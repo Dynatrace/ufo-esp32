@@ -27,3 +27,8 @@
 *.exe
 *.out
 *.app
+build/*
+*.d
+sdkconfig
+sdkconfig.old
+.project
