@@ -65,9 +65,8 @@ except IOError:
 
 try:
     convert_file("indexhtml.gz", 'main/indexhtml.h')
-    #convert_file('data/nice.wav', 'main/wavdata.h')
-    convert_file('data/font.woff', 'main/fontwoff.h')    
-    convert_file('data/font.ttf', 'main/fontttf.h')
+    convert_file('data/material-design-icons.woff', 'main/fontwoff.h')    
+    convert_file('data/material-design-icons.ttf', 'main/fontttf.h')
 
 except IOError:
     print("cannot open indexhtml.h or font*.h for writing, or cannot find file to convert")
