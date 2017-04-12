@@ -1,22 +1,7 @@
-/*
- * DotstarStripe.h
- *
- *  Created on: 29.03.2017
- *      Author: helmut.spiegl
- */
-
 #ifndef MAIN_DOTSTARSTRIPE_H_
 #define MAIN_DOTSTARSTRIPE_H_
 
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_system.h"
-#include "nvs_flash.h"
 #include "driver/gpio.h"
-#include "sdkconfig.h"
-#include "dotstarstripe.h"
-
 
 class DotstarStripe {
 public:

@@ -1,13 +1,7 @@
-/*
- * StringParser.cpp
- *
- *  Created on: 03.04.2017
- *      Author: helmut.spiegl
- */
-
 #include "StringParser.h"
 #include <_ansi.h>
 #include <ctype.h>
+
 
 StringParser::StringParser() {
 	Init();

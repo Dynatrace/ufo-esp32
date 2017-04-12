@@ -1,10 +1,3 @@
-/*
- * Ufo.h
- *
- *  Created on: 29.03.2017
- *      Author: helmut.spiegl
- */
-
 #ifndef MAIN_HTTPRESPONSE_H_
 #define MAIN_HTTPRESPONSE_H_
 

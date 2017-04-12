@@ -1,15 +1,9 @@
-/*
- * Ufo.cpp
- *
- *  Created on: 29.03.2017
- *      Author: helmut.spiegl
- */
-
+#include <freertos/FreeRTOS.h>
 #include "Ufo.h"
 #include "DotstarStripe.h"
-
-#define WIFI_SSID CONFIG_WIFI_SSID
-#define WIFI_PASS CONFIG_WIFI_PASSWORD
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include <esp_log.h>
 
 
 extern "C"{
@@ -17,9 +11,15 @@ extern "C"{
 }
 
 
-void task1_function(void *pvParameter)
+void task_function_webserver(void *pvParameter)
 {
-	((Ufo*)pvParameter)->Task1();
+	((Ufo*)pvParameter)->TaskWebServer();
+	vTaskDelete(NULL);
+}
+
+void task_function_display(void *pvParameter)
+{
+	((Ufo*)pvParameter)->TaskDisplay();
 	vTaskDelete(NULL);
 }
 
@@ -27,16 +27,25 @@ void task1_function(void *pvParameter)
 
 
 Ufo::Ufo() : mStripeLevel1(15, GPIO_NUM_16, GPIO_NUM_17), mStripeLevel2(15, GPIO_NUM_16, GPIO_NUM_18), mStripeLogo(4, GPIO_NUM_16, GPIO_NUM_19){
+	mServer.SetUfo(this);
+	mServer.SetDisplayCharter(&mDisplayCharterLevel1, &mDisplayCharterLevel2);
+	mWifi.SetConfig(&mConfig);
+	mWifi.SetStateDisplay(&mStateDisplay);
+	mbApiCallReceived = false;
 }
 
 Ufo::~Ufo() {
 }
 
 void Ufo::Start(){
+	ESP_LOGD("UFO", "Start\n");
+	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
+	mConfig.Read();
+	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 
 	gpio_pad_select_gpio(10);
-	gpio_set_direction(GPIO_NUM_10, GPIO_MODE_INPUT);
-	gpio_set_pull_mode(GPIO_NUM_10, GPIO_PULLUP_ONLY);
+	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
 
 	gpio_pad_select_gpio(16);
 	gpio_set_direction(GPIO_NUM_16, GPIO_MODE_OUTPUT);
@@ -47,44 +56,78 @@ void Ufo::Start(){
 	gpio_pad_select_gpio(19);
 	gpio_set_direction(GPIO_NUM_19, GPIO_MODE_OUTPUT);
 
+	xTaskCreate(&task_function_webserver, "Task_WebServer", 4096, this, 5, NULL);
+	xTaskCreate(&task_function_display, "Task_Display", 4096, this, 5, NULL);
+
+	if (mConfig.mbAPMode){
+		if (mConfig.muLastSTAIpAddress){
+			char sBuf[16];
+			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
+			ESP_LOGD("Ufo", "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
+		}
+		mWifi.SetAPMode(mConfig.msAPSsid, mConfig.msAPPass);
+	}
+	else{
+		if (mConfig.msSTAENTUser.length())
+			mWifi.SetSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA);
+		else
+			mWifi.SetSTAMode(mConfig.msSTASsid, mConfig.msSTAPass);
+	}
+
+}
+
+void Ufo::TaskWebServer(){
+
+	while (1){
+		if (mWifi.IsConnected()){
+			ESP_LOGD("Ufo", "starting server\n");
+			mServer.Start(80);
+		}
+		vTaskDelay(100 / portTICK_PERIOD_MS);
+	}
+}
+
+void Ufo::TaskDisplay(){
+	while (1){
+		if (mWifi.IsConnected() && mbApiCallReceived){
+			mDisplayCharterLevel1.Display(mStripeLevel1);
+			mDisplayCharterLevel2.Display(mStripeLevel2);
+		}
+		else
+			mStateDisplay.Display(mStripeLevel1, mStripeLevel2);
+
+		mDisplayCharterLogo.Display(mStripeLogo);
+
+		if (!gpio_get_level(GPIO_NUM_0)){
+			if (!mbButtonPressed){
+				mConfig.ToggleAPMode();
+				mConfig.Write();
+				esp_restart();
+			}
+		}
+		else
+			mbButtonPressed = false;
+
+		vTaskDelay(1);
+	}
+}
+
+void Ufo::InitLogoLeds(){
 	mStripeLogo.SetLeds(0, 1, 0, 100, 255);
 	mStripeLogo.SetLeds(1, 1, 125, 255, 0);
 	mStripeLogo.SetLeds(2, 1, 0, 255, 0);
 	mStripeLogo.SetLeds(3, 1, 255, 0, 150);
-
 	mStripeLogo.Show();
-
-	xTaskCreate(&task1_function, "Task1", 2048, this, 5, NULL);
-
-	mWifi.connectAP(WIFI_SSID, WIFI_PASS);
-
-
-
+	mStripeLevel1.SetLeds(0, 1, 0, 100, 255);
+	mStripeLevel1.SetLeds(1, 1, 125, 255, 0);
+	mStripeLevel1.SetLeds(2, 1, 0, 255, 0);
+	mStripeLevel1.SetLeds(3, 1, 255, 0, 150);
+	mStripeLevel1.Show();
 }
 
-void Ufo::Task1(){
-	/*mStripeLevel1.InitColor(0, 255, 0);
-	mStripeLevel1.SetLeds(0, 1, 255, 0, 0);
-	mStripeLevel1.SetLeds(1, 1, 255, 0, 0);
-	mStripeLevel1.SetLeds(2, 1, 255, 0, 0);
-
-	mStripeLevel1.SetStartPos(i);
+void Ufo::ShowLogoLeds(){
+	mStripeLogo.Show();
 	mStripeLevel1.Show();
-	i++;
-	i = i % mStripeLevel1.getCount();
-	vTaskDelay(100 / portTICK_PERIOD_MS);
-
-	uint8_t i = 0;*/
-
-	while (1){
-
-		if (mWifi.IsConnected()){
-			printf("starting server\n");
-			mServer.Start(8912);
-		}
-		vTaskDelay(100 / portTICK_PERIOD_MS);
-
-	}
 }
 
 
@@ -95,6 +138,7 @@ Ufo ufo;
 void app_main(){
 
 	nvs_flash_init();
+	tcpip_adapter_init();
 
 	ufo.Start();
 }

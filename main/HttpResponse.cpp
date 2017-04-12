@@ -1,7 +1,5 @@
-
-#include "httpResponse.h"
 #include "freertos/FreeRTOS.h"
-#include <stdlib.h>
+#include "httpResponse.h"
 
 
 void HttpResponse::Init(__uint16_t uRetCode, bool bHttp11, bool bConnectionClose){

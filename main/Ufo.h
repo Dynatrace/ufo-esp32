@@ -1,17 +1,15 @@
-/*
- * Ufo.h
- *
- *  Created on: 29.03.2017
- *      Author: helmut.spiegl
- */
-
 #ifndef MAIN_UFO_H_
 #define MAIN_UFO_H_
 
 #include "DotstarStripe.h"
+#include "DisplayCharter.h"
+#include "DisplayCharterLogo.h"
+#include "StateDisplay.h"
 #include "Wifi.h"
-#include "Server.h"
+#include "Config.h"
+#include "WebServer.h"
 
+#define FIRMWARE_VERSION __DATE__ " - " __TIME__
 
 class Ufo {
 public:
@@ -20,15 +18,35 @@ public:
 
 	void Start();
 
-	void Task1();
+	void TaskWebServer();
+	void TaskDisplay();
+
+	void InitLogoLeds();
+	void ShowLogoLeds();
+
+	void IndicateApiCall() 	{ mbApiCallReceived = true; };
+	Config& GetConfig()		{ return mConfig; };
+	Wifi& GetWifi()			{ return mWifi; };
+	DisplayCharterLogo& GetLogoDisplay() { return mDisplayCharterLogo; };
 
 private:
+	DisplayCharter mDisplayCharterLevel1;
+	DisplayCharter mDisplayCharterLevel2;
+	DisplayCharterLogo mDisplayCharterLogo;
+
+	StateDisplay mStateDisplay;
+
 	DotstarStripe mStripeLevel1;
 	DotstarStripe mStripeLevel2;
 	DotstarStripe mStripeLogo;
 
-	WiFi mWifi;
-	Server mServer;
+	Wifi mWifi;
+	WebServer mServer;
+
+	Config mConfig;
+
+	bool mbButtonPressed;
+	bool mbApiCallReceived;
 };
 
 #endif /* MAIN_UFO_H_ */

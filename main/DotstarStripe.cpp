@@ -1,10 +1,4 @@
-/*
- * DotstarStripe.cpp
- *
- *  Created on: 29.03.2017
- *      Author: helmut.spiegl
- */
-
+#include <freertos/FreeRTOS.h>
 #include "dotstarstripe.h"
 
 DotstarStripe::DotstarStripe(__uint8_t count, gpio_num_t cl, gpio_num_t dt) {

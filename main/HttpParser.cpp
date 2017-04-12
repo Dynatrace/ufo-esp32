@@ -1,12 +1,4 @@
-/*
- * HttpParser.cpp
- *
- *  Created on: 03.04.2017
- *      Author: helmut.spiegl
- */
-
 #include "HttpParser.h"
-#include <stdio.h>
 #include "freertos/FreeRTOS.h"
 
 
@@ -47,8 +39,6 @@ bool HttpParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 	while (uPos < uLen){
 		char c = sBuffer[uPos];
 		uPos++;
-
-		printf("%c", c);
 
 		switch (muParseState){
 			case STATE_Method:
@@ -197,6 +187,5 @@ bool HttpParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 
 		}
 	}
-	printf("\r\nExit: %d, pos: %d, len: %d\r\n", muParseState, uPos, uLen);
 	return true;
 }

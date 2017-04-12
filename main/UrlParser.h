@@ -1,10 +1,3 @@
-/*
- * UrlParser.h
- *
- *  Created on: 03.04.2017
- *      Author: helmut.spiegl
- */
-
 #ifndef MAIN_URL_PARSER_H_
 #define MAIN_URL_PARSER_H_
 
@@ -38,10 +31,14 @@ public:
 
 	__uint8_t GetState() { return muState; };
 
-
+private:
+	bool ProcessHash(char c);
 
 private:
 	__uint8_t muState;
+
+	__uint8_t muInDecode;
+	__uint8_t muDecodedValue;
 
 };
 

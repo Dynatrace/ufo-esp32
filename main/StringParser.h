@@ -1,10 +1,3 @@
-/*
- * StringParser.h
- *
- *  Created on: 03.04.2017
- *      Author: helmut.spiegl
- */
-
 #ifndef MAIN_STRINGPARSER_H_
 #define MAIN_STRINGPARSER_H_
 
