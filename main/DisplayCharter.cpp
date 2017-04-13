@@ -210,7 +210,7 @@ void DisplayCharter::Display(DotstarStripe &dotstar){
 		case 1:
 			if (!--morphSpeedTick){
 				if (morphingPercentage < 100)
-					morphingPercentage+=1;
+					morphingPercentage+=2;
 				else
 					morphingState = 2;
 
@@ -220,7 +220,7 @@ void DisplayCharter::Display(DotstarStripe &dotstar){
 		case 2:
 			if (!--morphSpeedTick){
 				if (morphingPercentage > 0)
-					morphingPercentage-=1;
+					morphingPercentage-=2;
 				else
 					morphingState = 0;
 

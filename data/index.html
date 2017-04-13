@@ -40,25 +40,35 @@
 			</div>
 		</header>
 
+		
 		<div class="content">
+		
 			<ul class="list">
 				<li class="divider">UFO communication examples (REST calls)</li>
 				<li>
-					<span class="padded-list">/api?logo=on|off</span>
-					<button class="btn btn-flat primary pull-right" data-api="logo=off" id="led1off">Off</button>
-					<button class="btn btn-flat primary pull-right" data-api="logo=on" id="led1on">On</button>
+					<span class="padded-list" id='api_1'>/api?logo=ff0000|00ff00|0000ff|ffcc00</span>
+					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/1"'>EDIT</button>
+					<button class="btn btn-flat primary pull-right" id="onapi_1">SET</button>
 				</li>
 				<li>
-					<span class="padded-list">/api?top_init=1&top=0|3|FF0000&top_bg=00FF00</span>
-					<button class="btn btn-flat primary pull-right" data-api="top_init=1&top=0|3|FF0000&top_bg=00FF00" id="apisample1">Set</button>
+					<span class="padded-list" id='api_2'>/api?logo_reset</span>
+					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/2"'>EDIT</button>
+					<button class="btn btn-flat primary pull-right" id="onapi_2">SET</button>
 				</li>
 				<li>
-					<span class="padded-list">/api?top_init=1&top=0|1|FFC000|1|3|FF0000|4|1|FFC000&top_bg=00A00a&top_whirl=220</span>
-					<button class="btn btn-flat primary pull-right" data-api="top_init=1&top=0|1|FFC000|1|3|FF0000|4|1|FFC000&top_bg=00A00a&top_whirl=220" id="apisample2">Set</button>
+					<span class="padded-list" id='api_3'>/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5</span>
+					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/3"'>EDIT</button>
+					<button class="btn btn-flat primary pull-right" id="onapi_3">SET</button>
 				</li>
 				<li>
-					<span class="padded-list">/api?bottom_init=1&bottom=0|15|FF0000&bottom_bg=0000FF&bottom_morph=500|6</span>
-					<button class="btn btn-flat primary pull-right" data-api="bottom_init=1&bottom=0|15|FF0000&bottom_bg=0000FF&bottom_morph=500|6" id="apisample3">Set</button>
+					<span class="padded-list" id='api_4'>/api?top_init&top=0|15|ff0000&top_morph=100|8&bottom_init&bottom=0|15|ff0000&bottom_morph=100|8</span>
+					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/4"'>EDIT</button>
+					<button class="btn btn-flat primary pull-right" id="onapi_4">SET</button>
+				</li>
+				<li>
+					<span class="padded-list" id='api_5'>/api?top_init&bottom_init</span>
+					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/5"'>EDIT</button>
+					<button class="btn btn-flat primary pull-right" id="onapi_5">SET</button>
 				</li>
 				<li class="divider">UFO machine room</li>
 				<li>
@@ -171,6 +181,31 @@
 			</div>
 		</div>
 	</pagewifisettings>
+	
+	<pageapiedit data-page="true">
+		<header class="header-bar">
+			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
+			<div class="center">
+				<h1 class="title">Dynatrace UFO - Configure APIs</h1>
+			</div>
+		</header>
+		<div class="content">
+			<div class="padded-full">
+				
+				<form method='GET' action='/apiedit'>
+					<div class="padded-full">
+						API:<br>
+						<input type='hidden' name='apiid' value='8'/>
+						<input type="text" name="apiedit" id="apiedit" value = '/api?gogo=4'/>
+					</div>
+					<div class="padded-full">
+						<button class="btn btn-submit fit-parent primary" type="submit" name="save" value="1">SAVE</button>
+						<button class="btn btn-submit fit-parent primary" type="submit" name="delete" value="1">Delete</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</pageapiedit>
 
 	<pagedynatraceintegrationsettings data-page="true">
 		<header class="header-bar">
@@ -243,41 +278,44 @@
 			app.on({page: 'home', preventClose: false, content: null} , function(activity) {
 				var onApi = function(evt) {
 					var target = evt.target;
-					var apicall = target.getAttribute('data-api');
-					console.log(apicall);
-
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'api?'+apicall,
-						dataType: 'json',
-						//contentType: '',
-						//data: {'ssid': document.querySelector('#ssid').value, 'pwd': document.querySelector('#wifipwd').value}, 
-						//data: { 'key1': 'val1', 'key2': 'val2'},
-						//timeout: 5000,
-						success: function(res, xhr) {
-							console.log(res);
-						},
+					var id = target.getAttribute('id');
+					var parts = id.split('_');
+					console.log(parts);
+					if (parts.length == 2){
+						id = "#api_" + parts[1];
+						console.log(id);
+							
+						var apicall = document.querySelector(id).innerText;
 						
-						error: function(res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					}); 
+						console.log(apicall);
+
+						var req = phonon.ajax({
+							method: 'GET',
+							url: apicall,
+							dataType: 'json',
+							//contentType: '',
+							//data: {'ssid': document.querySelector('#ssid').value, 'pwd': document.querySelector('#wifipwd').value}, 
+							//data: { 'key1': 'val1', 'key2': 'val2'},
+							//timeout: 5000,
+							success: function(res, xhr) {
+								console.log(res);
+							},
+							
+							error: function(res, flagError, xhr) {
+								console.error(flagError);
+								console.log(res);
+							}
+						}); 
+					}
 
 				}; 
                 
 				activity.onCreate(function() {
-					// document.querySelector('#submitwifisettings').on('tap', onWifiSettingsSubmit);
-					document.querySelector('#led1on').on('tap', onApi);
-					document.querySelector('#led1on').on('click', onApi);
-					document.querySelector('#led1off').on('tap', onApi);
-					document.querySelector('#led1off').on('click', onApi);
-					document.querySelector('#apisample1').on('tap', onApi);
-					document.querySelector('#apisample1').on('click', onApi);
-					document.querySelector('#apisample2').on('tap', onApi);
-					document.querySelector('#apisample2').on('click', onApi);
-					document.querySelector('#apisample3').on('tap', onApi);
-					document.querySelector('#apisample3').on('click', onApi);
+					var apiid = '#onapi_';
+					for (u=1 ; u<=5 ; u++){
+						document.querySelector(apiid + u).on('tap', onApi);
+						document.querySelector(apiid + u).on('click', onApi);
+					}
 				}) 
 			});
 			
@@ -376,6 +414,9 @@
 							console.log(res);
 						}
 					}); 
+				}
+				if (evt.detail.page == "pageapiedit") {
+					alert(evt.target.URL);
 				}
 			});
 

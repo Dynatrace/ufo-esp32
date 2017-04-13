@@ -1,20 +1,14 @@
-/*
- * WiFi.cpp
- *
- *  Created on: Feb 25, 2017
- *      Author: kolban
- */
 #include "sdkconfig.h"
 #if defined(CONFIG_WIFI_ENABLED)
 
-#define _GLIBCXX_USE_C99
-
-#include "WiFi.h"
+#include "Wifi.h"
+#include "Config.h"
+#include "StateDisplay.h"
 #include <esp_event.h>
 #include <esp_event_loop.h>
 #include <esp_log.h>
-#include <esp_system.h>
 #include <esp_wifi.h>
+#include "esp_wpa2.h"
 #include <freertos/FreeRTOS.h>
 #include <nvs_flash.h>
 #include <lwip/dns.h>
@@ -26,7 +20,7 @@
 
 
 
-static char tag[]= "WiFi";
+static char tag[]= "Wifi";
 
 
 /*
@@ -40,99 +34,132 @@ static void setDNSServer(char *ip) {
 */
 
 
-WiFi::WiFi() {
-	ip      = "";
-	gw      = "";
-	netmask = "";
+Wifi::Wifi() {
+	muConnectedClients = 0;
+	mbConnected = false;
 }
 
 
 esp_err_t eventHandler(void *ctx, system_event_t *event) {
-
-	return ((WiFi*)ctx)->OnEvent(event);
+	return ((Wifi*)ctx)->OnEvent(event);
 }
 
-/**
- * @brief Add a reference to a DNS server.
- *
- * Here we define a server that will act as a DNS server.  We can add two DNS
- * servers in total.  The first will be the primary, the second will be the backup.
- * The public Google DNS servers are "8.8.8.8" and "8.8.4.4".
- *
- * For example:
- *
- * @code{.cpp}
- * wifi.addDNSServer("8.8.8.8");
- * wifi.addDNSServer("8.8.4.4");
- * @endcode
- *
- * @param [in] ip The IP address of the DNS Server.
- */
-void WiFi::addDNSServer(std::string ip) {
+
+void Wifi::GetLocalAddress(char* sBuf){
+	tcpip_adapter_ip_info_t ip;
+	tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+	sprintf(sBuf, "%d.%d.%d.%d", IP2STR(&ip.ip));
+}
+
+void Wifi::GetGWAddress(char* sBuf){
+	tcpip_adapter_ip_info_t ip;
+	tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+	sprintf(sBuf, "%d.%d.%d.%d", IP2STR(&ip.gw));
+}
+void Wifi::GetNetmask(char* sBuf){
+	tcpip_adapter_ip_info_t ip;
+	tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+	sprintf(sBuf, "%d.%d.%d.%d", IP2STR(&ip.netmask));
+}
+
+void Wifi::GetMac(__uint8_t uMac[6]){
+	esp_wifi_get_mac(ESP_IF_WIFI_STA, uMac);
+}
+
+void Wifi::StartAPMode(std::string& rsSsid, std::string& rsPass){
+	msSsid = rsSsid;
+	msPass = rsPass;
+	StartAP();
+}
+
+void Wifi::StartSTAMode(std::string& rsSsid, std::string& rsPass){
+	msSsid = rsSsid;
+	msPass = rsPass;
+	Connect();
+}
+
+void Wifi::StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA)
+{
+	msSsid = rsSsid;
+	msUser = rsUser;
+	msPass = rsPass;
+	msCA = rsCA;
+	Connect();
+}
+
+
+void Wifi::Connect(){
+	ESP_LOGD(tag, "  Connect(<%s><%s><%s><%d>)", msSsid.data(), msUser.data(), msPass.data(), msCA.length());
+
+	nvs_flash_init();
+	tcpip_adapter_init();
+	if (ip.length() > 0 && gw.length() > 0 && netmask.length() > 0) {
+		tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
+		tcpip_adapter_ip_info_t ipInfo;
+		inet_pton(AF_INET, ip.data(), &ipInfo.ip);
+		inet_pton(AF_INET, gw.data(), &ipInfo.gw);
+		inet_pton(AF_INET, netmask.data(), &ipInfo.netmask);
+		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo);
+	}
+
+	esp_event_loop_init(eventHandler, this);
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	esp_wifi_init(&cfg);
+	esp_wifi_set_storage(WIFI_STORAGE_RAM);
+	esp_wifi_set_mode(WIFI_MODE_STA);
+	wifi_config_t config;
+	memset(&config, 0, sizeof(config));
+	memcpy(config.sta.ssid, msSsid.data(), msSsid.length());
+	if (!msUser.length())
+		memcpy(config.sta.password, msPass.data(), msPass.length());
+	esp_wifi_set_config(WIFI_IF_STA, &config);
+
+	if (msUser.length()){ //Enterprise WPA2
+		if (msCA.length())
+			esp_wifi_sta_wpa2_ent_set_ca_cert((__uint8_t*)msCA.data(), msCA.length());
+		esp_wifi_sta_wpa2_ent_set_identity((__uint8_t*)msUser.data(), msUser.length());
+		esp_wifi_sta_wpa2_ent_set_username((__uint8_t*)msUser.data(), msUser.length());
+		esp_wifi_sta_wpa2_ent_set_password((__uint8_t*)msPass.data(), msPass.length());
+		esp_wifi_sta_wpa2_ent_enable();
+	}
+
+	esp_wifi_start();
+	esp_wifi_connect();
+}
+
+
+void Wifi::StartAP() {
+	ESP_LOGD(tag, "  StartAP(<%s>)", msSsid.data());
+	nvs_flash_init();
+	tcpip_adapter_init();
+	esp_event_loop_init(eventHandler, this);
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	esp_wifi_init(&cfg);
+	esp_wifi_set_storage(WIFI_STORAGE_RAM);
+	esp_wifi_set_mode(WIFI_MODE_AP);
+	wifi_config_t config;
+	memset(&config, 0, sizeof(config));
+	memcpy(config.ap.ssid, msSsid.data(), msSsid.length());
+	config.ap.ssid_len = 0;
+	memcpy(config.ap.password, msPass.data(), msPass.length());
+	config.ap.channel = 0;
+	config.ap.authmode = WIFI_AUTH_OPEN;
+	config.ap.ssid_hidden = 0;
+	config.ap.max_connection = 4;
+	config.ap.beacon_interval = 100;
+	esp_wifi_set_config(WIFI_IF_AP, &config);
+	esp_wifi_start();
+}
+
+void Wifi::addDNSServer(std::string ip) {
 	ip_addr_t dnsserver;
 	ESP_LOGD(tag, "Setting DNS[%d] to %s", dnsCount, ip.c_str());
 	inet_pton(AF_INET, ip.c_str(), &dnsserver);
 	::dns_setserver(dnsCount, &dnsserver);
 	dnsCount++;
-} // addDNSServer
+}
 
-/**
- * Connect to an access point.
- * @param[in] ssid The network SSID of the access point to which we wish to connect.
- * @param[in] password The password of the access point to which we wish to connect.
- */
-void WiFi::connectAP(std::string ssid, std::string password){
-	::nvs_flash_init();
-	::tcpip_adapter_init();
-	if (ip.length() > 0 && gw.length() > 0 && netmask.length() > 0) {
-		::tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
-		tcpip_adapter_ip_info_t ipInfo;
-
-		inet_pton(AF_INET, ip.data(), &ipInfo.ip);
-		inet_pton(AF_INET, gw.data(), &ipInfo.gw);
-		inet_pton(AF_INET, netmask.data(), &ipInfo.netmask);
-		::tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo);
-	}
-
-
-	ESP_ERROR_CHECK( esp_event_loop_init(eventHandler, this));
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(::esp_wifi_init(&cfg));
-	ESP_ERROR_CHECK(::esp_wifi_set_storage(WIFI_STORAGE_RAM));
-	ESP_ERROR_CHECK(::esp_wifi_set_mode(WIFI_MODE_STA));
-	wifi_config_t sta_config;
-	::memset(&sta_config, 0, sizeof(sta_config));
-	::memcpy(sta_config.sta.ssid, ssid.data(), ssid.size());
-	::memcpy(sta_config.sta.password, password.data(), password.size());
-	sta_config.sta.bssid_set = 0;
-	ESP_ERROR_CHECK(::esp_wifi_set_config(WIFI_IF_STA, &sta_config));
-	ESP_ERROR_CHECK(::esp_wifi_start());
-
-	ESP_ERROR_CHECK(::esp_wifi_connect());
-} // connectAP
-
-
-/**
- * @brief Dump diagnostics to the log.
- */
-void WiFi::dump() {
-	ESP_LOGD(tag, "WiFi Dump");
-	ESP_LOGD(tag, "---------");
-	char ipAddrStr[30];
-	ip_addr_t ip = ::dns_getserver(0);
-	inet_ntop(AF_INET, &ip, ipAddrStr, sizeof(ipAddrStr));
-	ESP_LOGD(tag, "DNS Server[0]: %s", ipAddrStr);
-} // dump
-
-
-/**
- * @brief Lookup an IP address by host name.
- *
- * @param [in] hostname The hostname to resolve.
- *
- * @return The IP address of the host or 0.0.0.0 if not found.
- */
-struct in_addr WiFi::getHostByName(std::string hostName) {
+struct in_addr Wifi::getHostByName(std::string hostName) {
 	struct in_addr retAddr;
 	struct hostent *he = gethostbyname(hostName.c_str());
 	if (he == nullptr) {
@@ -144,88 +171,67 @@ struct in_addr WiFi::getHostByName(std::string hostName) {
 
 	}
 	return retAddr;
-} // getHostByName
+}
 
-
-
-/**
- * Start being an access point.
- * @param[in] ssid The SSID to use to advertize for stations.
- * @param[in] password The password to use for station connections.
- */
-void WiFi::startAP(std::string ssid, std::string password) {
-	::nvs_flash_init();
-	::tcpip_adapter_init();
-	ESP_ERROR_CHECK(esp_event_loop_init(eventHandler, this));
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-	ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_AP) );
-	wifi_config_t apConfig;
-	::memset(&apConfig, 0, sizeof(apConfig));
-	::memcpy(apConfig.ap.ssid, ssid.data(), ssid.size());
-	apConfig.ap.ssid_len = 0;
-	::memcpy(apConfig.ap.password, password.data(), password.size());
-	apConfig.ap.channel = 0;
-	apConfig.ap.authmode = WIFI_AUTH_OPEN;
-	apConfig.ap.ssid_hidden = 0;
-	apConfig.ap.max_connection = 4;
-	apConfig.ap.beacon_interval = 100;
-	ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_AP, &apConfig) );
-	ESP_ERROR_CHECK( esp_wifi_start() );
-} // startAP
-
-
-/**
- * @brief Set the IP info used when connecting as a station to an access point.
- *
- * For example, prior to calling connectAP() we could invoke:
- *
- * @code{.cpp}
- * myWifi.setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
- * @encode
- *
- * @param [in] ip IP address value.
- * @param [in] gw Gateway value.
- * @param [in] netmask Netmask value.
- */
-void WiFi::setIPInfo(std::string ip, std::string gw, std::string netmask) {
+void Wifi::setIPInfo(std::string ip, std::string gw, std::string netmask) {
 	this->ip = ip;
 	this->gw = gw;
 	this->netmask = netmask;
 }
 
-esp_err_t WiFi::OnEvent(system_event_t *event){
+esp_err_t Wifi::OnEvent(system_event_t *event){
 
 	esp_err_t rc = ESP_OK;
 	switch(event->event_id) {
 
 		case SYSTEM_EVENT_AP_START:
-			printf("AP Start\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_AP_START");
+			mbConnected = true;
 			break;
 		case SYSTEM_EVENT_AP_STOP:
-			printf("AP Stop\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_AP_STOP");
+			mbConnected = false;
+			break;
+		case SYSTEM_EVENT_AP_STACONNECTED:
+			muConnectedClients++;
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_AP_STACONNECTED - %d clients", muConnectedClients);
+			if (mpStateDisplay)
+				mpStateDisplay->SetConnected(true, this);
+			break;
+		case SYSTEM_EVENT_AP_STADISCONNECTED:
+			if (muConnectedClients)
+				muConnectedClients--;
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_AP_STADISCONNECTED - %d clients", muConnectedClients);
+			if (!muConnectedClients && mpStateDisplay)
+				mpStateDisplay->SetConnected(false, this);
 			break;
 		case SYSTEM_EVENT_STA_CONNECTED:
-			printf("STA connected\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_CONNECTED");
+			mbConnected = true;
+			if (mpStateDisplay)
+				mpStateDisplay->SetConnected(true, this);
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED:
-			printf("STA disconnected\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_DISCONNECTED");
+			mbConnected = false;
+			if (mpStateDisplay)
+				mpStateDisplay->SetConnected(false, this);
+			esp_wifi_connect();
 			break;
 		case SYSTEM_EVENT_STA_GOT_IP:
-			bConnected = true;
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_GOT_IP");
+			if (mpStateDisplay)
+				mpStateDisplay->SetConnected(true, this);
 			tcpip_adapter_ip_info_t ip;
 			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
-			printf("Got IP: %x", ip.ip.addr);
+			if (mpConfig)
+				mpConfig->muLastSTAIpAddress = ip.ip.addr;
 			break;
 		case SYSTEM_EVENT_STA_START:
-			printf("STA Start\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_START");
 			break;
 		case SYSTEM_EVENT_STA_STOP:
-			printf("STA stop\n");
-			break;
-		case SYSTEM_EVENT_WIFI_READY:
-			printf("Wifi ready\n");
+			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_STOP");
 			break;
 		default:
 			break;
@@ -235,4 +241,4 @@ esp_err_t WiFi::OnEvent(system_event_t *event){
 
 
 
-#endif // CONFIG_WIFI_ENABLED
+#endif

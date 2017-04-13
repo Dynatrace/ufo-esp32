@@ -65,13 +65,13 @@ void Ufo::Start(){
 			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
 			ESP_LOGD("Ufo", "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
-		mWifi.SetAPMode(mConfig.msAPSsid, mConfig.msAPPass);
+		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass);
 	}
 	else{
 		if (mConfig.msSTAENTUser.length())
-			mWifi.SetSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA);
+			mWifi.StartSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA);
 		else
-			mWifi.SetSTAMode(mConfig.msSTASsid, mConfig.msSTAPass);
+			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass);
 	}
 
 }

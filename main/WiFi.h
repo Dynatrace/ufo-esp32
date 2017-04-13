@@ -16,51 +16,54 @@
 #include <string>
 #include <vector>
 
+class Config;
+class StateDisplay;
 
-/**
- * @brief %WiFi driver.
- *
- * Encapsulate control of %WiFi functions.
- *
- * Here is an example fragment that illustrates connecting to an access point.
- * @code{.cpp}
- * class TargetWiFiEventHandler: public WiFiEventHandler {
- *    esp_err_t staGotIp(system_event_sta_got_ip_t event_sta_got_ip) {
- *       ESP_LOGD(tag, "MyWiFiEventHandler(Class): staGotIp");
- *       // Do something ...
- *       return ESP_OK;
- *    }
- * };
- *
- * WiFi wifi;
- *
- * MyWiFiEventHandler *eventHandler = new MyWiFiEventHandler();
- * wifi.setWifiEventHandler(eventHandler);
- * wifi.connectAP("myssid", "mypassword");
- * @endcode
- */
-class WiFi {
+class Wifi {
+
+public:
+	Wifi();
+
+	void SetConfig(Config* pConfig)						{ mpConfig = pConfig; };
+	void SetStateDisplay(StateDisplay* pStateDisplay)  	{ mpStateDisplay = pStateDisplay; };
+
+	void GetLocalAddress(char* sBuf);
+	void GetGWAddress(char* sBuf);
+	void GetNetmask(char* sBuf);
+	void GetMac(__uint8_t uMac[6]);
+
+	void StartAPMode(std::string& rsSsid, std::string& rsPass);
+	void StartSTAMode(std::string& rsSsid, std::string& rsPass);
+	void StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA);
+
+	bool IsConnected() { return mbConnected; };
+	void addDNSServer(std::string ip);
+	struct in_addr getHostByName(std::string hostName);
+	void setIPInfo(std::string ip, std::string gw, std::string netmask);
+
+	esp_err_t OnEvent(system_event_t *event);
+
 private:
+	void Connect();
+	void StartAP();
+
+private:
+	Config* mpConfig;
+	StateDisplay* mpStateDisplay;
+
 	std::string      ip;
 	std::string      gw;
 	std::string      netmask;
 
-public:
-	WiFi();
+	__uint8_t        muMode;
+	std::string      msSsid;
+	std::string      msPass;
+	std::string      msUser;
+	std::string      msCA;
 
-	bool IsConnected() { return bConnected; };
+	__uint8_t 		muConnectedClients;
+	bool 			mbConnected;
 
-	void addDNSServer(std::string ip);
-	struct in_addr getHostByName(std::string hostName);
-	void connectAP(std::string ssid, std::string passwd);
-	void dump();
-	void startAP(std::string ssid, std::string passwd);
-	void setIPInfo(std::string ip, std::string gw, std::string netmask);
-	esp_err_t OnEvent(system_event_t *event);
-
-
-private:
-	bool bConnected = false;
 	int dnsCount=0;
 	char *dnsServer = nullptr;
 };
