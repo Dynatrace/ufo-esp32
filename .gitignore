@@ -32,3 +32,13 @@ build/*
 sdkconfig
 sdkconfig.old
 .project
+
+#generated header files
+wifiaccess.h
+main/fontwoff.h
+main/fontsvg.h
+main/fontttf.h
+main/fonteot.h
+main/indexhtml.h
+main/wavdata.h
+sdkconfig.old
