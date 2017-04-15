@@ -10,6 +10,8 @@
 #include "sdkconfig.h"
 #include "fontwoff.h"
 #include "fontttf.h"
+#include "fontsvg.h"
+#include "fonteot.h"
 #include "indexhtml.h"
 
 static char tag[] = "WebServer";
@@ -126,7 +128,7 @@ void WebServer::WebRequestHandler(int socket){
 			if (!httpResponse.Send(socket, indexhtml_h, sizeof(indexhtml_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/font.woff") || !httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
+		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
 			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(socket, fontwoff_h, sizeof(fontwoff_h)))
 				break;
@@ -134,6 +136,16 @@ void WebServer::WebRequestHandler(int socket){
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.ttf")){
 			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(socket, fontttf_h, sizeof(fontttf_h)))
+				break;
+		}
+		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.eot")){
+			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(socket, fonteot_h, sizeof(fonteot_h)))
+				break;
+		}
+		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.svg")){
+			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(socket, fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/api")){

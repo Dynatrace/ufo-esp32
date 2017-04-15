@@ -3,7 +3,24 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := ufo
+PROJECT_NAME := ufo-esp32
+
+all: main/indexhtml.h main/fontttf.h main/fontsvg.h main/fonteot.h main/fontwoff.h 
+
+main/indexhtml.h: 
+	python data2h.py data/index.html main/indexhtml.h
+
+main/fontttf.h: 
+	python data2h.py data/material-design-icons.ttf main/fontttf.h
+	
+main/fontwoff.h: 
+	python data2h.py data/material-design-icons.woff main/fontwoff.h
+	
+main/fontsvg.h: 
+	python data2h.py data/material-design-icons.svg main/fontsvg.h
+
+main/fonteot.h: 
+	python data2h.py data/material-design-icons.eot main/fonteot.h
 
 include $(IDF_PATH)/make/project.mk
 
