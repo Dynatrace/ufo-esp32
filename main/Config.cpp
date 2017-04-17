@@ -11,6 +11,7 @@
 Config::Config() {
 	mbAPMode = true;
 	msAPSsid = "UFO";
+	msHostname = "UFO";
 
 	msSTASsid = WIFI_SSID;
 	msSTAPass = WIFI_PASS;
@@ -36,6 +37,7 @@ bool Config::Read(){
 	ReadString(h, "STAPass", msSTAPass);
 	ReadString(h, "STAENTUser", msSTAENTUser);
 	ReadString(h, "STAENTCA", msSTAENTCA);
+	ReadString(h, "hostname", msHostname);
 
 	nvs_close(h);
 	return true;
@@ -60,6 +62,8 @@ bool Config::Write()
 	if (!WriteString(h, "STASsid", msSTASsid))
 		return nvs_close(h), false;
 	if (!WriteString(h, "STAPass", msSTAPass))
+		return nvs_close(h), false;
+	if (!WriteString(h, "hostname", msHostname))
 		return nvs_close(h), false;
 	if (!WriteString(h, "STAENTUser", msSTAENTUser))
 		return nvs_close(h), false;

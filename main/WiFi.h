@@ -32,9 +32,10 @@ public:
 	void GetNetmask(char* sBuf);
 	void GetMac(__uint8_t uMac[6]);
 
-	void StartAPMode(std::string& rsSsid, std::string& rsPass);
-	void StartSTAMode(std::string& rsSsid, std::string& rsPass);
-	void StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA);
+	void StartAPMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname);
+	void StartSTAMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname);
+	void StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA, std::string& rsHostname);
+
 
 	bool IsConnected() { return mbConnected; };
 	void addDNSServer(std::string ip);
@@ -60,6 +61,7 @@ private:
 	std::string      msPass;
 	std::string      msUser;
 	std::string      msCA;
+	std::string 	 msHostname;
 
 	__uint8_t 		muConnectedClients;
 	bool 			mbConnected;
