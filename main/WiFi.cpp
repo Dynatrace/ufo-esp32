@@ -212,9 +212,6 @@ esp_err_t Wifi::OnEvent(system_event_t *event){
 			break;
 		case SYSTEM_EVENT_STA_CONNECTED:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_CONNECTED");
-			mbConnected = true;
-			if (mpStateDisplay)
-				mpStateDisplay->SetConnected(true, this);
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_DISCONNECTED");
@@ -225,6 +222,7 @@ esp_err_t Wifi::OnEvent(system_event_t *event){
 			break;
 		case SYSTEM_EVENT_STA_GOT_IP:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_GOT_IP");
+			mbConnected = true;
 			if (mpStateDisplay)
 				mpStateDisplay->SetConnected(true, this);
 			tcpip_adapter_ip_info_t ip;
