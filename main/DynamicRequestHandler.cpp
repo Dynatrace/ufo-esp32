@@ -64,6 +64,16 @@ __uint8_t DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, std
 	return 200;
 }
 
+__uint8_t DynamicRequestHandler::HandleApiListRequest(std::list<TParam>& params, std::string& body){
+	body = "{\"apis\":[";
+	body += "\"/api?logo=ff0000|00ff00|0000ff|ff00cc\",";
+	body += "\"/api?logo_reset\"";
+	body += "]}";
+
+	return 200;
+}
+
+
 __uint8_t DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, std::string& body){
 
 	char sBuf[100];
