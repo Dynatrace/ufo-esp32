@@ -66,24 +66,27 @@ void Wifi::GetMac(__uint8_t uMac[6]){
 	esp_wifi_get_mac(ESP_IF_WIFI_STA, uMac);
 }
 
-void Wifi::StartAPMode(std::string& rsSsid, std::string& rsPass){
+void Wifi::StartAPMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname){
 	msSsid = rsSsid;
 	msPass = rsPass;
+	msHostname = rsHostname;
 	StartAP();
 }
 
-void Wifi::StartSTAMode(std::string& rsSsid, std::string& rsPass){
+void Wifi::StartSTAMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname){
 	msSsid = rsSsid;
 	msPass = rsPass;
+	msHostname = rsHostname;
 	Connect();
 }
 
-void Wifi::StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA)
+void Wifi::StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA, std::string& rsHostname)
 {
 	msSsid = rsSsid;
 	msUser = rsUser;
 	msPass = rsPass;
 	msCA = rsCA;
+	msHostname = rsHostname;
 	Connect();
 }
 
@@ -124,6 +127,8 @@ void Wifi::Connect(){
 	}
 
 	esp_wifi_start();
+	ESP_LOGD(tag, "SETTING HOSTNAME: %s", msHostname.c_str() == NULL ? "NULL" : msHostname.c_str());
+	ESP_ERROR_CHECK(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, msHostname.c_str()));
 	esp_wifi_connect();
 }
 
@@ -207,9 +212,6 @@ esp_err_t Wifi::OnEvent(system_event_t *event){
 			break;
 		case SYSTEM_EVENT_STA_CONNECTED:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_CONNECTED");
-			mbConnected = true;
-			if (mpStateDisplay)
-				mpStateDisplay->SetConnected(true, this);
 			break;
 		case SYSTEM_EVENT_STA_DISCONNECTED:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_DISCONNECTED");
@@ -220,6 +222,7 @@ esp_err_t Wifi::OnEvent(system_event_t *event){
 			break;
 		case SYSTEM_EVENT_STA_GOT_IP:
 			ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_GOT_IP");
+			mbConnected = true;
 			if (mpStateDisplay)
 				mpStateDisplay->SetConnected(true, this);
 			tcpip_adapter_ip_info_t ip;
