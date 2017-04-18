@@ -7,7 +7,15 @@ PROJECT_NAME := ufo-esp32
 
 flash: all
 
-all: main/indexhtml.h main/fontttf.h main/fontsvg.h main/fonteot.h main/fontwoff.h 
+all: main/indexhtml.h 
+
+all: main/fontttf.h 
+
+all: main/fontsvg.h 
+
+all: main/fonteot.h 
+
+all: main/fontwoff.h 
 
 main/indexhtml.h: data/index.html
 	python data2h.py data/index.html main/indexhtml.h
