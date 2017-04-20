@@ -48,31 +48,23 @@
 				<div id='apis'>
 				<li>
 					<span class="padded-list" id='api_1'>/api?logo=ff0000|00ff00|0000ff|ffcc00</span>
-					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/1"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_1">SET</button>
 				</li>
 				<li>
 					<span class="padded-list" id='api_2'>/api?logo_reset</span>
-					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/2"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_2">SET</button>
 				</li>
 				<li>
 					<span class="padded-list" id='api_3'>/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5</span>
-					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/3"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_3">SET</button>
 				</li>
 				<li>
 					<span class="padded-list" id='api_4'>/api?top_init&top=0|15|ff0000&top_morph=100|8&bottom_init&bottom=0|15|ff0000&bottom_morph=100|8</span>
-					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/4"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_4">SET</button>
 				</li>
 				<li>
 					<span class="padded-list" id='api_5'>/api?top_init&bottom_init</span>
-					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/5"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_5">SET</button>
-				</li>
-				<li>
-					<button class="btn btn-flat primary" onclick='window.location.href="#!pageapiedit/6"'>Add API</button>
 				</li>
 				</div>
 				<li class="divider">UFO machine room</li>
@@ -347,8 +339,11 @@
 								newContent += u;
 								newContent += ")'>EDIT</button><button class='btn btn-flat primary pull-right' id='onapi_";
 								newContent += u;
-								newContent += "'>SET</button>";
+								newContent += "'>SET</button></li>";
 							}
+							newContent += "<li><button class='btn btn-flat primary' onclick='editIt(";
+							newContent += u;
+							newContent += ")'>Add API</button></li>"
 							
 							var mydiv = document.querySelector('#apis');
 							mydiv.innerHTML = newContent;

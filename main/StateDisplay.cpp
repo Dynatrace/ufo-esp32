@@ -2,8 +2,8 @@
 #include "Wifi.h"
 
 
-#define IPSPEED    200
-#define IPBREAK    20
+#define IPSPEED    400
+#define IPBREAK    40
 
 
 StateDisplay::StateDisplay() {
@@ -36,7 +36,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 100;
+						muStateTimer = 200;
 						muState = 1;
 						rStripeLevel1.InitColor(0, 0, 25);
 						rStripeLevel2.InitColor(0, 0, 25);
@@ -46,7 +46,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 100;
+						muStateTimer = 200;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 0);
@@ -63,7 +63,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 100;
+						muStateTimer = 200;
 						muState = 1;
 						rStripeLevel1.InitColor(0, 0, 25);
 						rStripeLevel2.InitColor(0, 0, 0);
@@ -73,7 +73,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 100;
+						muStateTimer = 200;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 25);
@@ -96,7 +96,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 20;
+						muStateTimer = 40;
 						muState = 1;
 						rStripeLevel1.InitColor(25, 20, 0);
 						rStripeLevel2.InitColor(25, 20, 0);
@@ -106,7 +106,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 100;
+						muStateTimer = 200;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 0);
