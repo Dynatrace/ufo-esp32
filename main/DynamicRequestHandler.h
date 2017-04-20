@@ -14,6 +14,7 @@ public:
 	virtual ~DynamicRequestHandler();
 
 	__uint8_t HandleApiRequest(std::list<TParam>& params, std::string& body);
+	__uint8_t HandleApiListRequest(std::list<TParam>& params, std::string& body);
 	__uint8_t HandleInfoRequest(std::list<TParam>& params, std::string& body);
 	__uint8_t HandleConfigRequest(std::list<TParam>& params, std::string& body);
 

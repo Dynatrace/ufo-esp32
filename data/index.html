@@ -44,7 +44,8 @@
 		<div class="content">
 		
 			<ul class="list">
-				<li class="divider">UFO communication examples (REST calls)</li>
+				<li class="divider">UFO communication APIs (REST calls)</li>
+				<div id='apis'>
 				<li>
 					<span class="padded-list" id='api_1'>/api?logo=ff0000|00ff00|0000ff|ffcc00</span>
 					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/1"'>EDIT</button>
@@ -70,6 +71,10 @@
 					<button class="btn btn-flat primary pull-right" onclick='window.location.href="#!pageapiedit/5"'>EDIT</button>
 					<button class="btn btn-flat primary pull-right" id="onapi_5">SET</button>
 				</li>
+				<li>
+					<button class="btn btn-flat primary" onclick='window.location.href="#!pageapiedit/6"'>Add API</button>
+				</li>
+				</div>
 				<li class="divider">UFO machine room</li>
 				<li>
 					<a href="#!pageinfo" class="padded-list">Info</a>
@@ -203,12 +208,12 @@
 				<form method='GET' action='/apiedit'>
 					<div class="padded-full">
 						API:<br>
-						<input type='hidden' name='apiid' value='8'/>
-						<input type="text" name="apiedit" id="apiedit" value = '/api?gogo=4'/>
+						<input type='hidden' name='apiid' id="apieditid"/>
+						<input type="text" name="apiedit" id="apiedit" value = ""/>
 					</div>
 					<div class="padded-full">
-						<button class="btn btn-submit fit-parent primary" type="submit" name="save" value="1">SAVE</button>
-						<button class="btn btn-submit fit-parent primary" type="submit" name="delete" value="1">Delete</button>
+						<span class="padded-list"><button class="btn btn-submit primary" type="submit" name="save" value="1">SAVE</button></span>
+						<span class="padded-list"><button class="btn btn-submit" type="submit" name="delete" value="1">Delete</button></span>
 					</div>
 				</form>
 			</div>
@@ -265,6 +270,10 @@
 	<!-- our app config -->
 	<!-- <script src="app.js"></script> -->
 	<script>
+		var editIt = function(apiid){
+			window.location.href= "#!pageapiedit/" + apiid;
+		}
+	
 		phonon.options({
 				navigator: {
 					defaultPage: 'home',
@@ -317,13 +326,45 @@
 					}
 
 				}; 
-                
+				
 				activity.onCreate(function() {
-					var apiid = '#onapi_';
-					for (u=1 ; u<=5 ; u++){
-						document.querySelector(apiid + u).on('tap', onApi);
-						document.querySelector(apiid + u).on('click', onApi);
-					}
+				
+					var req = phonon.ajax({
+						method: 'GET',
+						url: 'apilist',
+						dataType: 'text/json',
+						success: function(res, xhr) {
+							console.log(xhr.response);
+							var result = JSON.parse(xhr.response);
+							
+							var newContent = "";
+							for (u=1 ; u<=result.apis.length ; u++){
+								newContent += "<li><span class='padded-list' id='api_";
+								newContent += u;
+								newContent += "'>"
+								newContent += result.apis[u-1];
+								newContent += "</span><button class='btn btn-flat primary pull-right' onclick='editIt(";
+								newContent += u;
+								newContent += ")'>EDIT</button><button class='btn btn-flat primary pull-right' id='onapi_";
+								newContent += u;
+								newContent += "'>SET</button>";
+							}
+							
+							var mydiv = document.querySelector('#apis');
+							mydiv.innerHTML = newContent;
+							
+							var apiid = '#onapi_';
+							for (u=1 ; u<=result.apis.length ; u++){
+								document.querySelector(apiid + u).on('tap', onApi);
+								document.querySelector(apiid + u).on('click', onApi);
+							}
+						
+						},
+						error: function(res, flagError, xhr) {
+							console.error(flagError);
+							console.log(res);
+						}
+					})
 				}) 
 			});
 			
@@ -424,7 +465,19 @@
 					}); 
 				}
 				if (evt.detail.page == "pageapiedit") {
-					alert(evt.target.URL);
+					var parts = evt.target.URL.split("/");
+					if (parts.length > 1){
+						var id = parts[parts.length - 1];
+						var elem = document.querySelector("#api_" + id);
+						if (elem){
+							var apicall = elem.innerText;
+							document.getElementById('apiedit').value = apicall;
+						}
+						else
+							document.getElementById('apiedit').value = "/api?";
+						document.getElementById('apieditid').value = id;
+
+					}
 				}
 			});
 

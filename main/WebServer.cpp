@@ -155,6 +155,13 @@ void WebServer::WebRequestHandler(int socket){
 			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
 				break;
 		}
+		else if (!httpParser.GetUrl().compare("/apilist")){
+			std::string sBody;
+			__uint8_t retCode = requestHandler.HandleApiListRequest(httpParser.GetParams(), sBody);
+			httpResponse.Init(retCode, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+				break;
+		}
 		else if (!httpParser.GetUrl().compare("/info")){
 			std::string sBody;
 			__uint8_t retCode = requestHandler.HandleInfoRequest(httpParser.GetParams(), sBody);
