@@ -145,64 +145,66 @@ void WebServer::WebRequestHandler(int socket){
 		// request parsed
 
 		if (!httpParser.GetUrl().compare("/") || !httpParser.GetUrl().compare("/index.html")){
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			httpResponse.AddHeader("Content-Type: text/html");
 			httpResponse.AddHeader("Content-Encoding: gzip");
-			if (!httpResponse.Send(socket, indexhtml_h, sizeof(indexhtml_h)))
+			if (!httpResponse.Send(indexhtml_h, sizeof(indexhtml_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, fontwoff_h, sizeof(fontwoff_h)))
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(fontwoff_h, sizeof(fontwoff_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.ttf")){
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, fontttf_h, sizeof(fontttf_h)))
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(fontttf_h, sizeof(fontttf_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.eot")){
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, fonteot_h, sizeof(fonteot_h)))
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(fonteot_h, sizeof(fonteot_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.svg")){
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, fontsvg_h, sizeof(fontsvg_h)))
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/api")){
 			std::string sBody;
-			__uint8_t retCode = requestHandler.HandleApiRequest(httpParser.GetParams(), sBody);
-			httpResponse.Init(retCode, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/apilist")){
 			std::string sBody;
-			__uint8_t retCode = requestHandler.HandleApiListRequest(httpParser.GetParams(), sBody);
-			httpResponse.Init(retCode, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!requestHandler.HandleApiListRequest(httpParser.GetParams(), httpResponse))
+				break;
+		}
+		else if (!httpParser.GetUrl().compare("/apiedit")){
+			std::string sBody;
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!requestHandler.HandleApiEditRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/info")){
 			std::string sBody;
-			__uint8_t retCode = requestHandler.HandleInfoRequest(httpParser.GetParams(), sBody);
-			httpResponse.Init(retCode, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!requestHandler.HandleInfoRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/config")){
 			std::string sBody;
-			__uint8_t retCode = requestHandler.HandleConfigRequest(httpParser.GetParams(), sBody);
-			httpResponse.Init(retCode, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 
 		else if (!httpParser.GetUrl().compare("/test")){
 			std::string sBody;
-			httpResponse.Init(200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			sBody = httpParser.IsGet() ? "GET " : "POST ";
 			sBody += httpParser.GetUrl();
 			sBody += httpParser.IsHttp11() ? " HTTP/1.1" : "HTTP/1.0";
@@ -216,12 +218,12 @@ void WebServer::WebRequestHandler(int socket){
 				sBody += "\r\n";
 				it++;
 			}
-			if (!httpResponse.Send(socket, sBody.data(), sBody.size()))
+			if (!httpResponse.Send(sBody.data(), sBody.size()))
 				break;
 		}
 		else{
-			httpResponse.Init(404, httpParser.IsHttp11(), httpParser.IsConnectionClose());
-			if (!httpResponse.Send(socket, NULL, 0))
+			httpResponse.Init(socket, 404, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			if (!httpResponse.Send(NULL, 0))
 				break;
 		}
 

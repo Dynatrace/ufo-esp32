@@ -8,6 +8,7 @@
 #include "Wifi.h"
 #include "Config.h"
 #include "WebServer.h"
+#include "ApiStore.h"
 
 #define FIRMWARE_VERSION __DATE__ " - " __TIME__
 
@@ -28,6 +29,7 @@ public:
 	Config& GetConfig()		{ return mConfig; };
 	Wifi& GetWifi()			{ return mWifi; };
 	DisplayCharterLogo& GetLogoDisplay() { return mDisplayCharterLogo; };
+	ApiStore& GetApiStore() { return mApiStore; };
 
 private:
 	DisplayCharter mDisplayCharterLevel1;
@@ -44,6 +46,7 @@ private:
 	WebServer mServer;
 
 	Config mConfig;
+	ApiStore mApiStore;
 
 	bool mbButtonPressed;
 	bool mbApiCallReceived;

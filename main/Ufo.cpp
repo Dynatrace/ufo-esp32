@@ -42,6 +42,7 @@ void Ufo::Start(){
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	mConfig.Read();
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
+	mApiStore.Init();
 
 	gpio_pad_select_gpio(10);
 	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);

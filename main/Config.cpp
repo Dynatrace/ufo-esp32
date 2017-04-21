@@ -72,6 +72,7 @@ bool Config::Write()
 	if (nvs_set_u32(h, "STAIpAddress", muLastSTAIpAddress) != ESP_OK)
 		return nvs_close(h), false;
 
+	nvs_commit(h);
 	nvs_close(h);
 	return true;
 }
@@ -88,9 +89,10 @@ bool Config::ReadString(nvs_handle h, const char* sKey, std::string& rsValue){
 		return false;
 	sBuf = (char*)malloc(u+1);
 	if (nvs_get_str(h, sKey, sBuf, &u) != ESP_OK)
-		return false;
+		return free(sBuf), false;
 	sBuf[u] = 0x00;
 	rsValue = sBuf;
+	free(sBuf);
 	return true;
 }
 

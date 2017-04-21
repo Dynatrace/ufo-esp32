@@ -1,60 +1,64 @@
 #include "freertos/FreeRTOS.h"
 #include "httpResponse.h"
+#include <esp_log.h>
 
-
-void HttpResponse::Init(__uint16_t uRetCode, bool bHttp11, bool bConnectionClose){
-
+void HttpResponse::Init(int socket, __uint16_t uRetCode, bool bHttp11, bool bConnectionClose){
+	mSocket = socket;
 	muRetCode = uRetCode;
 	mbHttp11 = bHttp11;
 	mbConnectionClose = bConnectionClose;
 	mHeaders.clear();
 }
 
+void HttpResponse::Init(int socket, bool bHttp11, bool bConnectionClose){
+	Init(socket, 200, bHttp11, bConnectionClose);
+}
+
 void HttpResponse::AddHeader(const char* sHeader){
 	mHeaders.push_back(sHeader);
 }
 
-bool HttpResponse::Send(int socket, const char* sBody, __uint16_t uBodyLen){
+bool HttpResponse::Send(const char* sBody, __uint16_t uBodyLen){
 
 	char sBuf[10];
 
-	if (!SendInternal(socket, mbHttp11 ? "HTTP/1.1 " : "HTTP/1.0 ", 9))
+	if (!SendInternal(mSocket, mbHttp11 ? "HTTP/1.1 " : "HTTP/1.0 ", 9))
 		return false;
 	__uint8_t len = Number2String(muRetCode, sBuf);
-	if (!SendInternal(socket , sBuf, len))
+	if (!SendInternal(mSocket , sBuf, len))
 		return false;
 	const char* sData = GetResponseMsg(muRetCode, len);
-	if (!SendInternal(socket , sData, len))
+	if (!SendInternal(mSocket , sData, len))
 			return false;
 
 	std::list<std::string>::iterator it = mHeaders.begin();
 	while (it != mHeaders.end()){
-		if (!SendInternal(socket, it->data(), it->size()))
+		if (!SendInternal(mSocket, it->data(), it->size()))
 			return false;
-		if (!SendInternal(socket , "\r\n", 2))
+		if (!SendInternal(mSocket , "\r\n", 2))
 			return false;
 		it++;
 	}
 	if (!mbConnectionClose){
-		if (!SendInternal(socket , "Content-Length: ", 16))
+		if (!SendInternal(mSocket , "Content-Length: ", 16))
 			return false;
 
 		__uint8_t len = Number2String(uBodyLen, sBuf);
-		if (!SendInternal(socket , sBuf, len))
+		if (!SendInternal(mSocket , sBuf, len))
 			return false;
-		if (!SendInternal(socket , "\r\n\r\n", 4))
+		if (!SendInternal(mSocket , "\r\n\r\n", 4))
 			return false;
 	}
 	else{
-		if (!SendInternal(socket , "\r\n", 2))
+		if (!SendInternal(mSocket , "\r\n", 2))
 			return false;
 	}
 	if (sBody && uBodyLen){
-		if (!SendInternal(socket , sBody, uBodyLen))
+		if (!SendInternal(mSocket , sBody, uBodyLen))
 			return false;
 	}
 	else{
-		if (!SendInternal(socket , "\r\n", 2))
+		if (!SendInternal(mSocket , "\r\n", 2))
 			return false;
 	}
 	return true;

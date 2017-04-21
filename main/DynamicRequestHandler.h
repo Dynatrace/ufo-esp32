@@ -2,6 +2,7 @@
 #define MAIN_DYNAMICREQUESTHANDLER_H_
 
 #include "UrlParser.h"
+#include "HttpResponse.h"
 #include <string>
 #include <list>
 
@@ -13,10 +14,11 @@ public:
 	DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2);
 	virtual ~DynamicRequestHandler();
 
-	__uint8_t HandleApiRequest(std::list<TParam>& params, std::string& body);
-	__uint8_t HandleApiListRequest(std::list<TParam>& params, std::string& body);
-	__uint8_t HandleInfoRequest(std::list<TParam>& params, std::string& body);
-	__uint8_t HandleConfigRequest(std::list<TParam>& params, std::string& body);
+	bool HandleApiRequest(std::list<TParam>& params, HttpResponse& rResponse);
+	bool HandleApiListRequest(std::list<TParam>& params, HttpResponse& rResponse);
+	bool HandleApiEditRequest(std::list<TParam>& params, HttpResponse& rResponse);
+	bool HandleInfoRequest(std::list<TParam>& params, HttpResponse& rResponse);
+	bool HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse);
 
 	void CheckForRestart();
 

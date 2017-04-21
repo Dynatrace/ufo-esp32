@@ -10,20 +10,26 @@
 
 #include "nvs.h"
 #include <string>
+#include <list>
 
 class ApiStore {
 public:
 	ApiStore();
 	virtual ~ApiStore();
 
-	bool SetApi(__uint8_t uId, std::string& rsApi);
+	void Init();
+
+	bool SetApi(__uint8_t uId, const char* sApi);
 	bool DeleteApi(__uint8_t uId);
 
-	__uint8_t GetApiCount();
-	bool GetApi(__uint8_t uId, std::string& rApi);
+	void GetApisJson(std::string& rsBody);
 
 private:
-	bool ReadString(nvs_handle h, const char* sKey, std::string& rsValue);
+	bool ReadApis();
+	bool WriteApis();
+
+private:
+	std::list<std::string> mApis;
 
 };
 
