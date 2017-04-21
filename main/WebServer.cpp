@@ -35,6 +35,26 @@ WebServer::~WebServer() {
 bool WebServer::Start(__uint16_t port){
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
+	/*SSL_CTX* ctx;
+    SSL* ssl;
+
+	if (1){//secure?
+		ctx = SSL_CTX_new(TLS_server_method());
+    	if (!ctx) {
+        	ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
+			return false;
+		}
+		ret = SSL_CTX_use_certificate_ASN1(ctx, certpem_h, sizeof(certpem_h));
+    	if (!ret) {
+			ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
+			return false;
+		}
+		ret = SSL_CTX_use_PrivateKey_ASN1(0, ctx, keypem_h, sizeof(keypem_h));
+		if (!ret) {
+			ESP_LOGI(TAG, "failed");
+			goto failed2;
+		}
+    }*/
 
 	// Create a socket that we will listen upon.
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
