@@ -6,6 +6,7 @@
 #include <lwip/sockets.h>
 #include <esp_log.h>
 #include <string.h>
+//#include "openssl/ssl.h"
 
 #include "sdkconfig.h"
 #include "fontwoff.h"
@@ -13,6 +14,8 @@
 #include "fontsvg.h"
 #include "fonteot.h"
 #include "indexhtml.h"
+//#include "keypem.h"
+//#include "certpem.h"
 
 static char tag[] = "WebServer";
 
