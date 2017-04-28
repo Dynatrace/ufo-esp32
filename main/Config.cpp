@@ -16,6 +16,9 @@ Config::Config() {
 	msSTASsid = WIFI_SSID;
 	msSTAPass = WIFI_PASS;
 
+	mbWebServerUseSsl = false;
+	muWebServerPort = 0;
+
 	muLastSTAIpAddress = 0;
 }
 

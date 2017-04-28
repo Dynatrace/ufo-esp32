@@ -28,7 +28,7 @@
 
 #include "mbedtls/platform.h"
 #include "mbedtls/net.h"
-#include "mbedtls/esp_debug.h"
+//#include "mbedtls/esp_debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
@@ -242,7 +242,7 @@ bool WebClient::HttpExecuteSecure() {
 	mbedtls_ssl_conf_ca_chain(&conf, &cacert, NULL);
 	mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
 #ifdef CONFIG_MBEDTLS_DEBUG
-	mbedtls_esp_enable_debug_log(&conf, 4);
+	//mbedtls_esp_enable_debug_log(&conf, 4);
 #endif
 
 	if ((ret = mbedtls_ssl_setup(&ssl, &conf)) != 0) {

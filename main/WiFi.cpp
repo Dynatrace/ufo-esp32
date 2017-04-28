@@ -93,6 +93,10 @@ void Wifi::StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std:
 
 void Wifi::Connect(){
 	ESP_LOGD(tag, "  Connect(<%s><%s><%s><%d>)", msSsid.data(), msUser.data(), msPass.data(), msCA.length());
+	ESP_LOGD(tag, "-----------------------");
+	ESP_LOGD(tag, "%s", msCA.data());
+	ESP_LOGD(tag, "-----------------------");
+	
 
 	nvs_flash_init();
 	tcpip_adapter_init();

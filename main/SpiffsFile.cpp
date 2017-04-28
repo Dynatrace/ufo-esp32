@@ -26,7 +26,9 @@ SpiffsFile::~SpiffsFile() {
 
 bool SpiffsFile::Open(std::string s) {
 	fileHandle = SPIFFS_open(&SpiffsFileSystem::fs, s.c_str(), SPIFFS_CREAT | SPIFFS_TRUNC | SPIFFS_RDWR, 0);
-	return fileHandle != NULL;
+	//return fileHandle != NULL; HS - compile error
+	//guess a negative value is an error. 0 is SPIFFS_OK and would not make much sense as filehandle but lets accept it
+	return  fileHandle >= SPIFFS_OK;
 }
 
 int SpiffsFile::Write(char* data, int size) {

@@ -1,18 +1,17 @@
-#include "HttpParser.h"
+#include "HttpRequestParser.h"
 #include "freertos/FreeRTOS.h"
 
 
-
-HttpParser::HttpParser(int socket) {
+HttpRequestParser::HttpRequestParser(int socket) {
 	mSocket = socket;
 
 	Init();
 }
 
-HttpParser::~HttpParser() {
+HttpRequestParser::~HttpRequestParser() {
 }
 
-void HttpParser::Init(){
+void HttpRequestParser::Init(){
 	Clear();
 
 	muError = 0;
@@ -27,13 +26,13 @@ void HttpParser::Init(){
 	mStringParser.AddStringToParse("post");
 }
 
-void HttpParser::Clear(){
+void HttpRequestParser::Clear(){
 	mUrl.clear();
 	mParams.clear();
 	mBody.clear();
 }
 
-bool HttpParser::ParseRequest(char* sBuffer, __uint16_t uLen){
+bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 
 	__uint16_t uPos = 0;
 	while (uPos < uLen){

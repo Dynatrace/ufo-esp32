@@ -97,7 +97,6 @@ bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, Http
 		if (!mpUfo->GetApiStore().SetApi(uId, sNewApi))
 			rResponse.SetRetCode(500);
 	}
-	rResponse.AddHeader("Content-Type: text/html");
 	rResponse.AddHeader("Location: /");
 	rResponse.SetRetCode(302);
 	return rResponse.Send();
@@ -135,7 +134,7 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	}
 	mpUfo->GetWifi().GetMac((__uint8_t*)sHelp);
 	sprintf(sBuf, "\"macaddress\":\"%x:%x:%x:%x:%x:%x\",", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-	sBody += sBuf;
+	sBody += sBuf;	
 	sprintf(sBuf, "\"firmwareversion\":\"%s\"", FIRMWARE_VERSION);
 	sBody += sBuf;
 	sBody += '}';
@@ -146,46 +145,71 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 
 bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
+	const char* sWifiMode = NULL;
 	const char* sWifiSsid = NULL;
 	const char* sWifiPass = NULL;
-	const char* sWifiUser = NULL;
-	const char* sWifiCA = NULL;
+	const char* sWifiEntPass = NULL;
+	const char* sWifiEntUser = NULL;
+	const char* sWifiEntCA = NULL;
+
 	std::string sBody;
 
 	std::list<TParam>::iterator it = params.begin();
 	while (it != params.end()){
 
-		if ((*it).paramName == "wifissid")
+		if ((*it).paramName == "wifimode")
+			sWifiMode = (*it).paramValue.data();
+		else if ((*it).paramName == "wifissid")
 			sWifiSsid = (*it).paramValue.data();
 		else if ((*it).paramName == "wifipwd")
 			sWifiPass = (*it).paramValue.data();
-		else if ((*it).paramName == "wifiuser")
-			sWifiUser = (*it).paramValue.data();
-		else if ((*it).paramName == "wifica")
-			sWifiCA = (*it).paramValue.data();
+		else if ((*it).paramName == "wifientpwd")
+			sWifiEntPass = (*it).paramValue.data();
+		else if ((*it).paramName == "wifientuser")
+			sWifiEntUser = (*it).paramValue.data();
+		else if ((*it).paramName == "wifientca")
+			sWifiEntCA = (*it).paramValue.data();
 		it++;
 	}
-	if (sWifiSsid && sWifiPass){
+
+	bool bOk = false;
+	if (sWifiSsid){
 		mpUfo->GetConfig().msSTASsid = sWifiSsid;
-		mpUfo->GetConfig().msSTAPass = sWifiPass;
-		if (sWifiUser)
-			mpUfo->GetConfig().msSTAENTUser = sWifiUser;
-		else
-			mpUfo->GetConfig().msSTAENTUser.clear();
-		if (sWifiCA){
-			//ESP_LOGD("DynamicRequestHandler", "<%s>", sWifiCA);
-			mpUfo->GetConfig().msSTAENTCA = sWifiCA;
+
+		if (sWifiMode && (sWifiMode[0] == '2')){ //enterprise wap2
+			if (sWifiEntUser && (sWifiEntUser[0] != 0x00)){
+					mpUfo->GetConfig().msSTAENTUser = sWifiEntUser;
+				if (sWifiEntCA)
+					mpUfo->GetConfig().msSTAENTCA = sWifiEntCA;
+				else
+					mpUfo->GetConfig().msSTAENTCA.clear();
+				if (sWifiEntPass)
+					mpUfo->GetConfig().msSTAPass = sWifiEntPass;
+				else
+					mpUfo->GetConfig().msSTAPass.clear();
+				bOk = true;
+			}
 		}
-		else
-			mpUfo->GetConfig().msSTAENTCA.clear();
+		else{
+			if (sWifiPass)
+				mpUfo->GetConfig().msSTAPass = sWifiPass;
+			else
+				mpUfo->GetConfig().msSTAPass.clear();
+			bOk = true;
+		}
+	}
+	if (bOk){
 		mpUfo->GetConfig().mbAPMode = false;
 		mpUfo->GetConfig().Write();
 		mbRestart = true;
 		sBody = "Restarting......";
-
+		rResponse.SetRetCode(200);
+	}
+	else{
+		rResponse.AddHeader("Location: /#!pagewifisettings");
+		rResponse.SetRetCode(302);
 	}
 
-	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.data(), sBody.size());
 }
 

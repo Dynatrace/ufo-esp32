@@ -168,16 +168,42 @@
 			</ul>
 				
 				<form method='GET' action='/config'>
+				 
 					<div class="padded-full">
+
+						<ul class="list">
+							<li class="divider"></li>
+							<li class="padded-for-list">
+								<label class="radio">
+									<input type="radio" name="wifimode" value="1" id="wifimode1" onchange="wifiModeChange(1);" checked>
+									WPA/WPA2
+									<span></span>
+								</label>
+							</li>
+							<li class="padded-for-list">
+								<label class="radio">
+									<input type="radio" name="wifimode" value="2" id="wifimode2" onchange="wifiModeChange(2);">
+									WPA2-Enterprise
+									<span></span>
+								</label>
+							</li>
+							<li class="divider"></li>
+						</ul>
+    					
 						SSID:<br>
-						<input type="text" name="wifissid" placeholder="SSID" id="ssid" />
-						Password:<br>
-						<input type="text" name="wifipwd" placeholder="Password" id="wifipwd" />
-						Enterprise WPA2 User (optional):<br>
-						<input type="text" name="wifiuser" placeholder="Enterprise WPA2 User" id="enterpriseuser" />
-						Enterprise WPA2 Certificate Authority (optional):<br>
-						<textarea name="wifica"></textarea>
-						<!--input type="text" name="wifica" placeholder="Enterprise WPA2 CA" id="enterpriseca" /-->
+						<input type="text" name="wifissid" id="ssid" />
+						<div id="wpafields">
+							Password:<br>
+							<input type="password" name="wifipwd" id="wifipwd" />
+						</div>
+						<div id="enterprisefields" style='Display:None'>
+							Enterprise WPA2 User:<br>
+							<input type="text" name="wifientuser" id="enterpriseuser" />
+							Enterprise WPA2 Password:<br>
+							<input type="password" name="wifientpwd" id="enterprisepass" />
+							Enterprise WPA2 Certificate Authority (optional):<br>
+							<textarea name="wifientca"></textarea>
+						</div>
 					</div>
 					<div class="padded-full">
 						<button class="btn btn-submit fit-parent primary" type="submit">Apply WIFI settings and reboot.</button>
@@ -264,6 +290,17 @@
 	<script>
 		var editIt = function(apiid){
 			window.location.href= "#!pageapiedit/" + apiid;
+		}
+
+		var wifiModeChange = function(mode){
+			if (mode == 1){
+				document.getElementById('enterprisefields').style.display='none';
+				document.getElementById('wpafields').style.display='';
+			}
+			else{
+				document.getElementById('enterprisefields').style.display='';
+				document.getElementById('wpafields').style.display='none';
+			}
 		}
 	
 		phonon.options({

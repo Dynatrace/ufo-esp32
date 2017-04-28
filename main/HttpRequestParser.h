@@ -18,10 +18,10 @@
 #define STATE_CopyBody				8
 
 
-class HttpParser {
+class HttpRequestParser {
 public:
-	HttpParser(int socket);
-	virtual ~HttpParser();
+	HttpRequestParser(int socket);
+	virtual ~HttpRequestParser();
 
 	void Init();
 	void Clear();

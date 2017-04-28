@@ -1,12 +1,12 @@
 #include "WebServer.h"
-
-#include "HttpParser.h"
+#include "ufo.h"
+#include "config.h"
+#include "HttpRequestParser.h"
 #include "HttpResponse.h"
 #include "DynamicRequestHandler.h"
 #include <lwip/sockets.h>
 #include <esp_log.h>
 #include <string.h>
-//#include "openssl/ssl.h"
 
 #include "sdkconfig.h"
 #include "fontwoff.h"
@@ -14,10 +14,18 @@
 #include "fontsvg.h"
 #include "fonteot.h"
 #include "indexhtml.h"
-//#include "keypem.h"
-//#include "certpem.h"
+#include "keypem.h"
+#include "certpem.h"
 
 static char tag[] = "WebServer";
+
+   extern const unsigned char cacert_pem_start[] asm("_binary_cacert_pem_start");
+    extern const unsigned char cacert_pem_end[]   asm("_binary_cacert_pem_end");
+    const unsigned int cacert_pem_bytes = cacert_pem_end - cacert_pem_start;
+
+    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
+    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
+    const unsigned int prvtkey_pem_bytes = prvtkey_pem_end - prvtkey_pem_start;  
 
 struct TServerSocketPair{
 	WebServer* pServer;
@@ -29,35 +37,48 @@ void request_handler_function(void *pvParameter);
 //------------------------------------------------------------------
 
 WebServer::WebServer() {
-
+	mpSslCtx = NULL;
 }
 
 WebServer::~WebServer() {
+	SSL_CTX_free(mpSslCtx);
 }
 
-bool WebServer::Start(__uint16_t port){
+bool WebServer::Start(){
+	__uint16_t port; 
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
-	/*SSL_CTX* ctx;
-    SSL* ssl;
 
-	if (1){//secure?
-		ctx = SSL_CTX_new(TLS_server_method());
-    	if (!ctx) {
-        	ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
-			return false;
+	if (mpUfo->GetConfig().muWebServerPort)
+		port = mpUfo->GetConfig().muWebServerPort;
+	else
+		port = mpUfo->GetConfig().mbWebServerUseSsl ? 443 : 80;
+		
+	if (mpUfo->GetConfig().mbWebServerUseSsl){
+
+		if (!mpSslCtx){
+			mpSslCtx = SSL_CTX_new(TLS_server_method());
+			if (!mpSslCtx) {
+				ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
+				return false;
+			}
+			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  cacert_pem_bytes, cacert_pem_start)){
+			//if (!SSL_CTX_use_certificate_ASN1(mpSslCtx, sizeof(certpem_h), (const unsigned char*)certpem_h)){
+				ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
+				SSL_CTX_free(mpSslCtx);
+				mpSslCtx = NULL;
+				return false;
+			}
+			if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, prvtkey_pem_start, prvtkey_pem_bytes)){
+			//if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, (const unsigned char*)keypem_h, sizeof(keypem_h))){
+				ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
+				SSL_CTX_free(mpSslCtx);
+				mpSslCtx = NULL;
+				return false;
+			}
+			port = 443;
 		}
-		ret = SSL_CTX_use_certificate_ASN1(ctx, certpem_h, sizeof(certpem_h));
-    	if (!ret) {
-			ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
-			return false;
-		}
-		ret = SSL_CTX_use_PrivateKey_ASN1(0, ctx, keypem_h, sizeof(keypem_h));
-		if (!ret) {
-			ESP_LOGI(TAG, "failed");
-			goto failed2;
-		}
-    }*/
+	}
 
 	// Create a socket that we will listen upon.
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -73,6 +94,7 @@ bool WebServer::Start(__uint16_t port){
 	int rc  = bind(sock, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 	if (rc < 0) {
 		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
+		close(sock);
 		return false;
 	}
 
@@ -80,35 +102,36 @@ bool WebServer::Start(__uint16_t port){
 	rc = listen(sock, 5);
 	if (rc < 0) {
 		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
+		close(sock);
 		return false;
 	}
 	printf("started listening\n");
 
 	while (1) {
+		
 		// Listen for a new client connection.
 		socklen_t clientAddressLength = sizeof(clientAddress);
 		int clientSock = accept(sock, (struct sockaddr *)&clientAddress, &clientAddressLength);
 		if (clientSock < 0) {
 			ESP_LOGE(tag, "accept: %d %s", clientSock, strerror(errno));
+			close(sock);
 			return false;
 		}
 		ESP_LOGD(tag, "new connection\n");
 
-		TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
+ 		TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
 		pServerSocketPair->pServer = this;
 		pServerSocketPair->socket = clientSock;
-		xTaskCreate(&request_handler_function, "WebSocketHandler", 4096, pServerSocketPair, 5, NULL);
+		xTaskCreate(&request_handler_function, "WebSocketHandler", 10240, pServerSocketPair, 5, NULL);
 	}
-
-	//vTaskDelete(NULL);
 }
 
 void request_handler_function(void *pvParameter)
 {
 	TServerSocketPair* serverSocket = (TServerSocketPair*)pvParameter;
 	serverSocket->pServer->WebRequestHandler(serverSocket->socket);
-	vTaskDelete(NULL);
 	delete serverSocket;
+	vTaskDelete(NULL);
 }
 
 void WebServer::WebRequestHandler(int socket){
@@ -116,95 +139,107 @@ void WebServer::WebRequestHandler(int socket){
 	// We now have a new client ...
 	int total =	1024;
 	char *data = (char*)malloc(total);
-	HttpParser httpParser(socket);
+	HttpRequestParser httpParser(socket);
 	HttpResponse httpResponse;
 	DynamicRequestHandler requestHandler(mpUfo, mpDisplayCharterLevel1, mpDisplayCharterLevel2);
+	SSL* ssl = NULL;
 
+	if (mpSslCtx){
+		ssl = SSL_new(mpSslCtx);
+		if (!ssl) {
+			ESP_LOGE(tag, "SSL_new: %s", strerror(errno));
+			goto EXIT;
+		}
+
+		SSL_set_fd(ssl, socket);
+
+		if (!SSL_accept(ssl)){
+			ESP_LOGE(tag, "SSL_accept: %s", strerror(errno));
+			goto EXIT;
+		}
+	}
+	ESP_LOGD(tag, "Socket Accepted");
 
 	while (1){
 		httpParser.Init();
 
 		while(1) {
-			ssize_t sizeRead = recv(socket, data, total, 0);
+			ssize_t sizeRead;
+			if (ssl)
+				sizeRead = SSL_read(ssl, data, total);
+			else
+				sizeRead = recv(socket, data, total, 0);
+
 			if (sizeRead <= 0) {
 				ESP_LOGE(tag, "Connection closed during parsing");
-				free(data);
-				close(socket);
-				return;
+				goto EXIT;
 			}
 			if (!httpParser.ParseRequest(data, sizeRead)){
 				ESP_LOGE(tag, "HTTP Parsing error: %d", httpParser.GetError());
-				free(data);
-				close(socket);
-				return;
+				goto EXIT;
 			}
 			if (httpParser.RequestFinished()){
 				break;
 			}
 		}
-		// request parsed
 
+		ESP_LOGD(tag, "Request parsed: %s", httpParser.GetUrl().data());
+
+		if (ssl)
+			httpResponse.Init(ssl, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+		else
+			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+		
 		if (!httpParser.GetUrl().compare("/") || !httpParser.GetUrl().compare("/index.html")){
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			httpResponse.AddHeader("Content-Type: text/html");
 			httpResponse.AddHeader("Content-Encoding: gzip");
 			if (!httpResponse.Send(indexhtml_h, sizeof(indexhtml_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(fontwoff_h, sizeof(fontwoff_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.ttf")){
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(fontttf_h, sizeof(fontttf_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.eot")){
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(fonteot_h, sizeof(fonteot_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.svg")){
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/api")){
 			std::string sBody;
-			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/apilist")){
 			std::string sBody;
-			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!requestHandler.HandleApiListRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/apiedit")){
 			std::string sBody;
-			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!requestHandler.HandleApiEditRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/info")){
 			std::string sBody;
-			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!requestHandler.HandleInfoRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/config")){
 			std::string sBody;
-			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 
 		else if (!httpParser.GetUrl().compare("/test")){
 			std::string sBody;
-			httpResponse.Init(socket, 200, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 			sBody = httpParser.IsGet() ? "GET " : "POST ";
 			sBody += httpParser.GetUrl();
 			sBody += httpParser.IsHttp11() ? " HTTP/1.1" : "HTTP/1.0";
@@ -222,7 +257,7 @@ void WebServer::WebRequestHandler(int socket){
 				break;
 		}
 		else{
-			httpResponse.Init(socket, 404, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+			httpResponse.SetRetCode(404);
 			if (!httpResponse.Send(NULL, 0))
 				break;
 		}
@@ -234,6 +269,10 @@ void WebServer::WebRequestHandler(int socket){
 			break;
 		}
 	}
+
+EXIT:
+	if (ssl)
+		SSL_free(ssl);
 
 	free(data);
 	close(socket);
