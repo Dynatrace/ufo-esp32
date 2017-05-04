@@ -42,3 +42,5 @@ main/fonteot.h
 main/indexhtml.h
 main/wavdata.h
 sdkconfig.old
+main/keypem.h
+main/certpem.h
