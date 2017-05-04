@@ -121,8 +121,9 @@ bool Ota::UpdateFirmware(std::string sUrl)
 
 	ESP_LOGI(LOGTAG, "Retrieve firmware from: %s", url.GetUrl().c_str());
 	mWebClient.Prepare(&url);
+	mWebClient.SetDownloadHandler(this);
 
-    if (!mWebClient.HttpExecute(this)) {
+    if (!mWebClient.HttpGet()) {
       	ESP_LOGE(LOGTAG, "Error in HttpExecute()")
       			return false;
     }
