@@ -54,68 +54,70 @@ static void __attribute__((noreturn)) task_fatal_error()
 bool Ota::OnReceiveBegin() {
     ESP_LOGI(LOGTAG, "Starting OTA example...");
 
-	/*esp_err_t err;
+	esp_err_t err;
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
 
-    assert(configured == running); // fresh from reset, should be running from configured boot partition
     ESP_LOGI(LOGTAG, "Running partition type %d subtype %d (offset 0x%08x)",
              configured->type, configured->subtype, configured->address);
 
-    update_partition = esp_ota_get_next_update_partition(NULL);
+    mpUpdatePartition = esp_ota_get_next_update_partition(NULL);
+    if (mpUpdatePartition == NULL) {
+        ESP_LOGE(LOGTAG, "could not get next update partition");
+    	return false;
+    }
 
     ESP_LOGI(LOGTAG, "Writing to partition subtype %d at offset 0x%x",
-             update_partition->subtype, update_partition->address);
-    assert(update_partition != NULL);
+             mpUpdatePartition->subtype, mpUpdatePartition->address);
 
-    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+
+    err = esp_ota_begin(mpUpdatePartition, OTA_SIZE_UNKNOWN, &mOtaHandle);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_begin failed, error=%d", err);
         task_fatal_error();
+        return false;
     }
-    ESP_LOGI(LOGTAG, "esp_ota_begin succeeded"); */
-    dummy = "";
+    ESP_LOGI(LOGTAG, "esp_ota_begin succeeded");
     return true;
 }
 
 bool Ota::OnReceiveData(char* buf, int len) {
-	//esp_err_t err;
-    //err = esp_ota_write( update_handle, (const void *)buf, len);
-    ESP_LOGI(LOGTAG, "Have written image length %d", len);
+	esp_err_t err;
+    err = esp_ota_write( mOtaHandle, (const void *)buf, len);
+    if (err == ESP_ERR_INVALID_SIZE) {
+    	ESP_LOGE(LOGTAG, "Error partition too small for firmware data: %d", muDataLength + len );
+    } else if (err != ESP_OK) {
+    	ESP_LOGE(LOGTAG, "Error writing data: %d", err);
+    	return false;
+    }
     muDataLength += len;
-    //return err == ESP_OK;
-
-    //dummy.append(buf, 0, len);
-    //ESP_LOGI(LOGTAG, "DATA: %s", dummy.c_str());
-
-
-    return true;
+    ESP_LOGD(LOGTAG, "Have written image length %d, total %d", len, muDataLength);
+    return err == ESP_OK;
 }
 
 void Ota::OnReceiveEnd() {
     ESP_LOGI(LOGTAG, "Total Write binary data length : %u", muDataLength);
     //ESP_LOGI(LOGTAG, "DATA: %s", dummy.c_str());
-/*
+
     esp_err_t err;
 
-    if (esp_ota_end(update_handle) != ESP_OK) {
+    if (esp_ota_end(mOtaHandle) != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_end failed!");
         task_fatal_error();
     }
-    err = esp_ota_set_boot_partition(update_partition);
+    err = esp_ota_set_boot_partition(mpUpdatePartition);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
         task_fatal_error();
     }
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
-    esp_restart(); */
+    mbUpdateSuccess = true;
 }
 
 
 
 bool Ota::UpdateFirmware(std::string sUrl)
 {
-	ESP_LOGI(LOGTAG, "OTA not yet fully implemented --- testing DownloadHandler right now");
 	Url url;
 	url.Parse(sUrl);
 
@@ -127,9 +129,32 @@ bool Ota::UpdateFirmware(std::string sUrl)
       	ESP_LOGE(LOGTAG, "Error in HttpExecute()")
       			return false;
     }
-    return true;
+
+	ESP_LOGI(LOGTAG, "UpdateFirmware finished. downloaded %u bytes, success %s" , muDataLength, mbUpdateSuccess ? "yeah!": "uhhh!");
+
+    return mbUpdateSuccess;
+
+}
+
+/*
+void task_function_firmwareupdate(void* user_data) {
+	ESP_LOGW(LOGTAG, "Starting Firmware Update Task ....");
+
+  	Ota ota;
+    if(ota.UpdateFirmware("http://surpro4:9999/getfirmware")) {
+	  	ESP_LOGI(LOGTAG, "AFTER OTA STUFF---- RESTARTING IN 2 SEC");
+		vTaskDelay(2*1000 / portTICK_PERIOD_MS);
+		esp_restart();
+    } else {
+    	//TODO add ota.GetErrorInfo() to inform end-user of problem
+	  	ESP_LOGE(LOGTAG, "OTA update failed!");
+    }
 
 }
 
 
 
+void Ota::StartUpdateFirmwareTask() {
+	xTaskCreate(&task_function_firmwareupdate, "firmwareupdate", 4096, NULL, 5, NULL);
+}
+*/
