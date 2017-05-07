@@ -122,6 +122,15 @@
 		</header>
 		<div class="content">
 			<div class="input-wrapper list">
+				<ul class="list">
+					<li class="divider">from update server</li>
+					<li class="padded-list">
+						<span class="padded-list">download and update</span>
+						<button class="btn btn-flat primary" id="firmwareupdate">update</button>
+					</li>
+					<li class="divider">manual update</li>
+				</ul>
+
 				<form method='POST' action='/update' enctype='multipart/form-data'>
 					<span class="padded-list">Select firmware file like ufo.ino.bin or index.html (do not upload the ufo.spiffs.bin here)</span>
 					<li>
@@ -355,9 +364,25 @@
 					}
 
 				}; 
+
+				var onFirmwareUpdate = function (evt) {
+					var req = phonon.ajax({
+						method: 'GET',
+						url: 'firmware?update',
+						success: function (res, xhr) {
+							console.log(res);
+						},
+
+						error: function (res, flagError, xhr) {
+							console.error(flagError);
+							console.log(res);
+						}
+					});
+				};
 				
 				activity.onCreate(function() {
-				
+					document.querySelector('#firmwareupdate').on('tap', onFirmwareUpdate);
+
 					var req = phonon.ajax({
 						method: 'GET',
 						url: 'apilist',

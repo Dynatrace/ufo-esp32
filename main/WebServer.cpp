@@ -197,18 +197,22 @@ void WebServer::WebRequestHandler(int socket){
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
+			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontwoff_h, sizeof(fontwoff_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.ttf")){
+			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontttf_h, sizeof(fontttf_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.eot")){
+			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fonteot_h, sizeof(fonteot_h)))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.svg")){
+			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
@@ -236,7 +240,12 @@ void WebServer::WebRequestHandler(int socket){
 			std::string sBody;
 			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
+		} 
+		else if (!httpParser.GetUrl().compare("/firmware")) {
+			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
+				break;
 		}
+
 
 		else if (!httpParser.GetUrl().compare("/test")){
 			std::string sBody;

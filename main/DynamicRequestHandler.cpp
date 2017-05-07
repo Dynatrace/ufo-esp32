@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "esp_system.h"
 #include <esp_log.h>
+#include "Ota.h"
 
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
@@ -62,6 +63,7 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 		it++;
 	}
 
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.data(), sBody.size());
 }
@@ -69,6 +71,8 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 bool DynamicRequestHandler::HandleApiListRequest(std::list<TParam>& params, HttpResponse& rResponse){
 	std::string sBody;
 	mpUfo->GetApiStore().GetApisJson(sBody);
+	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.data(), sBody.size());
 }
@@ -97,6 +101,7 @@ bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, Http
 		if (!mpUfo->GetApiStore().SetApi(uId, sNewApi))
 			rResponse.SetRetCode(500);
 	}
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.AddHeader("Location: /");
 	rResponse.SetRetCode(302);
 	return rResponse.Send();
@@ -139,6 +144,8 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += sBuf;
 	sBody += '}';
 
+	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.data(), sBody.size());
 }
@@ -151,6 +158,7 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	const char* sWifiEntPass = NULL;
 	const char* sWifiEntUser = NULL;
 	const char* sWifiEntCA = NULL;
+	const char* sWifiHostName = NULL;
 
 	std::string sBody;
 
@@ -169,6 +177,8 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			sWifiEntUser = (*it).paramValue.data();
 		else if ((*it).paramName == "wifientca")
 			sWifiEntCA = (*it).paramValue.data();
+		else if ((*it).paramName == "wifihostname")
+			sWifiHostName = (*it).paramValue.data();
 		it++;
 	}
 
@@ -198,6 +208,11 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			bOk = true;
 		}
 	}
+	if (sWifiHostName && mpUfo->GetConfig().msHostname.compare(sWifiHostName) != 0) {
+		mpUfo->GetConfig().msHostname = sWifiHostName;
+		bOk = true;
+	}
+
 	if (bOk){
 		mpUfo->GetConfig().mbAPMode = false;
 		mpUfo->GetConfig().Write();
@@ -210,8 +225,41 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 		rResponse.SetRetCode(302);
 	}
 
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	return rResponse.Send(sBody.data(), sBody.size());
 }
+
+
+
+bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response) {
+	std::list<TParam>::iterator it = params.begin();
+	std::string sBody;
+	response.SetRetCode(400); // invalid request
+	while (it != params.end()) {
+		if ((*it).paramName == "update") {
+			Ota ota;
+			if(ota.UpdateFirmware("https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin")) {
+				mbRestart = true;
+				sBody = "Firmware update process initiated......";
+				response.SetRetCode(200);
+			} else {
+				//TODO add ota.GetErrorInfo() to inform end-user of problem
+				sBody = "Firmware update failed. Rebooting anyway.";
+				response.SetRetCode(500);
+				mbRestart = true;
+			}
+		} else if ((*it).paramName == "check") {
+			//TODO implement firmware version check;
+			sBody = "not implemented";
+			response.SetRetCode(501); // not implemented
+		}
+		it++;
+	}
+	response.AddHeader(HttpResponse::HeaderNoCache);
+	response.AddHeader(HttpResponse::HeaderContentTypeJson);
+	return response.Send(sBody.data(), sBody.size());
+}
+
 
 void DynamicRequestHandler::CheckForRestart(){
 
