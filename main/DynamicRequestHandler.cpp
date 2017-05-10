@@ -238,7 +238,8 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 	while (it != params.end()) {
 		if ((*it).paramName == "update") {
 			Ota ota;
-			if(ota.UpdateFirmware("https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin")) {
+			//if(ota.UpdateFirmware("https://github.com/flyinggorilla/esp32gong/raw/master/firmware/ufo-esp32.bin")) {
+			if(ota.UpdateFirmware("https://surpro4:9999/getfirmware")) {
 				mbRestart = true;
 				sBody = "Firmware update process initiated......";
 				response.SetRetCode(200);

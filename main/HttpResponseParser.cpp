@@ -19,7 +19,8 @@
 #define STATE_CheckHeaderValue		6
 #define STATE_ReadContentLength		7
 #define STATE_ReadContentType		8
-#define STATE_CopyBody				9
+#define STATE_ReadLocation			9
+#define STATE_CopyBody			   10
 
 #define ERROR_OK 									0
 #define ERROR_HTTPRESPONSE_NOVALIDHTTP 				1
@@ -44,6 +45,7 @@ HttpResponseParser::~HttpResponseParser() {
 void HttpResponseParser::Init(DownloadHandler* pDownloadHandler, unsigned int maxBodyBufferSize) {
 	mpDownloadHandler = pDownloadHandler;
 	mBody.clear();
+	msLocation.clear();
 	muContentLength = 0;
 	muActualContentLength = 0;
 	muMaxBodyBufferSize = maxBodyBufferSize;
@@ -121,6 +123,7 @@ bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 				mStringParser.AddStringToParse("connection");
 				mStringParser.AddStringToParse("content-length");
 				mStringParser.AddStringToParse("content-type");
+				mStringParser.AddStringToParse("location");
 			} else {
 				if (++muCrlfCount == 4) {
 					if (mbContentLength && muContentLength == 0) {
@@ -134,10 +137,12 @@ bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 					ESP_LOGI(LOGTAG, "HEADER: content-type: %s", msContentType.c_str());
 					ESP_LOGI(LOGTAG, "HEADER: content-length: %u %s", muContentLength,
 							mbContentLength ? "" : "<no header set>");
-
+					if (msLocation.size()) {
+						ESP_LOGI(LOGTAG, "HEADER: location: %s", msLocation.c_str());
+					}
 					muParseState = STATE_CopyBody;
 					if (mpDownloadHandler) {
-						if (!mpDownloadHandler->OnReceiveBegin()) {
+						if (!mpDownloadHandler->OnReceiveBegin(muStatusCode, mbContentLength, muContentLength)) {
 							ESP_LOGW(LOGTAG, "DownloadHandler signaled to abort download begin.");
 							mbFinished = true;
 							return SetError(ERROR_DOWNLOADHANDLER_ONRECEIVEBEGIN_ABORT), false;
@@ -161,9 +166,12 @@ bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 						muParseState = STATE_ReadContentLength;
 						muContentLength = 0;
 						mbContentLength = true;
-					} else {
+					} else if (uFound == 2) {
 						muParseState = STATE_ReadContentType;
 						msContentType.clear();
+					} else if (uFound == 3) {
+						muParseState = STATE_ReadLocation;
+						msLocation.clear();
 					}
 				} else
 					muParseState = STATE_SkipHeader;
@@ -216,6 +224,17 @@ bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 				muParseState = STATE_SearchEndOfHeaderLine;
 			} else {
 				msContentType += c;
+			}
+			break;
+
+		case STATE_ReadLocation:
+			if ((c == 10) || (c == 13)) {
+				muCrlfCount = 1;
+				muParseState = STATE_SearchEndOfHeaderLine;
+	 			mbFinished = true;
+				return SetError(ERROR_OK), true; // drive immediate redirect
+			} else {
+				msLocation += c;
 			}
 			break;
 

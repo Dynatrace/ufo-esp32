@@ -113,17 +113,29 @@ void WebClient::PrepareRequest(std::string& sRequest) {
 unsigned short WebClient::HttpGet() {
 	mpPostData = NULL;
 	muPostDataSize = 0;
-	return HttpExecute();
+	unsigned short statuscode;
+
+	for (short redirects = 0; redirects < 5; redirects++) {
+		statuscode = HttpExecute();
+		if (statuscode != 302 && statuscode != 301) {
+			ESP_LOGI(LOGTAG, "HttpExecute* finished with %d", mHttpResponseParser.GetStatusCode());
+			return statuscode;
+		}
+		mpUrl->Parse(mHttpResponseParser.GetRedirectLocation());
+		ESP_LOGI(LOGTAG, "Redirecting to: %s", mHttpResponseParser.GetRedirectLocation().c_str());
+	}
+	return 399; // max redirects exceeded
+
 }
 
 
 unsigned short WebClient::HttpExecute() {
 
 	if (!mpUrl)
-		return 0;
+		return 1001;
 
 	if (mpUrl->GetHost().empty()) {
-		return 0;
+		return 1002;
 	}
 
 
@@ -144,7 +156,7 @@ unsigned short WebClient::HttpExecute() {
 
 	if (err != 0 || res == NULL) {
 		ESP_LOGE(LOGTAG, "DNS lookup failed err=%d res=%p", err, res);
-		return false;
+		return 1003;
 	}
 
 	// Code to print the resolved IP.
@@ -157,7 +169,7 @@ unsigned short WebClient::HttpExecute() {
 	if (socket < 0) {
 		ESP_LOGE(LOGTAG, "... Failed to allocate socket.");
 		freeaddrinfo(res);
-		return false;
+		return 1004;
 	}
 	ESP_LOGI(LOGTAG, "... allocated socket\r\n");
 
@@ -166,7 +178,7 @@ unsigned short WebClient::HttpExecute() {
 		ESP_LOGE(LOGTAG, "... socket connect failed errno=%d", errno);
 		close(socket);
 		freeaddrinfo(res);
-		return false;
+		return 1005;
 	}
 	ESP_LOGI(LOGTAG, "... connected");
 	freeaddrinfo(res);
@@ -181,7 +193,7 @@ unsigned short WebClient::HttpExecute() {
 	if (write(socket, sRequest.c_str(), sRequest.length()) < 0) {
 		ESP_LOGE(LOGTAG, "... socket send failed");
 		close(socket);
-		return false;
+		return 1006;
 	}
 	sRequest.clear(); // free memory
 
@@ -190,7 +202,7 @@ unsigned short WebClient::HttpExecute() {
 		if (write(socket, mpPostData, muPostDataSize) < 0) {
 			ESP_LOGE(LOGTAG, "... socket send post data failed");
 			close(socket);
-			return false;
+			return 1007;
 		}
 	}
 
@@ -206,7 +218,7 @@ unsigned short WebClient::HttpExecute() {
 		if (!mHttpResponseParser.ParseResponse(recv_buf, sizeRead)) {
 			ESP_LOGE(LOGTAG, "HTTP Parsing error: %d", mHttpResponseParser.GetError());
 			close(socket);
-			return false;
+			return 1008;
 		}
 	}
 
@@ -214,14 +226,15 @@ unsigned short WebClient::HttpExecute() {
 
 	close(socket);
 
-	return true;
+	return mHttpResponseParser.GetStatusCode();
 }
 
-bool WebClient::HttpExecuteSecure() {
+unsigned short WebClient::HttpExecuteSecure() {
 
 	std::string sRequest;
 
-	char buf[512];
+	char buf[512]; //TODO REMOVE EXTRA LARGE BUFFER AFTER TESTING
+	char* databuf = (char*)malloc(64*1024);
 	int ret, flags, len;
 
 	mbedtls_entropy_context entropy;
@@ -361,7 +374,11 @@ bool WebClient::HttpExecuteSecure() {
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
 
 	while (!mHttpResponseParser.ResponseFinished()) {
-		ret = mbedtls_ssl_read(&ssl, (unsigned char*)buf, sizeof(buf));
+		ESP_LOGI(LOGTAG, "before ssl_read");
+//ret = mbedtls_ssl_read(&ssl, (unsigned char*)buf, sizeof(buf));
+		ret = mbedtls_ssl_read(&ssl, (unsigned char*)databuf, 64*1024);
+		ESP_LOGI(LOGTAG, "after ssl_read ret=%d", ret);
+
 
 		if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE)
 			continue;
@@ -379,22 +396,25 @@ bool WebClient::HttpExecuteSecure() {
 
 		len = ret;
 
-		if (!mHttpResponseParser.ParseResponse(buf, len)) {
-			ESP_LOGE(LOGTAG, "HTTP Parsing error: %d", mHttpResponseParser.GetError());
+		//ESP_LOGI(LOGTAG, "invoking responseparse(buflen=%d)", len);
+		if (!mHttpResponseParser.ParseResponse(databuf, len)) {
+			ESP_LOGE(LOGTAG, "HTTP Error Code: %d", mHttpResponseParser.GetError());
 			goto exit;
 		}
+		//ESP_LOGI(LOGTAG, "responseparser actual length %d", mHttpResponseParser.GetContentLength());
 	}
 
 	mbedtls_ssl_close_notify(&ssl);
 
 	exit: mbedtls_ssl_session_reset(&ssl);
 	mbedtls_net_free(&server_fd);
+	free(databuf);
 
 	if (!mHttpResponseParser.ResponseFinished() && ret != 0) {
 		mbedtls_strerror(ret, buf, 100);
 		ESP_LOGE(LOGTAG, "Last MBEDTLS error was: -0x%x - %s", -ret, buf);
-		return false;
+		return 1010;
 	}
-	return true;
+	return mHttpResponseParser.GetStatusCode();
 
 }

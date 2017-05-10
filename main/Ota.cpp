@@ -51,7 +51,12 @@ static void __attribute__((noreturn)) task_fatal_error()
 }
 
 
-bool Ota::OnReceiveBegin() {
+bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
+	if (httpStatusCode != 200) {
+	    ESP_LOGE(LOGTAG, "Server responded with %d HTTP Status code. Aborting download.", httpStatusCode);
+	    return false;
+	}
+
     ESP_LOGI(LOGTAG, "Starting OTA example...");
 
 	esp_err_t err;
@@ -59,6 +64,8 @@ bool Ota::OnReceiveBegin() {
     const esp_partition_t *running = esp_ota_get_running_partition();
 
     ESP_LOGI(LOGTAG, "Running partition type %d subtype %d (offset 0x%08x)",
+             running->type, running->subtype, running->address);
+    ESP_LOGI(LOGTAG, "Configured boot partition type %d subtype %d (offset 0x%08x)",
              configured->type, configured->subtype, configured->address);
 
     mpUpdatePartition = esp_ota_get_next_update_partition(NULL);
@@ -74,28 +81,40 @@ bool Ota::OnReceiveBegin() {
     err = esp_ota_begin(mpUpdatePartition, OTA_SIZE_UNKNOWN, &mOtaHandle);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_begin failed, error=%d", err);
-        task_fatal_error();
+        //task_fatal_error();
+        mbUpdateFailed = true;
         return false;
     }
     ESP_LOGI(LOGTAG, "esp_ota_begin succeeded");
+    mbUpdateFailed = false;
     return true;
 }
 
 bool Ota::OnReceiveData(char* buf, int len) {
+    //ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
+ 
+	if (mbUpdateFailed)
+		return false;
+
 	esp_err_t err;
+    //ESP_LOGI(LOGTAG, "Before esp_ota_write");
     err = esp_ota_write( mOtaHandle, (const void *)buf, len);
     if (err == ESP_ERR_INVALID_SIZE) {
     	ESP_LOGE(LOGTAG, "Error partition too small for firmware data: %d", muDataLength + len );
     } else if (err != ESP_OK) {
     	ESP_LOGE(LOGTAG, "Error writing data: %d", err);
+        mbUpdateFailed = true;
     	return false;
     }
     muDataLength += len;
-    ESP_LOGD(LOGTAG, "Have written image length %d, total %d", len, muDataLength);
+    ESP_LOGI(LOGTAG, "Have written image length %d, total %d", len, muDataLength);
     return err == ESP_OK;
 }
 
 void Ota::OnReceiveEnd() {
+	if (mbUpdateFailed)
+		return;
+
     ESP_LOGI(LOGTAG, "Total Write binary data length : %u", muDataLength);
     //ESP_LOGI(LOGTAG, "DATA: %s", dummy.c_str());
 
@@ -103,15 +122,19 @@ void Ota::OnReceiveEnd() {
 
     if (esp_ota_end(mOtaHandle) != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_end failed!");
-        task_fatal_error();
+        //task_fatal_error();
+        mbUpdateFailed = true;
+        return false;
     }
     err = esp_ota_set_boot_partition(mpUpdatePartition);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
-        task_fatal_error();
+        //task_fatal_error();
+        mbUpdateFailed = true;
+        return false;
     }
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
-    mbUpdateSuccess = true;
+    mbUpdateFailed = false;
 }
 
 
@@ -130,9 +153,9 @@ bool Ota::UpdateFirmware(std::string sUrl)
       			return false;
     }
 
-	ESP_LOGI(LOGTAG, "UpdateFirmware finished. downloaded %u bytes, success %s" , muDataLength, mbUpdateSuccess ? "yeah!": "uhhh!");
+	ESP_LOGI(LOGTAG, "UpdateFirmware finished. downloaded %u bytes, %s" , muDataLength, mbUpdateFailed ? "uuuuh! failed.": "yeah! success!");
 
-    return mbUpdateSuccess;
+    return !mbUpdateFailed;
 
 }
 

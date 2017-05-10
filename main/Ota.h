@@ -27,7 +27,7 @@ public:
 	bool UpdateFirmware(std::string url);
 
 public:
-	bool OnReceiveBegin();
+	bool OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength);
 	void OnReceiveEnd();
 	bool OnReceiveData(char* buf, int len); // override DownloadHandler virtual method
 
@@ -36,7 +36,7 @@ private:
     esp_ota_handle_t mOtaHandle = 0 ;
     const esp_partition_t *mpUpdatePartition = NULL;
     unsigned int muDataLength = 0;
-    bool mbUpdateSuccess = false;
+    bool mbUpdateFailed = true;
 };
 
 #endif /* MAIN_OTA_H_ */
