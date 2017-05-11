@@ -44,3 +44,10 @@ main/wavdata.h
 sdkconfig.old
 main/keypem.h
 main/certpem.h
+
+#go
+go/pkg
+go/bin
+go/src/go*
+go/src/git*
+go/src/source*
