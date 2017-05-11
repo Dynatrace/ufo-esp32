@@ -125,7 +125,7 @@
 				<ul class="list">
 					<li class="divider">from update server</li>
 					<li class="padded-list">
-						<button class="btn btn-flat primary" id="firmware_update">download and update</button>
+						<button class="btn btn-flat primary" id="firmware_update"><a href="/firmware?update">download and update</a></button>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
@@ -370,7 +370,7 @@
 
 				}; 
 
-				var onFirmwareUpdate = function (evt) {
+			/*	var onFirmwareUpdate = function (evt) {
 					var req = phonon.ajax({
 						method: 'GET',
 						url: 'firmware?update',
@@ -383,7 +383,7 @@
 							console.log(res);
 						}
 					});
-				};
+				}; */
 
 				var onSwitchBootPartition = function (evt) {
 					var req = phonon.ajax({
@@ -416,7 +416,7 @@
 				};
 				
 				activity.onCreate(function() {
-					document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+					// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
 					document.querySelector('#firmware_restart').on('tap', onRestart);
 					document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
 

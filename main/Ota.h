@@ -11,19 +11,27 @@
 #include "DownloadHandler.h"
 #include "WebClient.h"
 
-
-
+#define OTA_PROGRESS_NOTYETSTARTED      -1
+#define OTA_PROGRESS_CONNECTIONERROR    -2
+#define OTA_PROGRESS_FLASHERROR	        -3
 
 class Ota : public DownloadHandler {
 public:
-	/*static void StartUpdateFirmwareTask();
-	static int  smErrorCode; //TODO this should provide "feedback" from the static class*/
+	static void StartUpdateFirmwareTask();
+	//static int  smErrorCode; //TODO this should provide "feedback" from the static class*/
+
+	/*
+	*   get firmware update progress in 0..100%
+	*   @returns in case of an error, it returns negative error codes
+	*/
+	static int GetProgress();
 
 public:
 	Ota();
 	virtual ~Ota();
 	bool UpdateFirmware(std::string url);
 	
+
 	bool SwitchBootPartition();
 
 public:
@@ -37,7 +45,9 @@ private:
 	WebClient mWebClient;
     esp_ota_handle_t mOtaHandle = 0 ;
     const esp_partition_t *mpUpdatePartition = NULL;
-    unsigned int muDataLength = 0;
+    unsigned int muActualDataLength = 0;
+	unsigned int muContentLength = 0;
+	static volatile int miProgress; 
 };
 
 #endif /* MAIN_OTA_H_ */

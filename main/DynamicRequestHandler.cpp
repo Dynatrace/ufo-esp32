@@ -6,8 +6,6 @@
 #include <esp_log.h>
 #include "Ota.h"
 
-#define LATEST_FIRMWARE_URL "https://10.10.29.131:9999/getfirmware"
-
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
 	mpDisplayCharterLevel1 = pDCLevel1;
@@ -239,18 +237,24 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 	response.SetRetCode(400); // invalid request
 	while (it != params.end()) {
 		if ((*it).paramName == "update") {
-			Ota ota;
-			//if(ota.UpdateFirmware("https://github.com/flyinggorilla/esp32gong/raw/master/firmware/ufo-esp32.bin")) {
-			if(ota.UpdateFirmware(LATEST_FIRMWARE_URL)) {
-				mbRestart = true;
-				sBody = "Firmware update process initiated......";
-				response.SetRetCode(200);
-			} else {
-				//TODO add ota.GetErrorInfo() to inform end-user of problem
-				sBody = "Firmware update failed. Rebooting anyway.";
-				response.SetRetCode(500);
-				mbRestart = true;
+			if (Ota::GetProgress() == OTA_PROGRESS_NOTYETSTARTED) {
+				Ota::StartUpdateFirmwareTask();
+				//TODO implement firmware version check;
 			}
+			sBody = "<html><head><title>Firmware update progress</title>"
+					"<meta http-equiv=\"refresh\" content=\"5; url=/firmware?progress\"></head><body>"
+					"<h1>Firmware update task initiated....</h1></body></html>";
+			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
+			response.SetRetCode(200);
+		} else if ((*it).paramName == "progress") {
+			sBody = "<html><head><title>Firmware update progress</title>"
+			        "<meta http-equiv=\"refresh\" content=\"5\"></head><body><h1>Progress: ";
+			char buf[64];
+			sprintf(buf, "%d%%", Ota::GetProgress());
+			sBody += buf;
+			sBody += "</h1></body><html>";
+			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
+			response.SetRetCode(200);
 		} else if ((*it).paramName == "check") {
 			//TODO implement firmware version check;
 			sBody = "not implemented";
@@ -278,7 +282,6 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 		it++;
 	}
 	response.AddHeader(HttpResponse::HeaderNoCache);
-	response.AddHeader(HttpResponse::HeaderContentTypeJson);
 	return response.Send(sBody.data(), sBody.size());
 }
 
