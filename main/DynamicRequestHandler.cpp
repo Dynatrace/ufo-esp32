@@ -6,6 +6,8 @@
 #include <esp_log.h>
 #include "Ota.h"
 
+#define LATEST_FIRMWARE_URL "https://10.10.29.131:9999/getfirmware"
+
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
 	mpDisplayCharterLevel1 = pDCLevel1;
@@ -239,7 +241,7 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 		if ((*it).paramName == "update") {
 			Ota ota;
 			//if(ota.UpdateFirmware("https://github.com/flyinggorilla/esp32gong/raw/master/firmware/ufo-esp32.bin")) {
-			if(ota.UpdateFirmware("https://surpro4:9999/getfirmware")) {
+			if(ota.UpdateFirmware(LATEST_FIRMWARE_URL)) {
 				mbRestart = true;
 				sBody = "Firmware update process initiated......";
 				response.SetRetCode(200);
@@ -253,6 +255,25 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 			//TODO implement firmware version check;
 			sBody = "not implemented";
 			response.SetRetCode(501); // not implemented
+		} else if ((*it).paramName == "restart") {
+			//TODO implement firmware version check;
+			sBody = "restarting...";
+			mbRestart = true;
+			response.SetRetCode(200);
+		} else if ((*it).paramName == "switchbootpartition") {
+			Ota ota;
+			if(ota.SwitchBootPartition()) {
+				mbRestart = true;
+				sBody = "Switching boot partition successful.";
+				response.SetRetCode(200);
+			} else {
+				//TODO add ota.GetErrorInfo() to inform end-user of problem
+				sBody = "Switching boot partition failed.";
+				response.SetRetCode(500);
+			}
+		} else {
+				sBody = "Invalid request.";
+				response.SetRetCode(400);
 		}
 		it++;
 	}

@@ -125,8 +125,13 @@
 				<ul class="list">
 					<li class="divider">from update server</li>
 					<li class="padded-list">
-						<span class="padded-list">download and update</span>
-						<button class="btn btn-flat primary" id="firmwareupdate">update</button>
+						<button class="btn btn-flat primary" id="firmware_update">download and update</button>
+					</li>
+					<li class="padded-list">
+						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
+					</li>
+					<li class="padded-list">
+						<button class="btn btn-flat primary" id="firmware_switchbootpartition">switch to previus firmware (if available)</button>
 					</li>
 					<li class="divider">manual update</li>
 				</ul>
@@ -379,9 +384,41 @@
 						}
 					});
 				};
+
+				var onSwitchBootPartition = function (evt) {
+					var req = phonon.ajax({
+						method: 'GET',
+						url: 'firmware?switchbootpartition',
+						success: function (res, xhr) {
+							console.log(res);
+						},
+
+						error: function (res, flagError, xhr) {
+							console.error(flagError);
+							console.log(res);
+						}
+					});
+				};
+
+				var onRestart = function (evt) {
+					var req = phonon.ajax({
+						method: 'GET',
+						url: 'firmware?restart',
+						success: function (res, xhr) {
+							console.log(res);
+						},
+
+						error: function (res, flagError, xhr) {
+							console.error(flagError);
+							console.log(res);
+						}
+					});
+				};
 				
 				activity.onCreate(function() {
-					document.querySelector('#firmwareupdate').on('tap', onFirmwareUpdate);
+					document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+					document.querySelector('#firmware_restart').on('tap', onRestart);
+					document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
 
 					var req = phonon.ajax({
 						method: 'GET',

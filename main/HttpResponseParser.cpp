@@ -30,6 +30,7 @@
 #define ERROR_ZEROCONTENTLENGTH						5
 #define ERROR_INVALIDHTTPTYPE						6
 #define ERROR_HTTPTYPENOTDETECTED					7
+#define ERROR_DOWNLOADHANDLER_ONRECEIVEEND_FAILED	8
 
 
 
@@ -70,7 +71,9 @@ bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 	if (uLen == 0) {
 		mbFinished = true;
 		if (mpDownloadHandler) {
-			mpDownloadHandler->OnReceiveEnd();
+			if (!mpDownloadHandler->OnReceiveEnd()) {
+				return SetError(ERROR_DOWNLOADHANDLER_ONRECEIVEEND_FAILED), false;
+			}
 		} else {
 			ESP_LOGI(LOGTAG, "BODY:<%s>", mBody.c_str());
 		}

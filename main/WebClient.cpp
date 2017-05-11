@@ -36,6 +36,7 @@
 #include "mbedtls/certs.h"
 
 #define DEFAULT_MAXRESPONSEDATASIZE 16*1024
+#define RECEIVE_BUFFER_SIZE 16*1024 
 
 static const char LOGTAG[] = "WebClient";
 
@@ -118,7 +119,7 @@ unsigned short WebClient::HttpGet() {
 	for (short redirects = 0; redirects < 5; redirects++) {
 		statuscode = HttpExecute();
 		if (statuscode != 302 && statuscode != 301) {
-			ESP_LOGI(LOGTAG, "HttpExecute* finished with %d", mHttpResponseParser.GetStatusCode());
+			ESP_LOGI(LOGTAG, "HttpExecute* finished with %u", mHttpResponseParser.GetStatusCode());
 			return statuscode;
 		}
 		mpUrl->Parse(mHttpResponseParser.GetRedirectLocation());
@@ -212,11 +213,13 @@ unsigned short WebClient::HttpExecute() {
 	// Read HTTP response
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
 
-	char recv_buf[1024];
+	//char recv_buf[1024];
+	std::string sReceiveBuf;
+	sReceiveBuf.resize(RECEIVE_BUFFER_SIZE);
 	while (!mHttpResponseParser.ResponseFinished()) {
-		size_t sizeRead = read(socket, recv_buf, sizeof(recv_buf));
-		if (!mHttpResponseParser.ParseResponse(recv_buf, sizeRead)) {
-			ESP_LOGE(LOGTAG, "HTTP Parsing error: %d", mHttpResponseParser.GetError());
+		size_t sizeRead = read(socket, (char*)sReceiveBuf.data(), sReceiveBuf.size());
+		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.data(), sizeRead)) {
+			ESP_LOGE(LOGTAG, "HTTP Response error: %d", mHttpResponseParser.GetError());
 			close(socket);
 			return 1008;
 		}
@@ -234,7 +237,8 @@ unsigned short WebClient::HttpExecuteSecure() {
 	std::string sRequest;
 
 	char buf[512]; //TODO REMOVE EXTRA LARGE BUFFER AFTER TESTING
-	char* databuf = (char*)malloc(64*1024);
+	std::string sReceiveBuf;
+
 	int ret, flags, len;
 
 	mbedtls_entropy_context entropy;
@@ -309,7 +313,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	ESP_LOGI(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
 	ESP_LOGI(LOGTAG, "Port as string '%s'", mpUrl->GetPortAsString().c_str());
-	if ((ret = mbedtls_net_connect(&server_fd, mpUrl->GetHost().c_str(), "443", MBEDTLS_NET_PROTO_TCP))
+	if ((ret = mbedtls_net_connect(&server_fd, mpUrl->GetHost().c_str(), mpUrl->GetPortAsString().c_str(), MBEDTLS_NET_PROTO_TCP))
 			!= 0) {
 		ESP_LOGE(LOGTAG, "mbedtls_net_connect returned -%x", -ret);
 		goto exit;
@@ -372,12 +376,13 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	// Read HTTP response
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
+	sReceiveBuf.resize(RECEIVE_BUFFER_SIZE);
 
 	while (!mHttpResponseParser.ResponseFinished()) {
-		ESP_LOGI(LOGTAG, "before ssl_read");
-//ret = mbedtls_ssl_read(&ssl, (unsigned char*)buf, sizeof(buf));
-		ret = mbedtls_ssl_read(&ssl, (unsigned char*)databuf, 64*1024);
-		ESP_LOGI(LOGTAG, "after ssl_read ret=%d", ret);
+		//ESP_LOGI(LOGTAG, "before ssl_read");
+		//ret = mbedtls_ssl_read(&ssl, (unsigned char*)buf, sizeof(buf));
+		ret = mbedtls_ssl_read(&ssl, (unsigned char*)sReceiveBuf.data(), sReceiveBuf.size());
+		//ESP_LOGI(LOGTAG, "after ssl_read ret=%d", ret);
 
 
 		if (ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE)
@@ -397,7 +402,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		len = ret;
 
 		//ESP_LOGI(LOGTAG, "invoking responseparse(buflen=%d)", len);
-		if (!mHttpResponseParser.ParseResponse(databuf, len)) {
+		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.data(), len)) {
 			ESP_LOGE(LOGTAG, "HTTP Error Code: %d", mHttpResponseParser.GetError());
 			goto exit;
 		}
@@ -408,7 +413,6 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	exit: mbedtls_ssl_session_reset(&ssl);
 	mbedtls_net_free(&server_fd);
-	free(databuf);
 
 	if (!mHttpResponseParser.ResponseFinished() && ret != 0) {
 		mbedtls_strerror(ret, buf, 100);

@@ -1,8 +1,6 @@
 /*
  * Ota.cpp
  *
- *  Created on: 11.04.2017
- *      Author: bernd
  */
 #include "Ota.h"
 
@@ -26,8 +24,8 @@
 
 #include "WebClient.h"
 
-#define BUFFSIZE 1024
-#define TEXT_BUFFSIZE 1024
+//#define BUFFSIZE 1024
+//#define TEXT_BUFFSIZE 1024
 
 static const char* LOGTAG = "ota";
 
@@ -40,22 +38,7 @@ Ota::~Ota() {
 }
 
 
-static void __attribute__((noreturn)) task_fatal_error()
-{
-    ESP_LOGE(LOGTAG, "Exiting task due to fatal error...");
-    (void)vTaskDelete(NULL);
-
-    while (1) {
-        ;
-    }
-}
-
-
 bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
-	if (httpStatusCode != 200) {
-	    ESP_LOGE(LOGTAG, "Server responded with %d HTTP Status code. Aborting download.", httpStatusCode);
-	    return false;
-	}
 
     ESP_LOGI(LOGTAG, "Starting OTA example...");
 
@@ -82,19 +65,14 @@ bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_begin failed, error=%d", err);
         //task_fatal_error();
-        mbUpdateFailed = true;
         return false;
     }
     ESP_LOGI(LOGTAG, "esp_ota_begin succeeded");
-    mbUpdateFailed = false;
     return true;
 }
 
 bool Ota::OnReceiveData(char* buf, int len) {
     //ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
- 
-	if (mbUpdateFailed)
-		return false;
 
 	esp_err_t err;
     //ESP_LOGI(LOGTAG, "Before esp_ota_write");
@@ -103,7 +81,6 @@ bool Ota::OnReceiveData(char* buf, int len) {
     	ESP_LOGE(LOGTAG, "Error partition too small for firmware data: %d", muDataLength + len );
     } else if (err != ESP_OK) {
     	ESP_LOGE(LOGTAG, "Error writing data: %d", err);
-        mbUpdateFailed = true;
     	return false;
     }
     muDataLength += len;
@@ -111,10 +88,7 @@ bool Ota::OnReceiveData(char* buf, int len) {
     return err == ESP_OK;
 }
 
-void Ota::OnReceiveEnd() {
-	if (mbUpdateFailed)
-		return;
-
+bool Ota::OnReceiveEnd() {
     ESP_LOGI(LOGTAG, "Total Write binary data length : %u", muDataLength);
     //ESP_LOGI(LOGTAG, "DATA: %s", dummy.c_str());
 
@@ -123,18 +97,16 @@ void Ota::OnReceiveEnd() {
     if (esp_ota_end(mOtaHandle) != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_end failed!");
         //task_fatal_error();
-        mbUpdateFailed = true;
         return false;
     }
     err = esp_ota_set_boot_partition(mpUpdatePartition);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
         //task_fatal_error();
-        mbUpdateFailed = true;
         return false;
     }
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
-    mbUpdateFailed = false;
+    return true;
 }
 
 
@@ -148,15 +120,46 @@ bool Ota::UpdateFirmware(std::string sUrl)
 	mWebClient.Prepare(&url);
 	mWebClient.SetDownloadHandler(this);
 
-    if (!mWebClient.HttpGet()) {
-      	ESP_LOGE(LOGTAG, "Error in HttpExecute()")
-      			return false;
+    unsigned short statuscode = mWebClient.HttpGet();
+    if (statuscode != 200) {
+      	ESP_LOGE(LOGTAG, "Ota update failed - error %u", statuscode)
+        // esp_reboot();
+      	return false;
     }
 
-	ESP_LOGI(LOGTAG, "UpdateFirmware finished. downloaded %u bytes, %s" , muDataLength, mbUpdateFailed ? "uuuuh! failed.": "yeah! success!");
+	ESP_LOGI(LOGTAG, "UpdateFirmware finished successfully. downloaded %u bytes" , muDataLength);
 
-    return !mbUpdateFailed;
+    return true;
 
+}
+
+bool Ota::SwitchBootPartition() {
+
+
+ 	esp_err_t err;
+    const esp_partition_t *configured = esp_ota_get_boot_partition();
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    
+
+    ESP_LOGI(LOGTAG, "Running partition type %d subtype %d (offset 0x%08x)",
+             running->type, running->subtype, running->address);
+    ESP_LOGI(LOGTAG, "Configured boot partition type %d subtype %d (offset 0x%08x)",
+             configured->type, configured->subtype, configured->address);
+
+    const esp_partition_t *switchto = esp_ota_get_next_update_partition(NULL);
+    if (switchto == NULL) {
+        ESP_LOGE(LOGTAG, "could not get next update partition");
+    	return false;
+    }
+
+    err = esp_ota_set_boot_partition(switchto);
+    if (err != ESP_OK) {
+        ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
+        //task_fatal_error();
+        return false;
+    }
+    ESP_LOGI(LOGTAG, "Partition switched. Prepare to restart system!");
+    return true;
 }
 
 /*
