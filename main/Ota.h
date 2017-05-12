@@ -14,6 +14,7 @@
 #define OTA_PROGRESS_NOTYETSTARTED      -1
 #define OTA_PROGRESS_CONNECTIONERROR    -2
 #define OTA_PROGRESS_FLASHERROR	        -3
+#define OTA_PROGRESS_FINISHEDSUCCESS  -200
 
 class Ota : public DownloadHandler {
 public:

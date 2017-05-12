@@ -127,7 +127,7 @@ bool Ota::OnReceiveEnd() {
         return false;
     }
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
-    miProgress = 100;
+    miProgress = OTA_PROGRESS_FINISHEDSUCCESS;
     return true;
 }
 
@@ -199,7 +199,8 @@ void task_function_firmwareupdate(void* user_data) {
 	  	ESP_LOGE(LOGTAG, "OTA update failed!");
     }
   
-    vTaskDelay(2*1000 / portTICK_PERIOD_MS);
+    // wait 10 seconds before rebooting to make sure client gets success info
+    vTaskDelay(10*1000 / portTICK_PERIOD_MS);
 	esp_restart();
 }
 

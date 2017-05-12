@@ -247,11 +247,16 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
 			response.SetRetCode(200);
 		} else if ((*it).paramName == "progress") {
-			sBody = "<html><head><title>Firmware update progress</title>"
-			        "<meta http-equiv=\"refresh\" content=\"5\"></head><body><h1>Progress: ";
-			char buf[64];
-			sprintf(buf, "%d%%", Ota::GetProgress());
-			sBody += buf;
+			if (Ota::GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS) {
+				sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+				        "<meta http-equiv=\"refresh\" content=\"20; url=/\"></head><body><h1>Progress: ";
+			} else {
+				sBody = "<html><head><title>Firmware update progress</title>"
+						"<meta http-equiv=\"refresh\" content=\"5\"></head><body><h1>Progress: ";
+				char buf[64];
+				sprintf(buf, "%d%%", Ota::GetProgress());
+				sBody += buf;
+			}
 			sBody += "</h1></body><html>";
 			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
 			response.SetRetCode(200);
