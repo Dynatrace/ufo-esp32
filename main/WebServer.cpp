@@ -191,7 +191,7 @@ void WebServer::WebRequestHandler(int socket){
 			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 		
 		if (!httpParser.GetUrl().compare("/") || !httpParser.GetUrl().compare("/index.html")){
-			httpResponse.AddHeader("Content-Type: text/html");
+			httpResponse.AddHeader(HttpResponse::HeaderContentTypeHtml);
 			httpResponse.AddHeader("Content-Encoding: gzip");
 			if (!httpResponse.Send(indexhtml_h, sizeof(indexhtml_h)))
 				break;
