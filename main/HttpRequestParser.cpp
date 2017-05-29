@@ -251,6 +251,13 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 }
 
 void HttpRequestParser::ProcessMultipartBody(char* sBuffer, __uint16_t uLen){
+	if (muActBodyLength + 8 + mBoundary.size() < muContentLength){
+		if (muActBodyLength + 8 + mBoundary.size() + uLen > muContentLength){
+			__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.size());
+			mBody.append(sBuffer, u);
+			return;
+		}
+		mBody.append(sBuffer, uLen);
+	}
 	muActBodyLength+= uLen;
-	mBody.append(sBuffer, uLen);
 }
