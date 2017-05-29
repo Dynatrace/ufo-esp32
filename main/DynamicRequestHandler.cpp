@@ -205,6 +205,8 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 				mpUfo->GetConfig().msSTAPass = sWifiPass;
 			else
 				mpUfo->GetConfig().msSTAPass.clear();
+			mpUfo->GetConfig().msSTAENTUser.clear();
+			mpUfo->GetConfig().msSTAENTCA.clear();
 			bOk = true;
 		}
 	}

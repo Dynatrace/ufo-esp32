@@ -247,7 +247,7 @@ void WebServer::WebRequestHandler(int socket){
 		}
 
 
-		else if (!httpParser.GetUrl().compare("/test")){
+		else if (!httpParser.GetUrl().compare("/update")){
 			std::string sBody;
 			sBody = httpParser.IsGet() ? "GET " : "POST ";
 			sBody += httpParser.GetUrl();
@@ -261,6 +261,13 @@ void WebServer::WebRequestHandler(int socket){
 				sBody += (*it).paramValue;
 				sBody += "\r\n";
 				it++;
+			}
+			if (!httpParser.IsGet()){
+				sBody += "Boundary:<";
+				sBody += httpParser.GetBoundary();
+				sBody += ">\r\n";
+				sBody += "Body:\r\n";
+				sBody += httpParser.GetBody();
 			}
 			if (!httpResponse.Send(sBody.data(), sBody.size()))
 				break;

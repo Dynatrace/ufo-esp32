@@ -1,5 +1,10 @@
 #include <freertos/FreeRTOS.h>
 #include "dotstarstripe.h"
+#include "Ufo.h"
+#include "DotstarStripe.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include <esp_log.h>
 
 DotstarStripe::DotstarStripe(__uint8_t count, gpio_num_t cl, gpio_num_t dt) {
 	clock = cl;
@@ -69,10 +74,13 @@ void DotstarStripe::SendByte(__uint8_t out){
       gpio_set_level(data, 1);
     else
       gpio_set_level(data, 0);
-
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;");
+	
     gpio_set_level(clock, 1);
     out <<= 1;
     gpio_set_level(clock, 0);
+		__asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;");
+	
   }
 }
 
