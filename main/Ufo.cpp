@@ -38,6 +38,7 @@ Ufo::~Ufo() {
 }
 
 void Ufo::Start(){
+	ESP_LOGD("UFO", "===============================================\n");
 	ESP_LOGD("UFO", "Start\n");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	mConfig.Read();
