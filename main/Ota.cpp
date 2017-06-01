@@ -24,7 +24,9 @@
 
 #include "WebClient.h"
 
-#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"
+//#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"  // testing with local go server
+#define LATEST_FIRMWARE_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"
+
 //#define BUFFSIZE 1024
 //#define TEXT_BUFFSIZE 1024
 
@@ -119,13 +121,18 @@ bool Ota::OnReceiveEnd() {
         //task_fatal_error();
         return false;
     }
+
+    ESP_LOGW(LOGTAG, "DEBUGGING CODE ACTIVE ---- NO BOOT PARTITION SET!!!!!");
+
+/*
     err = esp_ota_set_boot_partition(mpUpdatePartition);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
         miProgress = OTA_PROGRESS_FLASHERROR;
         //task_fatal_error();
         return false;
-    }
+    } */
+    
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
     miProgress = OTA_PROGRESS_FINISHEDSUCCESS;
     return true;
@@ -192,7 +199,6 @@ void task_function_firmwareupdate(void* user_data) {
 	ESP_LOGW(LOGTAG, "Starting Firmware Update Task ....");
 
     Ota ota;
-    //if(ota.UpdateFirmware("https://github.com/flyinggorilla/esp32gong/raw/master/firmware/ufo-esp32.bin")) {
     if(ota.UpdateFirmware(LATEST_FIRMWARE_URL)) {
       	ESP_LOGI(LOGTAG, "Firmware updated. Rebooting now......");
     } else {
