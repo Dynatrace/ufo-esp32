@@ -18,6 +18,7 @@
 #include <esp_event_loop.h>
 #include <esp_log.h>
 #include <esp_partition.h>
+#include <esp_system.h>
 
 #include <nvs.h>
 #include <nvs_flash.h>
@@ -35,11 +36,14 @@ static const char* LOGTAG = "ota";
 
 
 volatile int Ota::miProgress = OTA_PROGRESS_NOTYETSTARTED;
+volatile unsigned int Ota::muTimestamp = 0;
 int Ota::GetProgress() { return miProgress; }
+unsigned int Ota::GetTimestamp() { return muTimestamp; }
 
 
 Ota::Ota() {
     miProgress = OTA_PROGRESS_NOTYETSTARTED;
+    muTimestamp = esp_log_early_timestamp();
 }
 
 Ota::~Ota() {

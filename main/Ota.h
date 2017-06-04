@@ -27,6 +27,7 @@ public:
 	*   @returns in case of an error, it returns negative error codes
 	*/
 	static int GetProgress();
+	static unsigned int GetTimestamp();
 
 public:
 	Ota();
@@ -50,6 +51,7 @@ private:
     unsigned int muActualDataLength = 0;
 	unsigned int muContentLength = 0;
 	static volatile int miProgress; 
+	static volatile unsigned int muTimestamp;
 };
 
 #endif /* MAIN_OTA_H_ */

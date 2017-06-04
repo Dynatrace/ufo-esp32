@@ -30,7 +30,6 @@
 	<title>Dynatrace UFO</title>
 </head>
 
-
 <body>
 	<!-- the home page is the default one. This page does not require to call its content because we define on its tag.-->
 	<home data-page="true">
@@ -40,32 +39,32 @@
 			</div>
 		</header>
 
-		
+
 		<div class="content">
-		
+
 			<ul class="list">
 				<li class="divider">UFO communication APIs (REST calls)</li>
 				<div id='apis'>
-				<li>
-					<span class="padded-list" id='api_1'>/api?logo=ff0000|00ff00|0000ff|ffcc00</span>
-					<button class="btn btn-flat primary pull-right" id="onapi_1">SET</button>
-				</li>
-				<li>
-					<span class="padded-list" id='api_2'>/api?logo_reset</span>
-					<button class="btn btn-flat primary pull-right" id="onapi_2">SET</button>
-				</li>
-				<li>
-					<span class="padded-list" id='api_3'>/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5</span>
-					<button class="btn btn-flat primary pull-right" id="onapi_3">SET</button>
-				</li>
-				<li>
-					<span class="padded-list" id='api_4'>/api?top_init&top=0|15|ff0000&top_morph=100|8&bottom_init&bottom=0|15|ff0000&bottom_morph=100|8</span>
-					<button class="btn btn-flat primary pull-right" id="onapi_4">SET</button>
-				</li>
-				<li>
-					<span class="padded-list" id='api_5'>/api?top_init&bottom_init</span>
-					<button class="btn btn-flat primary pull-right" id="onapi_5">SET</button>
-				</li>
+					<li>
+						<span class="padded-list" id='api_1'>/api?logo=ff0000|00ff00|0000ff|ffcc00</span>
+						<button class="btn btn-flat primary pull-right" id="onapi_1">SET</button>
+					</li>
+					<li>
+						<span class="padded-list" id='api_2'>/api?logo_reset</span>
+						<button class="btn btn-flat primary pull-right" id="onapi_2">SET</button>
+					</li>
+					<li>
+						<span class="padded-list" id='api_3'>/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5</span>
+						<button class="btn btn-flat primary pull-right" id="onapi_3">SET</button>
+					</li>
+					<li>
+						<span class="padded-list" id='api_4'>/api?top_init&top=0|15|ff0000&top_morph=100|8&bottom_init&bottom=0|15|ff0000&bottom_morph=100|8</span>
+						<button class="btn btn-flat primary pull-right" id="onapi_4">SET</button>
+					</li>
+					<li>
+						<span class="padded-list" id='api_5'>/api?top_init&bottom_init</span>
+						<button class="btn btn-flat primary pull-right" id="onapi_5">SET</button>
+					</li>
 				</div>
 				<li class="divider">UFO machine room</li>
 				<li>
@@ -109,6 +108,7 @@
 				<li class="padded-list" id="liinfoipsubnetmask">Subnetmask: <span id="infoipsubnetmask">-</span></li>
 				<li class="padded-list" id="liinfoipgateway">Gateway: <span id="infoipgateway">-</span></li>
 				<li class="padded-list" id="liinfomacaddress">Macaddress: <span id="infomacaddress">-</span></li>
+				<li class="padded-list" id="liinfohostname">Hostname: <span id="infohostname">-</span></li>
 			</ul>
 		</div>
 	</pageinfo>
@@ -139,7 +139,7 @@
 				<form method='POST' action='/update' enctype='multipart/form-data'>
 					<span class="padded-list">Select firmware file like ufo.ino.bin or index.html (do not upload the ufo.spiffs.bin here)</span>
 					<li>
-						<input class="padded-full" type="file" name="update" id="firmwarefilename"/>
+						<input class="padded-full" type="file" name="update" id="firmwarefilename" />
 					</li>
 					<li>
 						<button class="btn btn-submit fit-parent primary" type="submit">Update</button>
@@ -159,30 +159,30 @@
 		</header>
 		<div class="content">
 			<div class="padded-full">
-			<ul style="color:dimgrey">
-				<b>Welcome to the Dynatrace UFO</b><br/>Firmware version: <span id="firmwareversion">---</span>
-				<p/><br/>
-				<span style="color:dimgrey">Please configure the Wifi settings of your UFO first. In order to access the UFO AFTER submitting the Wifi settings, you may do the following:</span>
-				<li>Option 1: Open your browser, make sure its connected to the same Wifi as the UFO. Goto <a href="http://ufo">http://ufo</a>
-				</li> 
-				<li>Option 2: The lower ring visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4) then
-					2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The IP is
-					visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization
-					run uses a different color.</li>
-				<li>Option 3: After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the info
-					section for the latest IP adress retrieved by DHCP.
-				</li>
-				<!-- no SSDP available right now  
+				<ul style="color:dimgrey">
+					<b>Welcome to the Dynatrace UFO</b><br/>Firmware version: <span id="firmwareversion">---</span>
+					<p/><br/>
+					<span style="color:dimgrey">Please configure the Wifi settings of your UFO first. In order to access the UFO AFTER submitting the Wifi settings, you may do the following:</span>
+					<li>Option 1: Open your browser, make sure its connected to the same Wifi as the UFO. Goto <a href="http://ufo">http://ufo</a>
+					</li>
+					<li>Option 2: The lower ring visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4)
+						then 2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The
+						IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization
+						run uses a different color.</li>
+					<li>Option 3: After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the
+						info section for the latest IP adress retrieved by DHCP.
+					</li>
+					<!-- no SSDP available right now  
 				<li>Option 3: Open Windows file explorer and click on "Network" to display all devices that are discovered through SSDP.
 				</li>
 				-->
-				<li>Option 4: Remember your MAC address <b><span id="macaddress">---</span></b> as you may want to lookup the IP address in
-					your Wifi Accesspoint.
-				</li>
-			</ul>
-				
+					<li>Option 4: Remember your MAC address <b><span id="macaddress">---</span></b> as you may want to lookup the IP address
+						in your Wifi Accesspoint.
+					</li>
+				</ul>
+
 				<form method='GET' action='/config'>
-				 
+
 					<div class="padded-full">
 
 						<ul class="list">
@@ -203,7 +203,7 @@
 							</li>
 							<li class="divider"></li>
 						</ul>
-    					
+
 						SSID:<br>
 						<input type="text" name="wifissid" id="ssid" />
 						<div id="wpafields">
@@ -212,11 +212,13 @@
 						</div>
 						<div id="enterprisefields" style='Display:None'>
 							Enterprise WPA2 User:<br>
-							<input type="text" name="wifientuser" id="enterpriseuser" />
-							Enterprise WPA2 Password:<br>
-							<input type="password" name="wifientpwd" id="enterprisepass" />
-							Enterprise WPA2 Certificate Authority (optional):<br>
+							<input type="text" name="wifientuser" id="enterpriseuser" /> Enterprise WPA2 Password:<br>
+							<input type="password" name="wifientpwd" id="enterprisepass" /> Enterprise WPA2 Certificate Authority (optional):<br>
 							<textarea name="wifientca"></textarea>
+						</div>
+						<div id="divwifihostname">
+							Hostname:<br>
+							<input type="text" name="hostname" placeholder="default=ufo" id="wifihostname" />
 						</div>
 					</div>
 					<div class="padded-full">
@@ -226,7 +228,7 @@
 			</div>
 		</div>
 	</pagewifisettings>
-	
+
 	<pageapiedit data-page="true">
 		<header class="header-bar">
 			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
@@ -236,12 +238,12 @@
 		</header>
 		<div class="content">
 			<div class="padded-full">
-				
+
 				<form method='GET' action='/apiedit'>
 					<div class="padded-full">
 						API:<br>
-						<input type='hidden' name='apiid' id="apieditid"/>
-						<input type="text" name="apiedit" id="apiedit" value = ""/>
+						<input type='hidden' name='apiid' id="apieditid" />
+						<input type="text" name="apiedit" id="apiedit" value="" />
 					</div>
 					<div class="padded-full">
 						<span class="padded-list"><button class="btn btn-submit primary" type="submit" name="save" value="1">SAVE</button></span>
@@ -263,20 +265,20 @@
 			<div class="input-wrapper list">
 				<form method='GET' action='/api'>
 					<div class="padded-full">
-                    <ul class="list">
-                        <li class="">
-                            <label class="checkbox">
+						<ul class="list">
+							<li class="">
+								<label class="checkbox">
                                 <input type="checkbox" class="" name="dynatrace-on" id="dynatrace-on">
                                 Enabled
                                 <span></span>
                             </label>
-                        </li>
-                    </ul>
-                    
-					<input type="text" name="dynatrace-environmentid" placeholder="environment-id" id="dynatrace-environmentid" />
-					<input type="password" name="dynatrace-apikey" placeholder="api-key" id="dynatrace-apikey" />
-					<input type="number" min="30" max="300" placeholder="interval in sec" name="dynatrace-interval" id="dynatrace-interval" />
-					<!--<ul class="list">
+							</li>
+						</ul>
+
+						<input type="text" name="dynatrace-environmentid" placeholder="environment-id" id="dynatrace-environmentid" />
+						<input type="password" name="dynatrace-apikey" placeholder="api-key" id="dynatrace-apikey" />
+						<input type="number" min="30" max="300" placeholder="interval in sec" name="dynatrace-interval" id="dynatrace-interval" />
+						<!--<ul class="list">
                         <li class="padded-for-list">
                             <label class="radio">
                                 <input type="radio" name="test">
@@ -285,7 +287,7 @@
                             </label>
                         </li>
 					 </ul>-->
-					 </div>
+					</div>
 					<div class="padded-full">
 						<button class="btn btn-submit fit-parent primary" type="submit">Apply settings.</button>
 					</div>
@@ -302,73 +304,73 @@
 	<!-- our app config -->
 	<!-- <script src="app.js"></script> -->
 	<script>
-		var editIt = function(apiid){
-			window.location.href= "#!pageapiedit/" + apiid;
+		var editIt = function (apiid) {
+			window.location.href = "#!pageapiedit/" + apiid;
 		}
 
-		var wifiModeChange = function(mode){
-			if (mode == 1){
-				document.getElementById('enterprisefields').style.display='none';
-				document.getElementById('wpafields').style.display='';
+		var wifiModeChange = function (mode) {
+			if (mode == 1) {
+				document.getElementById('enterprisefields').style.display = 'none';
+				document.getElementById('wpafields').style.display = '';
 			}
-			else{
-				document.getElementById('enterprisefields').style.display='';
-				document.getElementById('wpafields').style.display='none';
+			else {
+				document.getElementById('enterprisefields').style.display = '';
+				document.getElementById('wpafields').style.display = 'none';
 			}
 		}
-	
+
 		phonon.options({
-				navigator: {
-					defaultPage: 'home',
-					animatePages: true,
-					enableBrowserBackButton: true
-					//templateRootDirectory: ''
-				},
-				i18n: null // for this example, we do not use internationalization
-			});
+			navigator: {
+				defaultPage: 'home',
+				animatePages: true,
+				enableBrowserBackButton: true
+				//templateRootDirectory: ''
+			},
+			i18n: null // for this example, we do not use internationalization
+		});
 
 
-			var app = phonon.navigator();
+		var app = phonon.navigator();
 
-			/**
-			 * The activity scope is not mandatory.
-			 * For the home page, we do not need to perform actions during
-			 * page events such as onCreate, onReady, etc
-			*/
-			app.on({page: 'home', preventClose: false, content: null} , function(activity) {
-				var onApi = function(evt) {
-					var target = evt.target;
-					var id = target.getAttribute('id');
-					var parts = id.split('_');
-					console.log(parts);
-					if (parts.length == 2){
-						id = "#api_" + parts[1];
-						console.log(id);
-							
-						var apicall = document.querySelector(id).innerText;
-						
-						console.log(apicall);
+		/**
+		 * The activity scope is not mandatory.
+		 * For the home page, we do not need to perform actions during
+		 * page events such as onCreate, onReady, etc
+		*/
+		app.on({ page: 'home', preventClose: false, content: null }, function (activity) {
+			var onApi = function (evt) {
+				var target = evt.target;
+				var id = target.getAttribute('id');
+				var parts = id.split('_');
+				console.log(parts);
+				if (parts.length == 2) {
+					id = "#api_" + parts[1];
+					console.log(id);
 
-						var req = phonon.ajax({
-							method: 'GET',
-							url: apicall,
-							dataType: 'json',
-							//contentType: '',
-							//data: {'ssid': document.querySelector('#ssid').value, 'pwd': document.querySelector('#wifipwd').value}, 
-							//data: { 'key1': 'val1', 'key2': 'val2'},
-							//timeout: 5000,
-							success: function(res, xhr) {
-								console.log(res);
-							},
-							
-							error: function(res, flagError, xhr) {
-								console.error(flagError);
-								console.log(res);
-							}
-						}); 
-					}
+					var apicall = document.querySelector(id).innerText;
 
-				}; 
+					console.log(apicall);
+
+					var req = phonon.ajax({
+						method: 'GET',
+						url: apicall,
+						dataType: 'json',
+						//contentType: '',
+						//data: {'ssid': document.querySelector('#ssid').value, 'pwd': document.querySelector('#wifipwd').value}, 
+						//data: { 'key1': 'val1', 'key2': 'val2'},
+						//timeout: 5000,
+						success: function (res, xhr) {
+							console.log(res);
+						},
+
+						error: function (res, flagError, xhr) {
+							console.error(flagError);
+							console.log(res);
+						}
+					});
+				}
+
+			};
 
 			/*	var onFirmwareUpdate = function (evt) {
 					var req = phonon.ajax({
@@ -385,203 +387,210 @@
 					});
 				}; */
 
-				var onSwitchBootPartition = function (evt) {
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'firmware?switchbootpartition',
-						success: function (res, xhr) {
-							console.log(res);
-						},
+			var onSwitchBootPartition = function (evt) {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'firmware?switchbootpartition',
+					success: function (res, xhr) {
+						console.log(res);
+					},
 
-						error: function (res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					});
-				};
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			};
 
-				var onRestart = function (evt) {
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'firmware?restart',
-						success: function (res, xhr) {
-							console.log(res);
-						},
+			var onRestart = function (evt) {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'firmware?restart',
+					success: function (res, xhr) {
+						console.log(res);
+					},
 
-						error: function (res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					});
-				};
-				
-				activity.onCreate(function() {
-					// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
-					document.querySelector('#firmware_restart').on('tap', onRestart);
-					document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			};
 
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'apilist',
-						dataType: 'text/json',
-						success: function(res, xhr) {
-							console.log(xhr.response);
-							var result = JSON.parse(xhr.response);
-							
-							var newContent = "";
-							for (u=1 ; u<=result.apis.length ; u++){
-								newContent += "<li><span class='padded-list' id='api_";
-								newContent += u;
-								newContent += "'>"
-								newContent += result.apis[u-1];
-								newContent += "</span><button class='btn btn-flat primary pull-right' onclick='editIt(";
-								newContent += u;
-								newContent += ")'>EDIT</button><button class='btn btn-flat primary pull-right' id='onapi_";
-								newContent += u;
-								newContent += "'>SET</button></li>";
-							}
-							newContent += "<li><button class='btn btn-flat primary' onclick='editIt(";
+			activity.onCreate(function () {
+				// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+				document.querySelector('#firmware_restart').on('tap', onRestart);
+				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'apilist',
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+
+						var newContent = "";
+						for (u = 1; u <= result.apis.length; u++) {
+							newContent += "<li><span class='padded-list' id='api_";
 							newContent += u;
-							newContent += ")'>Add API</button></li>"
-							
-							var mydiv = document.querySelector('#apis');
-							mydiv.innerHTML = newContent;
-							
-							var apiid = '#onapi_';
-							for (u=1 ; u<=result.apis.length ; u++){
-								document.querySelector(apiid + u).on('tap', onApi);
-								document.querySelector(apiid + u).on('click', onApi);
-							}
-						
-						},
-						error: function(res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
+							newContent += "'>"
+							newContent += result.apis[u - 1];
+							newContent += "</span><button class='btn btn-flat primary pull-right' onclick='editIt(";
+							newContent += u;
+							newContent += ")'>EDIT</button><button class='btn btn-flat primary pull-right' id='onapi_";
+							newContent += u;
+							newContent += "'>SET</button></li>";
 						}
-					})
-				}) 
-			});
-			
-			document.on('pageopened', function(evt) {
-				console.log(evt.detail.page + ' is opened');
-				if (evt.detail.page == "pageinfo") {
-					
-						var req = phonon.ajax({
-						method: 'GET',
-						url: 'info',
-						//crossDomain: false,
-						dataType: 'text/json',
-						success: function(res, xhr) {
-							console.log(xhr.response);
-							var result = JSON.parse(xhr.response);
-							document.getElementById('infoheap').innerHTML = result.heap;
-							document.getElementById('infofirmwareversion').innerHTML = result.firmwareversion;
-							document.getElementById('infomacaddress').innerHTML = result.macaddress;
-							if (result.apmode)
-								document.getElementById('networkmode').innerHTML = 'Network - Access Point mode';
-							else
-								document.getElementById('networkmode').innerHTML = 'Network';
-							if (result.ssid){
-								document.getElementById('infossid').innerHTML = result.ssid;
-								delete document.getElementById('liinfossid').style;
-							}
-							else
-								document.getElementById('liinfossid').style='Display:None';
-							if (result.ipaddress){
-								document.getElementById('infoipaddress').innerHTML = result.ipaddress;
-								delete document.getElementById('liinfoipaddress').style;
-							}
-							else
-								document.getElementById('liinfoipaddress').style='Display:None';
-							if (result.ipgateway){
-								document.getElementById('infoipgateway').innerHTML = result.ipgateway;
-								delete document.getElementById('liinfoipgateway').style;
-							}
-							else
-								document.getElementById('liinfoipgateway').style='Display:None';
-							if (result.ipsubnetmask){
-								document.getElementById('infoipsubnetmask').innerHTML = result.ipsubnetmask;
-								delete document.getElementById('liinfoipsubnetmask').style;
-							}
-							else
-								document.getElementById('liinfoipsubnetmask').style='Display:None';
-							if (result.lastiptoap){
-								document.getElementById('infolastiptoap').innerHTML = result.lastiptoap;
-								delete document.getElementById('liinfolastiptoap').style;
-							}
-							else
-								document.getElementById('liinfolastiptoap').style='Display:None';
-								
-						
-						},
-						error: function(res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
+						newContent += "<li><button class='btn btn-flat primary' onclick='editIt(";
+						newContent += u;
+						newContent += ")'>Add API</button></li>"
+
+						var mydiv = document.querySelector('#apis');
+						mydiv.innerHTML = newContent;
+
+						var apiid = '#onapi_';
+						for (u = 1; u <= result.apis.length; u++) {
+							document.querySelector(apiid + u).on('tap', onApi);
+							document.querySelector(apiid + u).on('click', onApi);
 						}
-					}); 
-				}
-				if (evt.detail.page == "pagewifisettings") {
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'info',
-						dataType: 'text/json',
-						success: function(res, xhr) {
-							console.log(xhr.response);
-                            var result = JSON.parse(xhr.response);
-                            document.getElementById('ssid').value = result.ssid;
-							document.getElementById('macaddress').innerHTML = result.macaddress;
-							document.getElementById('firmwareversion').innerHTML = result.firmwareversion;
-						},
-						error: function(res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					}); 
-				}
-				if (evt.detail.page == "pagedynatraceintegrationsettings") {
-						var req = phonon.ajax({
-						method: 'GET',
-						url: 'dtintinfo',
-						//crossDomain: false,
-						dataType: 'text/json',
-						success: function(res, xhr) {
-							console.log(xhr.response);
-							var result = JSON.parse(xhr.response);
-							document.getElementById('dynatrace-on').checked = result.enabled;
-							document.getElementById('dynatrace-environmentid').value = result.environmentid;
-							document.getElementById('dynatrace-apikey').value = result.apikey;
-							document.getElementById('dynatrace-interval').value = result.interval;
-						},
-						error: function(res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					}); 
-				}
-				if (evt.detail.page == "pageapiedit") {
-					var parts = evt.target.URL.split("/");
-					if (parts.length > 1){
-						var id = parts[parts.length - 1];
-						var elem = document.querySelector("#api_" + id);
-						if (elem){
-							var apicall = elem.innerText;
-							document.getElementById('apiedit').value = apicall;
+
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				})
+			})
+		});
+
+		document.on('pageopened', function (evt) {
+			console.log(evt.detail.page + ' is opened');
+			if (evt.detail.page == "pageinfo") {
+
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'info',
+					//crossDomain: false,
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+						document.getElementById('infoheap').innerHTML = result.heap;
+						document.getElementById('infofirmwareversion').innerHTML = result.firmwareversion;
+						document.getElementById('infomacaddress').innerHTML = result.macaddress;
+						if (result.apmode)
+							document.getElementById('networkmode').innerHTML = 'Network - Access Point mode';
+						else
+							document.getElementById('networkmode').innerHTML = 'Network';
+						if (result.hostname) {
+							document.getElementById('infossid').innerHTML = result.ssid;
+							delete document.getElementById('liinfossid').style;
 						}
 						else
-							document.getElementById('apiedit').value = "/api?";
-						document.getElementById('apieditid').value = id;
+							document.getElementById('liinfossid').style = 'Display:None';
+						if (result.ssid) {
+							document.getElementById('infohostname').innerHTML = result.hostname;
+							delete document.getElementById('liinfohostname').style;
+						}
+						else
+							document.getElementById('liinfohostname').style = 'Display:None';
+						if (result.ipaddress) {
+							document.getElementById('infoipaddress').innerHTML = result.ipaddress;
+							delete document.getElementById('liinfoipaddress').style;
+						}
+						else
+							document.getElementById('liinfoipaddress').style = 'Display:None';
+						if (result.ipgateway) {
+							document.getElementById('infoipgateway').innerHTML = result.ipgateway;
+							delete document.getElementById('liinfoipgateway').style;
+						}
+						else
+							document.getElementById('liinfoipgateway').style = 'Display:None';
+						if (result.ipsubnetmask) {
+							document.getElementById('infoipsubnetmask').innerHTML = result.ipsubnetmask;
+							delete document.getElementById('liinfoipsubnetmask').style;
+						}
+						else
+							document.getElementById('liinfoipsubnetmask').style = 'Display:None';
+						if (result.lastiptoap) {
+							document.getElementById('infolastiptoap').innerHTML = result.lastiptoap;
+							delete document.getElementById('liinfolastiptoap').style;
+						}
+						else
+							document.getElementById('liinfolastiptoap').style = 'Display:None';
 
+
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
 					}
-				}
-			});
+				});
+			}
+			if (evt.detail.page == "pagewifisettings") {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'info',
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+						document.getElementById('ssid').value = result.ssid;
+						document.getElementById('macaddress').innerHTML = result.macaddress;
+						document.getElementById('wifihostname').value = result.hostname;
+						document.getElementById('firmwareversion').innerHTML = result.firmwareversion;
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			}
+			if (evt.detail.page == "pagedynatraceintegrationsettings") {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'dtintinfo',
+					//crossDomain: false,
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+						document.getElementById('dynatrace-on').checked = result.enabled;
+						document.getElementById('dynatrace-environmentid').value = result.environmentid;
+						document.getElementById('dynatrace-apikey').value = result.apikey;
+						document.getElementById('dynatrace-interval').value = result.interval;
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			}
+			if (evt.detail.page == "pageapiedit") {
+				var parts = evt.target.URL.split("/");
+				if (parts.length > 1) {
+					var id = parts[parts.length - 1];
+					var elem = document.querySelector("#api_" + id);
+					if (elem) {
+						var apicall = elem.innerText;
+						document.getElementById('apiedit').value = apicall;
+					}
+					else
+						document.getElementById('apiedit').value = "/api?";
+					document.getElementById('apieditid').value = id;
 
-			app.on({page: 'pageinfo', preventClose: false, content: null} , function(activity) {
-			});
+				}
+			}
+		});
+
+		app.on({ page: 'pageinfo', preventClose: false, content: null }, function (activity) {
+		});
 	</script>
 
 	<script>
-		// Let's go!
-		app.start();
+			// Let's go!
+			app.start();
 	</script>
 
 

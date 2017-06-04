@@ -5,6 +5,7 @@
 #include "esp_system.h"
 #include <esp_log.h>
 #include "Ota.h"
+#include "String.h"
 
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
@@ -22,7 +23,7 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 
 	mpUfo->IndicateApiCall();
 
-	std::string sBody;
+	String sBody;
 	std::list<TParam>::iterator it = params.begin();
 	while (it != params.end()){
 
@@ -65,7 +66,7 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
-	return rResponse.Send(sBody.data(), sBody.size());
+	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleApiListRequest(std::list<TParam>& params, HttpResponse& rResponse){
@@ -112,14 +113,18 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 
 	char sBuf[100];
 	char sHelp[20];
-	std::string sBody;
+	String sBody;
 
-	sBody = "{";
-	sprintf(sBuf, "\"apmode\":\"%d\",", mpUfo->GetConfig().mbAPMode);
-	sBody += sBuf;
-	sprintf(sBuf, "\"heap\":\"%d Bytes\",", esp_get_free_heap_size());
-	sBody += sBuf;
-	sprintf(sBuf, "\"ssid\":\"%s\",", mpUfo->GetConfig().msSTASsid.data());
+	sBody.reserve(512);
+	sBody  = "{\"apmode\":\"";
+	sBody += mpUfo->GetConfig().mbAPMode;
+	sBody += "\",\"heap\":\"";
+	sBody += esp_get_free_heap_size();
+	sBody += "\",\"ssid\":\"";
+	sBody += mpUfo->GetConfig().msSTASsid.data();
+	sBody += "\",\"hostname\":\"";
+	sBody += mpUfo->GetConfig().msHostname.data();
+	sBody += "\",";
 	sBody += sBuf;
 
 	if (mpUfo->GetConfig().mbAPMode){
@@ -147,7 +152,7 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
-	return rResponse.Send(sBody.data(), sBody.size());
+	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
@@ -231,24 +236,78 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	return rResponse.Send(sBody.data(), sBody.size());
 }
 
+/*
+GET: /firmware?update
 
+GET: /firmware?progress
+
+Response:
+
+{ "session": "9724987887789", 
+"progress": "22",
+"status": "inprogress" }
+
+Session: 32bit unsigned int ID that changes when UFO reboots
+Progress: 0..100%
+Status: notyetstarted | inprogress | connectionerror | flasherror | finishedsuccess
+
+notyetstarted: Firmware update process has not started.
+
+inprogress: Firmware update is in progress.
+
+connectionerror: Firmware could not be downloaded. 
+
+flasherror: Firmware could not be flashed.
+
+finishedsuccess: Firmware successfully updated. Rebooting now.
+*/
 
 bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response) {
 	std::list<TParam>::iterator it = params.begin();
-	std::string sBody;
+	String sBody;
 	response.SetRetCode(400); // invalid request
 	while (it != params.end()) {
-		if ((*it).paramName == "update") {
+
+		if ((*it).paramName == "progress") {
+			short progressPct = 0;
+			const char* progressStatus = "notyetstarted";
+			int   progress = Ota::GetProgress();
+			if (progress >= 0) {
+				progressPct = progress;
+				progressStatus = "inprogress";
+			} else {
+				switch (progress) {
+					case OTA_PROGRESS_NOTYETSTARTED: progressStatus = "notyetstarted"; 
+							break;
+					case OTA_PROGRESS_CONNECTIONERROR: progressStatus = "connectionerror"; 
+							break;
+					case OTA_PROGRESS_FLASHERROR: progressStatus = "flasherror"; 
+							break;
+					case OTA_PROGRESS_FINISHEDSUCCESS: progressStatus = "finishedsuccess"; 
+							progressPct = 100;
+							break;
+				}
+			}
+			sBody = "{ \"session\": \"";
+			sBody += Ota::GetTimestamp();
+			sBody += "\", \"progress\": \"";
+			sBody += progressPct;
+			sBody += "\", \"status\": \"";
+			sBody += progressStatus;
+			sBody += "\"}";
+			response.AddHeader(HttpResponse::HeaderContentTypeJson);
+			response.SetRetCode(200);
+		} else if ((*it).paramName == "update") {
 			if (Ota::GetProgress() == OTA_PROGRESS_NOTYETSTARTED) {
 				Ota::StartUpdateFirmwareTask();
 				//TODO implement firmware version check;
 			}
 			sBody = "<html><head><title>Firmware update progress</title>"
-					"<meta http-equiv=\"refresh\" content=\"5; url=/firmware?progress\"></head><body>"
+					"<meta http-equiv=\"refresh\" content=\"5; url=/firmware?progresspage\"></head><body>"
 					"<h1>Firmware update task initiated....</h1></body></html>";
 			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
 			response.SetRetCode(200);
-		} else if ((*it).paramName == "progress") {
+		} else if ((*it).paramName == "progresspage") {
 			if (Ota::GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS) {
 				sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
 				        "<meta http-equiv=\"refresh\" content=\"20; url=/\"></head><body><h1>Progress: ";
@@ -289,7 +348,7 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 		it++;
 	}
 	response.AddHeader(HttpResponse::HeaderNoCache);
-	return response.Send(sBody.data(), sBody.size());
+	return response.Send(sBody.c_str(), sBody.length());
 }
 
 
