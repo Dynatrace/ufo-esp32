@@ -1,6 +1,5 @@
 #include "Url.h"
 #include <esp_log.h>
-#include <string>
 #include <sstream>
 #include <iomanip>
 #include <stdlib.h>
@@ -13,7 +12,7 @@ Url::Url() {
 	Clear();
 }
 
-void Url::Build(bool bSecure, std::string& sHost, unsigned short uPort, std::string& sPath) {
+void Url::Build(bool bSecure, String& sHost, unsigned short uPort, String& sPath) {
 	msHost = sHost;
 	msPath = sPath;
 	mbSecure = bSecure;
@@ -27,7 +26,7 @@ void Url::Build(bool bSecure, const char* host, unsigned short uPort, const char
 	muPort = uPort;
 }
 
-bool Url::Parse(std::string& sUrl) {
+bool Url::Parse(String& sUrl) {
 	Clear();
 	if (!ParseUrl(sUrl)) {
 		ESP_LOGI(LOGTAG, "Invalid URL: '%s' (parsed: '%s')", sUrl.c_str(), GetUrl().c_str());
@@ -37,7 +36,7 @@ bool Url::Parse(std::string& sUrl) {
 }
 
 bool Url::Parse(const char* url) {
-	std::string sUrl = url;
+	String sUrl = url;
 	return Parse(sUrl);
 }
 
@@ -56,28 +55,30 @@ void Url::Clear() {
 	mlQueryParams.clear();
 }
 
-std::string& Url::GetPortAsString() {
-	char buf[20];
-	sprintf(buf, "%hu", muPort);
-	msPort = buf;
+String& Url::GetPortAsString() {
+	//char buf[20];
+	//sprintf(buf, "%hu", muPort);
+	//msPort = buf;
+	msPort = muPort;
 	return msPort;
 }
 
-std::string& Url::GetUrl() {
+String& Url::GetUrl() {
 	msUrl.clear();
-	if (!msHost.empty()) {
+	if (msHost.length()) {
 		msUrl += mbSecure ? "https://" : "http://";
 		msUrl += msHost;
 
 		if (!(muPort == 80 && !mbSecure) && !(muPort == 443 && mbSecure)) {
 			msUrl += ':';
-			char buf[20];
-			sprintf(buf, "%hu", muPort);
-			msUrl += buf;
+			//char buf[20];
+			//sprintf(buf, "%hu", muPort);
+			//msUrl += buf;
+			msUrl += muPort;
 		}
 	}
 
-	if (msPath.empty() || msPath.at(0) != '/') {
+	if (!msPath.length() || msPath[0] != '/') {
 		msUrl += '/';
 	}
 	msUrl += msPath;
@@ -86,7 +87,7 @@ std::string& Url::GetUrl() {
 		msUrl += '?';
 		msUrl += GetQuery();
 	}
-	if (!msFragment.empty()) {
+	if (msFragment.length()) {
 		msUrl += '#';
 		msUrl += msFragment;
 
@@ -95,7 +96,7 @@ std::string& Url::GetUrl() {
 
 }
 
-void Url::AddQueryParam(std::string& name, std::string& value) {
+void Url::AddQueryParam(String& name, String& value) {
 	TQueryParam param;
 	param.paramName = name;
 	param.paramValue = value;
@@ -109,7 +110,7 @@ void Url::AddQueryParam(const char* name, const char* value) {
 	mlQueryParams.push_back(param);
 }
 
-std::string& Url::GetQuery() {
+String& Url::GetQuery() {
 	msQuery.clear();
 	for (std::list<TQueryParam>::iterator it = mlQueryParams.begin(); it != mlQueryParams.end(); ++it) {
 		msQuery += UrlEncode((*it).paramName);
@@ -122,13 +123,13 @@ std::string& Url::GetQuery() {
 	return msQuery;
 }
 
-std::string Url::UrlEncode(std::string& str) {
+String Url::UrlEncode(String& str) {
 	std::ostringstream escaped;
 	escaped.fill('0');
 	escaped << std::hex;
 
-	for (std::string::const_iterator i = str.begin(), n = str.end(); i != n; ++i) {
-		std::string::value_type c = (*i);
+	for (unsigned int i = 0, n = str.length(); i != n; ++i) {
+		char c = str[i];
 
 		// Keep alphanumeric and other accepted characters intact
 		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
@@ -142,11 +143,11 @@ std::string Url::UrlEncode(std::string& str) {
 		escaped << std::nouppercase;
 	}
 
-	return escaped.str();
+	return String(escaped.str().c_str());
 }
 
-std::string Url::UrlDecode(std::string str) {
-	std::string ret;
+String Url::UrlDecode(String str) {
+	String ret;
 	char ch;
 	int i, ii, len = str.length();
 
@@ -157,7 +158,7 @@ std::string Url::UrlDecode(std::string str) {
 			else
 				ret += str[i];
 		} else {
-			sscanf(str.substr(i + 1, 2).c_str(), "%x", &ii);
+			sscanf(str.substring(i + 1, 2).c_str(), "%x", &ii);
 			ch = static_cast<char>(ii);
 			ret += ch;
 			i = i + 2;
@@ -167,7 +168,7 @@ std::string Url::UrlDecode(std::string str) {
 }
 
 bool Url::Selftest() {
-	std::string s = "http://www.xyz.com?name1=param1&name2&name3=&name4=val4&n a m e 5=v%a%l%u%e5#fragment1";
+	String s = "http://www.xyz.com?name1=param1&name2&name3=&name4=val4&n a m e 5=v%a%l%u%e5#fragment1";
 	Url u;
 	u.Parse(s);
 	ESP_LOGI(LOGTAG, "Test input  URL: %s", s.c_str());
@@ -221,13 +222,13 @@ bool Url::Selftest() {
 #define STATE_Query 5
 #define STATE_Fragment 6
 
-bool Match(std::string::iterator& it, std::string& s, std::string match) {
-	std::string::iterator mit = match.begin();
-	while (mit != match.end()) {
-		if (it == s.end()) {
+bool Match(unsigned int& it, String& s, String match) {
+	unsigned int mit = 0;
+	while (mit != match.length()) {
+		if (it == s.length()) {
 			return false;
 		}
-		if (tolower(*it) != tolower(*mit)) {
+		if (tolower(s[it]) != tolower(match[mit])) {
 			return false;
 		}
 		mit++;
@@ -236,17 +237,16 @@ bool Match(std::string::iterator& it, std::string& s, std::string match) {
 	return true;
 }
 
-bool Url::ParseUrl(std::string& u) {
+bool Url::ParseUrl(String& u) {
 
-	std::string::iterator it;
-	std::string scheme;
+	String scheme;
 
 	char c;
 	unsigned short state = STATE_RelativeUrl;
 
-	it = u.begin();
-	while (it != u.end()) {
-		c = *it;
+	unsigned int it = 0;
+	while (it != u.length()) {
+		c = u[it];
 
 		switch (state) {
 		case STATE_RelativeUrl:
@@ -274,7 +274,7 @@ bool Url::ParseUrl(std::string& u) {
 			if (!Match(it, u, "://")) {
 				return false;
 			}
-			c = *it;
+			c = u[it];
 			state = STATE_Host;
 			// dont break here
 
@@ -348,7 +348,7 @@ bool Url::ParseUrl(std::string& u) {
 
 		it++;
 	}
-	if (msPath.empty()) {
+	if (!msPath.length()) {
 		msPath += '/';
 	}
 
@@ -363,23 +363,23 @@ bool Url::ParseUrl(std::string& u) {
 #define STATE_QueryName 0
 #define STATE_QueryValue 1
 
-std::list<TQueryParam>& Url::ParseQuery(std::string& u) {
+std::list<TQueryParam>& Url::ParseQuery(String& u) {
 	mlQueryParams.clear();
-	if (u.empty()) {
+	if (u.length() == 0) {
 		return mlQueryParams;
 	}
 
-	std::string name;
-	std::string value;
+	String name;
+	String value;
 
-	std::string::iterator it;
-	it = u.begin();
+	unsigned int it;
+	it = 0;
 
 	char c;
 	unsigned short state = STATE_QueryName;
 
-	while (it != u.end()) {
-		c = *it;
+	while (it != u.length()) {
+		c = u[it];
 
 		switch (state) {
 		case STATE_QueryName:

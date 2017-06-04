@@ -36,7 +36,7 @@
 #include "mbedtls/certs.h"
 
 #define DEFAULT_MAXRESPONSEDATASIZE 16*1024
-#define RECEIVE_BUFFER_SIZE 16*1024 
+#define RECEIVE_BUFFER_SIZE 16*1024
 
 static const char LOGTAG[] = "WebClient";
 
@@ -58,7 +58,7 @@ bool WebClient::Prepare(Url* pUrl) {
 }
 
 
-bool WebClient::AddHttpHeader(std::string& sHeader) {
+bool WebClient::AddHttpHeader(String& sHeader) {
 	mlRequestHeaders.push_back(sHeader);
 	return true;
 }
@@ -80,11 +80,11 @@ unsigned short WebClient::HttpPost(const char* data, unsigned int size) {
 	return HttpExecute();
 }
 
-unsigned short WebClient::HttpPost(std::string& sData) {
-	return HttpPost(sData.data(), sData.size());
+unsigned short WebClient::HttpPost(String& sData) {
+	return HttpPost(sData.c_str(), sData.length());
 }
 
-void WebClient::PrepareRequest(std::string& sRequest) {
+void WebClient::PrepareRequest(String& sRequest) {
 	sRequest.reserve(512);
 	sRequest = mpPostData ? "POST " : "GET ";
 	sRequest += mpUrl->GetPath();
@@ -96,7 +96,7 @@ void WebClient::PrepareRequest(std::string& sRequest) {
 	sRequest += mpUrl->GetHost();
 	sRequest += "\r\n";
 
-	for (std::list<std::string>::iterator it = mlRequestHeaders.begin(); it != mlRequestHeaders.end(); ++it) {
+	for (std::list<String>::iterator it = mlRequestHeaders.begin(); it != mlRequestHeaders.end(); ++it) {
 		sRequest += *it; //TODO *it or it????
 		sRequest += "\r\n";
 	}
@@ -135,7 +135,7 @@ unsigned short WebClient::HttpExecute() {
 	if (!mpUrl)
 		return 1001;
 
-	if (mpUrl->GetHost().empty()) {
+	if (mpUrl->GetHost().length() == 0) {
 		return 1002;
 	}
 
@@ -185,7 +185,7 @@ unsigned short WebClient::HttpExecute() {
 	freeaddrinfo(res);
 
 	// Build HTTP Request
-	std::string sRequest;
+	String sRequest;
 	PrepareRequest(sRequest);
 
 
@@ -214,18 +214,18 @@ unsigned short WebClient::HttpExecute() {
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
 
 	//char recv_buf[1024];
-	std::string sReceiveBuf;
+	String sReceiveBuf;
 	sReceiveBuf.resize(RECEIVE_BUFFER_SIZE);
 	while (!mHttpResponseParser.ResponseFinished()) {
-		size_t sizeRead = read(socket, (char*)sReceiveBuf.data(), sReceiveBuf.size());
-		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.data(), sizeRead)) {
+		size_t sizeRead = read(socket, (char*)sReceiveBuf.c_str(), sReceiveBuf.length());
+		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.c_str(), sizeRead)) {
 			ESP_LOGE(LOGTAG, "HTTP Response error: %d", mHttpResponseParser.GetError());
 			close(socket);
 			return 1008;
 		}
 	}
 
-	ESP_LOGI(LOGTAG, "data %i bytes: %s", mHttpResponseParser.GetContentLength(), mHttpResponseParser.GetBody().c_str());
+	//ESP_LOGI(LOGTAG, "data %i bytes: %s", mHttpResponseParser.GetContentLength(), mHttpResponseParser.GetBody().c_str());
 
 	close(socket);
 
@@ -234,10 +234,10 @@ unsigned short WebClient::HttpExecute() {
 
 unsigned short WebClient::HttpExecuteSecure() {
 
-	std::string sRequest;
+	String sRequest;
 
 	char buf[512]; //TODO REMOVE EXTRA LARGE BUFFER AFTER TESTING
-	std::string sReceiveBuf;
+	String sReceiveBuf;
 
 	int ret, flags, len;
 
@@ -350,7 +350,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	ESP_LOGI(LOGTAG, "Writing HTTP request... <%s>", sRequest.c_str());
 
-	while ((ret = mbedtls_ssl_write(&ssl, (const unsigned char*)sRequest.data(), sRequest.size())) <= 0) {
+	while ((ret = mbedtls_ssl_write(&ssl, (const unsigned char*)sRequest.c_str(), sRequest.length())) <= 0) {
 		if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 			ESP_LOGE(LOGTAG, "mbedtls_ssl_write returned -0x%x", -ret);
 			goto exit;
@@ -367,21 +367,25 @@ unsigned short WebClient::HttpExecuteSecure() {
 	}
 
 
-	ESP_LOGI(LOGTAG, "%d bytes written", ret);
+	//ESP_LOGI(LOGTAG, "%d bytes written", ret);
 	ESP_LOGI(LOGTAG, "Reading HTTP response...");
 
 	sRequest.clear(); // free memory
 
-	ESP_LOGI(LOGTAG, "... socket send success");
+	//ESP_LOGI(LOGTAG, "... socket send success");
 
 	// Read HTTP response
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
-	sReceiveBuf.resize(RECEIVE_BUFFER_SIZE);
+	if (!sReceiveBuf.resize(RECEIVE_BUFFER_SIZE))
+		ESP_LOGE(LOGTAG, "memory allocation failed (%d)", RECEIVE_BUFFER_SIZE);
+
+	//ESP_LOGI(LOGTAG, "sReceiveBuf.length(%d)", sReceiveBuf.length());
+
 
 	while (!mHttpResponseParser.ResponseFinished()) {
 		//ESP_LOGI(LOGTAG, "before ssl_read");
-		//ret = mbedtls_ssl_read(&ssl, (unsigned char*)buf, sizeof(buf));
-		ret = mbedtls_ssl_read(&ssl, (unsigned char*)sReceiveBuf.data(), sReceiveBuf.size());
+		//ESP_LOGI(LOGTAG, "sReceiveBuf.length(%d), pointer=%p", sReceiveBuf.length(), sReceiveBuf.c_str());
+		ret = mbedtls_ssl_read(&ssl, (unsigned char*)sReceiveBuf.c_str(), sReceiveBuf.length());
 		//ESP_LOGI(LOGTAG, "after ssl_read ret=%d", ret);
 
 
@@ -402,7 +406,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		len = ret;
 
 		//ESP_LOGI(LOGTAG, "invoking responseparse(buflen=%d)", len);
-		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.data(), len)) {
+		if (!mHttpResponseParser.ParseResponse((char*)sReceiveBuf.c_str(), len)) {
 			ESP_LOGE(LOGTAG, "HTTP Error Code: %d", mHttpResponseParser.GetError());
 			goto exit;
 		}

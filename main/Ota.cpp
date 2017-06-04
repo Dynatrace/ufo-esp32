@@ -5,7 +5,7 @@
 #include "Ota.h"
 
 #include "sdkconfig.h"
-#include <string.h>
+//#include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
@@ -22,6 +22,7 @@
 #include <nvs.h>
 #include <nvs_flash.h>
 
+#include "String.h"
 #include "WebClient.h"
 
 //#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"  // testing with local go server
@@ -48,7 +49,8 @@ Ota::~Ota() {
 
 bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
 
-    ESP_LOGI(LOGTAG, "Starting OTA example...");
+
+    ESP_LOGI(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
 
     if (isContentLength) {
         muContentLength = contentLength;
@@ -140,7 +142,7 @@ bool Ota::OnReceiveEnd() {
 
 
 
-bool Ota::UpdateFirmware(std::string sUrl)
+bool Ota::UpdateFirmware(String sUrl)
 {
 	Url url;
 	url.Parse(sUrl);

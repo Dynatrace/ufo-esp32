@@ -7,8 +7,9 @@
 #define MAIN_OTA_H_
 
 #include <esp_ota_ops.h>
-#include <string>
+//#include <string>
 #include "DownloadHandler.h"
+#include "String.h"
 #include "WebClient.h"
 
 #define OTA_PROGRESS_NOTYETSTARTED      -1
@@ -30,7 +31,7 @@ public:
 public:
 	Ota();
 	virtual ~Ota();
-	bool UpdateFirmware(std::string url);
+	bool UpdateFirmware(String url);
 	
 
 	bool SwitchBootPartition();
