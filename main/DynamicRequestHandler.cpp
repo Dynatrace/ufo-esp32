@@ -125,18 +125,19 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += "\",\"hostname\":\"";
 	sBody += mpUfo->GetConfig().msHostname.data();
 	sBody += "\",";
-	sBody += sBuf;
 
 	if (mpUfo->GetConfig().mbAPMode){
 		sprintf(sBuf, "\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
 		sBody += sBuf;
 	}
 	else{
-		mpUfo->GetWifi().GetLocalAddress(sHelp);
-		sprintf(sBuf, "\"ipaddress\":\"%s\",", sHelp);
-		sBody += sBuf;
+		//mpUfo->GetWifi().GetLocalAddress(sHelp);
+		//sprintf(sBuf, "\"ipaddress\":\"%s\",", sHelp);
+		//sBody += sBuf;
+		sBody += "\"ipaddress\":\"";
+		sBody += mpUfo->GetWifi().GetLocalAddress();
 		mpUfo->GetWifi().GetGWAddress(sHelp);
-		sprintf(sBuf, "\"ipgateway\":\"%s\",", sHelp);
+		sprintf(sBuf, "\",\"ipgateway\":\"%s\",", sHelp);
 		sBody += sBuf;
 		mpUfo->GetWifi().GetNetmask(sHelp);
 		sprintf(sBuf, "\"ipsubnetmask\":\"%s\",", sHelp);

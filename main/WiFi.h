@@ -11,6 +11,7 @@
 #if defined(CONFIG_WIFI_ENABLED)
 #include "esp_wifi.h"
 #include "esp_err.h"
+#include "String.h"
 
 
 #include <string>
@@ -27,6 +28,7 @@ public:
 	void SetConfig(Config* pConfig)						{ mpConfig = pConfig; };
 	void SetStateDisplay(StateDisplay* pStateDisplay)  	{ mpStateDisplay = pStateDisplay; };
 
+	String GetLocalAddress();
 	void GetLocalAddress(char* sBuf);
 	void GetGWAddress(char* sBuf);
 	void GetNetmask(char* sBuf);
