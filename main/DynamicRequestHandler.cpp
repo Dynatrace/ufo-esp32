@@ -125,7 +125,6 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += "\",\"hostname\":\"";
 	sBody += mpUfo->GetConfig().msHostname.data();
 	sBody += "\",";
-	sBody += sBuf;
 
 	if (mpUfo->GetConfig().mbAPMode){
 		sprintf(sBuf, "\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
