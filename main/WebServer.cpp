@@ -6,6 +6,7 @@
 #include "DynamicRequestHandler.h"
 #include <lwip/sockets.h>
 #include <esp_log.h>
+#include <esp_system.h>
 #include <string.h>
 
 #include "sdkconfig.h"
@@ -161,7 +162,7 @@ void WebServer::WebRequestHandler(int socket){
 	ESP_LOGD(tag, "Socket Accepted");
 
 	while (1){
-		httpParser.Init();
+		httpParser.Init(&mOta);
 
 		while(1) {
 			ssize_t sizeRead;
@@ -247,7 +248,7 @@ void WebServer::WebRequestHandler(int socket){
 		}
 
 
-		else if (!httpParser.GetUrl().compare("/update")){
+		else if (!httpParser.GetUrl().compare("/test")){
 			std::string sBody;
 			sBody = httpParser.IsGet() ? "GET " : "POST ";
 			sBody += httpParser.GetUrl();
@@ -278,7 +279,10 @@ void WebServer::WebRequestHandler(int socket){
 				break;
 		}
 
-		requestHandler.CheckForRestart();
+		if (requestHandler.ShouldRestart() || (mOta.GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS)){
+			vTaskDelay(100);
+			esp_restart();
+		}
 
 		if (httpParser.IsConnectionClose()){
 			close(socket);

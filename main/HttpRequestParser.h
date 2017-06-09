@@ -21,16 +21,20 @@
 #define STATE_ProcessMultipartBodyStart	11
 #define STATE_ProcessMultipartBody		12
 
+
+class DownAndUploadHandler;
+
+
 class HttpRequestParser {
 public:
 	HttpRequestParser(int socket);
 	virtual ~HttpRequestParser();
 
-	void Init();
+	void Init(DownAndUploadHandler* pUploadHandler);
 	void Clear();
 
 	bool ParseRequest(char* sBuffer, __uint16_t uLen);
-	void ProcessMultipartBody(char* sBuffer, __uint16_t uLen);
+	bool ProcessMultipartBody(char* sBuffer, __uint16_t uLen);
 
 	bool RequestFinished() 	{ return mbFinished; };
 	bool IsHttp11() 		{ return mbHttp11; };
@@ -42,7 +46,7 @@ public:
 	std::string& GetBoundary() { return mBoundary; }
 	std::list<TParam>& GetParams() { return mParams; };
 
-	void SetError(__uint8_t u) { muError = u; };
+	void SetError(__uint8_t u) { muError = u; mbFinished = true; };
 	__uint8_t GetError()  	{ return muError; };
 
 private:
@@ -54,8 +58,9 @@ private:
 
 	std::string mBody;
 	std::string mBoundary;
-	__uint16_t muContentLength;
-	__uint16_t muActBodyLength;
+	__uint32_t muContentLength;
+	__uint32_t muActBodyLength;
+	DownAndUploadHandler* mpUploadHandler;
 	
 
 	bool mbFinished;

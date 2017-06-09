@@ -51,11 +51,8 @@ Ota::~Ota() {
 }
 
 
-bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
-
-
-    ESP_LOGI(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
-
+bool Ota::InternalOnRecvBegin(bool isContentLength, unsigned int contentLength){
+    
     if (isContentLength) {
         muContentLength = contentLength;
     } else {
@@ -94,8 +91,22 @@ bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength
     return true;
 }
 
+bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
+    ESP_LOGI(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
+
+    if (httpStatusCode != 200)
+        return false;
+    return InternalOnRecvBegin(isContentLength, contentLength);
+}
+
+bool Ota::OnReceiveBegin(char* sUrl, unsigned int contentLength){
+    ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl, contentLength);
+    //todo use string here
+    return InternalOnRecvBegin(true, contentLength);
+}
+
 bool Ota::OnReceiveData(char* buf, int len) {
-    //ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
+    ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
 
 	esp_err_t err;
     //ESP_LOGI(LOGTAG, "Before esp_ota_write");
@@ -118,8 +129,6 @@ bool Ota::OnReceiveData(char* buf, int len) {
 bool Ota::OnReceiveEnd() {
     ESP_LOGI(LOGTAG, "Total Write binary data length : %u", muActualDataLength);
     //ESP_LOGI(LOGTAG, "DATA: %s", dummy.c_str());
-
-    esp_err_t err;
 
     if (esp_ota_end(mOtaHandle) != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_end failed!");

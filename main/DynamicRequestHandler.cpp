@@ -353,15 +353,5 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 }
 
 
-void DynamicRequestHandler::CheckForRestart(){
-
-	if (mbRestart){
-		vTaskDelay(100);
-		esp_restart();
-	}
-}
-
-
-
 
 

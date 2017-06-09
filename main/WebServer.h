@@ -1,6 +1,7 @@
 #ifndef MAIN_WEBSERVER_H_
 #define MAIN_WEBSERVER_H_
 
+#include "ota.h"
 #include "freertos/FreeRTOS.h"
 #include "openssl/ssl.h"
 
@@ -25,6 +26,8 @@ private:
 	DisplayCharter* mpDisplayCharterLevel2;
 
 	SSL_CTX* mpSslCtx;
+
+	Ota mOta;
 
 };
 

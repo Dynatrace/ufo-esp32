@@ -1,4 +1,5 @@
 #include "HttpRequestParser.h"
+#include "DownAndUploadHandler.h"
 #include "freertos/FreeRTOS.h"
 #include <esp_log.h>
 
@@ -6,14 +7,16 @@
 HttpRequestParser::HttpRequestParser(int socket) {
 	mSocket = socket;
 
-	Init();
+	Init(NULL);
 }
 
 HttpRequestParser::~HttpRequestParser() {
 }
 
-void HttpRequestParser::Init(){
+void HttpRequestParser::Init(DownAndUploadHandler* pUploadHandler){
 	Clear();
+
+	mpUploadHandler = pUploadHandler;
 
 	muError = 0;
 	mbFinished = false;
@@ -236,28 +239,39 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 				mStringParser.ConsumeCharSimple(c);
 				muActBodyLength++;
 				__uint8_t u;
-				if (mStringParser.Found(u))
+				if (mStringParser.Found(u)){
 					muParseState = STATE_ProcessMultipartBody;
+					if (!mpUploadHandler || !mpUploadHandler->OnReceiveBegin((char*)mUrl.data(), muContentLength))
+						return SetError(5), false;
+				}
 				mbFinished = muActBodyLength >= muContentLength;
 				break;
 			case STATE_ProcessMultipartBody:
 				uPos--;
-				ProcessMultipartBody(sBuffer + uPos, uLen - uPos);
+				uLen -= uPos;
+				if (muActBodyLength + 8 + mBoundary.size() < muContentLength){
+					if (muActBodyLength + 8 + mBoundary.size() + uLen > muContentLength){
+						__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.size());
+						if (!ProcessMultipartBody(sBuffer + uPos, u))
+							return SetError(6), false;
+					}
+					else{
+						if (!ProcessMultipartBody(sBuffer + uPos, uLen))
+							return SetError(6), false;
+					}	
+				}
+				muActBodyLength+= uLen;
 				mbFinished = muActBodyLength >= muContentLength;
+				if (mbFinished && mpUploadHandler)
+					mpUploadHandler->OnReceiveEnd();
 				return true;
 		}
 	}
 	return true;
 }
 
-void HttpRequestParser::ProcessMultipartBody(char* sBuffer, __uint16_t uLen){
-	if (muActBodyLength + 8 + mBoundary.size() < muContentLength){
-		if (muActBodyLength + 8 + mBoundary.size() + uLen > muContentLength){
-			__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.size());
-			mBody.append(sBuffer, u);
-			return;
-		}
-		mBody.append(sBuffer, uLen);
-	}
-	muActBodyLength+= uLen;
+bool HttpRequestParser::ProcessMultipartBody(char* sBuffer, __uint16_t uLen){
+	if (!mpUploadHandler)
+		return false;
+	return mpUploadHandler->OnReceiveData(sBuffer, uLen);
 }

@@ -43,7 +43,7 @@ HttpResponseParser::HttpResponseParser() {
 HttpResponseParser::~HttpResponseParser() {
 }
 
-void HttpResponseParser::Init(DownloadHandler* pDownloadHandler, unsigned int maxBodyBufferSize) {
+void HttpResponseParser::Init(DownAndUploadHandler* pDownloadHandler, unsigned int maxBodyBufferSize) {
 	mpDownloadHandler = pDownloadHandler;
 	mBody.clear();
 	msLocation.clear();

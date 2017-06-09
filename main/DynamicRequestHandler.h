@@ -22,7 +22,7 @@ public:
 	bool HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response);
 
 
-	void CheckForRestart();
+	bool ShouldRestart() { return mbRestart; }
 
 private:
 	Ufo* mpUfo;

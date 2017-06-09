@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <list>
-#include "DownloadHandler.h"
+#include "DownAndUploadHandler.h"
 #include "Url.h"
 #include "HttpResponseParser.h"
 #include "String.h"
@@ -41,7 +41,7 @@ public:
 	 * 		- HTTP response status code
 	 * 		- 0 on error
 	 */
-	void SetDownloadHandler(DownloadHandler* pDownloadHandler);
+	void SetDownloadHandler(DownAndUploadHandler* pDownloadHandler);
 
 
 
@@ -113,7 +113,7 @@ public:
 
 private:
 	HttpResponseParser mHttpResponseParser;
-	DownloadHandler* mpDownloadHandler = NULL;
+	DownAndUploadHandler* mpDownloadHandler = NULL;
 	Url* mpUrl = NULL;
 	std::list<String> mlRequestHeaders;
 	const char* mpPostData = NULL;
