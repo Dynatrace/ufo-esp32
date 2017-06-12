@@ -30,6 +30,11 @@ public:
 	std::string msSTAENTUser;
 	std::string msSTAENTCA;
 	std::string msHostname;
+	
+	bool mbDTEnabled;
+    std::string msDTEnvId;
+    std::string msDTApiToken;
+    int miDTInterval;
 
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;

@@ -105,7 +105,7 @@ bool WebServer::Start(){
 		close(sock);
 		return false;
 	}
-	printf("started listening\n");
+	ESP_LOGI(tag, "Webserver started listening");
 
 	while (1) {
 		
@@ -216,9 +216,9 @@ void WebServer::WebRequestHandler(int socket){
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/api")){
+		else if (!httpParser.GetUrl().compare("/dynatraceintegration")){
 			std::string sBody;
-			if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
+			if (!requestHandler.HandleDynatraceIntegrationRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (!httpParser.GetUrl().compare("/apilist")){

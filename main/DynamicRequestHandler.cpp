@@ -7,6 +7,8 @@
 #include "Ota.h"
 #include "String.h"
 
+static char tag[] = "WebServer";
+
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
 	mpDisplayCharterLevel1 = pDCLevel1;
@@ -146,12 +148,59 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += sBuf;	
 	sprintf(sBuf, "\"firmwareversion\":\"%s\"", FIRMWARE_VERSION);
 	sBody += sBuf;
-	sBody += '}';
+	sBody += ",\"dtenabled\":\"";
+	sBody += mpUfo->GetConfig().mbDTEnabled;
+	sBody += "\",\"dtenvid\":\"";
+	sBody += mpUfo->GetConfig().msDTEnvId.data();
+	sBody += "\",\"dtapitoken\":\"";
+	sBody += mpUfo->GetConfig().msDTApiToken.data();
+	sBody += "\",\"dtinterval\":\"";
+	sBody += mpUfo->GetConfig().miDTInterval;
+	sBody += "\"}";
 
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.c_str(), sBody.length());
+}
+
+bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& rResponse){
+
+	const char* sEnvId = NULL;
+	const char* sApiToken = NULL;
+	bool bEnabled = false;
+	int iInterval = 0;
+
+	String sBody;
+
+	std::list<TParam>::iterator it = params.begin();
+	while (it != params.end()){
+		if ((*it).paramName == "dynatrace-on")
+			bEnabled = (*it).paramValue.data();
+		else if ((*it).paramName == "dynatrace-environmentid")
+			sEnvId = (*it).paramValue.data();
+		else if ((*it).paramName == "dynatrace-apitoken")
+			sApiToken = (*it).paramValue.data();
+		else if ((*it).paramName == "dynatrace-interval")
+			iInterval = atoi((*it).paramValue.data());
+		it++;
+	}
+
+	mpUfo->GetConfig().mbDTEnabled = bEnabled;
+	if (sEnvId) mpUfo->GetConfig().msDTEnvId = sEnvId;
+	else 		mpUfo->GetConfig().msDTEnvId.clear();
+	if (sApiToken) mpUfo->GetConfig().msDTApiToken = sApiToken;
+	else 		mpUfo->GetConfig().msDTApiToken.clear();
+	mpUfo->GetConfig().miDTInterval = iInterval;
+
+	mpUfo->GetConfig().Write();
+
+	ESP_LOGI(tag, "Dynatrace Integration Saved");
+
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	rResponse.AddHeader("Location: /#!pagedynatraceintegrationsettings");
+	rResponse.SetRetCode(302);
+	return rResponse.Send();
 }
 
 bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
