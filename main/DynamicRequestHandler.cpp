@@ -297,8 +297,11 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 				Ota::StartUpdateFirmwareTask();
 				//TODO implement firmware version check;
 			}
-			sBody = "firmware update initiated.";
-			response.AddHeader(HttpResponse::HeaderNoCache);
+			// {"status":"firmware update initiated.", "url":"https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"}
+			sBody = "{\"status\":\"firmware update initiated.\", \"url\":\"";
+			sBody += OTA_LATEST_FIRMWARE_URL;
+			sBody += "\"}";
+			response.AddHeader(HttpResponse::HeaderContentTypeJson);
 			response.SetRetCode(200);
 		} else if ((*it).paramName == "check") {
 			//TODO implement firmware version check;
