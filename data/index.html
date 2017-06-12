@@ -486,10 +486,10 @@
 					url: '/firmware?progress',
 					dataType: 'json',
 					success: function (res, xhr) {
-						if(res.status === 'notyetstartet') {
-							continueHome();
-						} else {
+						if(res.status === 'inprogress') {
 							phonon.navigator().changePage('pagefirmwareprogress');
+						} else {
+							continueHome();
 						}
 					},
 					error: function() {
@@ -503,6 +503,11 @@
 		app.on({ page: 'pagefirmwareprogress', preventClose: false, content: null }, function (activity) {
 			activity.onCreate(function() {
 				var bar = document.getElementById('progressbarinner');
+				var messages = {
+					finishedsuccess: 'Firmware successfully updated. Rebooting now.',
+					connectionerror: 'Firmware could not be downloaded.',
+					flasherror: 'Firmware could not be flashed.'
+				};
 				
 				var update = function() {
 					phonon.ajax({
@@ -510,11 +515,24 @@
 						url: '/firmware?progress',
 						dataType: 'json',
 						success: function (res, xhr) {
-							bar.style.width = res.progress + '%';
-							if(res.status === 'inprogress') {
-								setTimeout(update, 300);
+							try {
+								bar.style.width = res.progress + '%';
+								if(res.status === 'inprogress') {
+									setTimeout(update, 300);
+								}
+								if(res.status === 'finishedsuccess') {
+
+								}
+								if(res.status === 'connectionerror') {
+									
+								}
+								if(res.status === 'flasherror') {
+									
+								}
+							} catch(e) {
+								// ERROR: Go to error page
 							}
-						},
+						}
 					});
 				};
 
