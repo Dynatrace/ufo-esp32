@@ -3,7 +3,7 @@
 
 #include "StringParser.h"
 #include "UrlParser.h"
-#include <string>
+#include "String.h"
 #include <list>
 
 
@@ -41,9 +41,9 @@ public:
 	bool IsConnectionClose(){ return mbConClose; };
 	bool IsGet()			{ return mbIsGet; };
 
-	std::string& GetUrl() 	{ return mUrl; };
-	std::string& GetBody()  { return mBody; };
-	std::string& GetBoundary() { return mBoundary; }
+	String& GetUrl() 	{ return mUrl; };
+	String& GetBody()  { return mBody; };
+	String& GetBoundary() { return mBoundary; }
 	std::list<TParam>& GetParams() { return mParams; };
 
 	void SetError(__uint8_t u) { muError = u; mbFinished = true; };
@@ -52,12 +52,12 @@ public:
 private:
 	int mSocket;
 	UrlParser mUrlParser;
-	std::string mUrl;
+	String mUrl;
 	std::list<TParam> mParams;
 	TParam* mpActParam;
 
-	std::string mBody;
-	std::string mBoundary;
+	String mBody;
+	String mBoundary;
 	__uint32_t muContentLength;
 	__uint32_t muActBodyLength;
 	DownAndUploadHandler* mpUploadHandler;

@@ -2,7 +2,7 @@
 #define MAIN_CONFIG_H_
 
 #include "nvs.h"
-#include <string>
+#include "String.h"
 
 class Config {
 public:
@@ -15,21 +15,21 @@ public:
 	void ToggleAPMode() { mbAPMode = !mbAPMode; };
 
 private:
-	bool ReadString(nvs_handle h, const char* sKey, std::string& rsValue);
+	bool ReadString(nvs_handle h, const char* sKey, String& rsValue);
 	bool ReadBool(nvs_handle h, const char* sKey, bool& rbValue);
-	bool WriteString(nvs_handle h, const char* sKey, std::string& rsValue);
+	bool WriteString(nvs_handle h, const char* sKey, String& rsValue);
 	bool WriteBool(nvs_handle h, const char* sKey, bool bValue);
 
 
 public:
 	bool mbAPMode;
-	std::string msAPSsid;
-	std::string msAPPass;
-	std::string msSTASsid;
-	std::string msSTAPass;
-	std::string msSTAENTUser;
-	std::string msSTAENTCA;
-	std::string msHostname;
+	String msAPSsid;
+	String msAPPass;
+	String msSTASsid;
+	String msSTAPass;
+	String msSTAENTUser;
+	String msSTAENTCA;
+	String msHostname;
 
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;

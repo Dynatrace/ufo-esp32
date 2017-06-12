@@ -3,7 +3,6 @@
 
 #include "UrlParser.h"
 #include "HttpResponse.h"
-#include <string>
 #include <list>
 
 class Ufo;

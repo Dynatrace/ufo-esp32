@@ -1,7 +1,6 @@
 #ifndef MAIN_HTTPREQUESTPARSER_HPP_
 #define MAIN_HTTPREQUESTPARSER_HPP_
 
-//#include <string>
 #include <list>
 
 #include "DownAndUploadHandler.h"

@@ -99,9 +99,11 @@ bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength
     return InternalOnRecvBegin(isContentLength, contentLength);
 }
 
-bool Ota::OnReceiveBegin(char* sUrl, unsigned int contentLength){
-    ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl, contentLength);
-    //todo use string here
+bool Ota::OnReceiveBegin(String& sUrl, unsigned int contentLength){
+    ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl.c_str(), contentLength);
+    
+    if (!sUrl.equals("/update"))
+        return false;
     return InternalOnRecvBegin(true, contentLength);
 }
 

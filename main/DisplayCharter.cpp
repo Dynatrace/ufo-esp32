@@ -1,5 +1,6 @@
 #include <freertos/FreeRTOS.h>
 #include "DisplayCharter.h"
+#include "String.h"
 #include <esp_log.h>
 
 
@@ -55,14 +56,14 @@ void DisplayCharter::SetMorph(__uint16_t period, __uint8_t mspeed){
 	ESP_LOGD("DisplayCharter", "SetMorph %d, %d", period, mspeed);
 }
 
-__uint16_t DisplayCharter::ParseLedArg(std::string& argument, __uint16_t iPos){
+__uint16_t DisplayCharter::ParseLedArg(String& argument, __uint16_t iPos){
 	__uint8_t seg = 0;
-	std::string pos;
-	std::string count;
-	std::string color;
+	String pos;
+	String count;
+	String color;
 	__uint16_t i=iPos;
 	while ((i < argument.length()) && (seg < 3)){
-		char c = argument.at(i);
+		char c = argument.charAt(i);
 		if (c == '|')
 			seg++;
 		else switch(seg){
@@ -80,30 +81,30 @@ __uint16_t DisplayCharter::ParseLedArg(std::string& argument, __uint16_t iPos){
 	//pos.trim();
 	//count.trim();
 	//color.trim();
-	ESP_LOGD("DisplayCharter", "ParseLedArg %s, %s, %s", pos.data(), count.data(), color.data());
+	ESP_LOGD("DisplayCharter", "ParseLedArg %s, %s, %s", pos.c_str(), count.c_str(), color.c_str());
 
 
 	if ((pos.length() > 0) && (count.length() > 0) && (color.length() == 6)){
-		SetLeds(atoi(pos.data()), atoi(count.data()), strtol(color.substr(0, 2).data(), NULL, 16),
-												  	  strtol(color.substr(2, 2).data(), NULL, 16),
-													  strtol(color.substr(4, 2).data(), NULL, 16));
+		SetLeds(atoi(pos.c_str()), atoi(count.c_str()), strtol(color.substring(0, 2).c_str(), NULL, 16),
+												  	  strtol(color.substring(2, 4).c_str(), NULL, 16),
+													  strtol(color.substring(4, 6).c_str(), NULL, 16));
 	}
 	return i;
 }
 
-void DisplayCharter::ParseBgArg(std::string& argument){
+void DisplayCharter::ParseBgArg(String& argument){
 	if (argument.length() == 6)
-		SetBackground(	strtol(argument.substr(0, 2).data(), NULL, 16),
-						strtol(argument.substr(2, 2).data(), NULL, 16),
-						strtol(argument.substr(4, 2).data(), NULL, 16));
+		SetBackground(	strtol(argument.substring(0, 2).c_str(), NULL, 16),
+						strtol(argument.substring(2, 4).c_str(), NULL, 16),
+						strtol(argument.substring(4, 6).c_str(), NULL, 16));
 }
 
-void DisplayCharter::ParseWhirlArg(std::string& argument){
+void DisplayCharter::ParseWhirlArg(String& argument){
 	__uint8_t seg = 0;
-	std::string wspeed;
+	String wspeed;
 
 	for (__uint8_t i=0 ; i< argument.length() ; i++){
-		char c = argument.at(i);
+		char c = argument.charAt(i);
 		if (c == '|'){
 			if (++seg == 2)
 				break;
@@ -117,17 +118,17 @@ void DisplayCharter::ParseWhirlArg(std::string& argument){
 	//wspeed.trim();
 
 	if (wspeed.length() > 0){
-		SetWhirl(atoi(wspeed.data()), !seg);
+		SetWhirl(atoi(wspeed.c_str()), !seg);
 	}
 }
 
-void DisplayCharter::ParseMorphArg(std::string& argument){
+void DisplayCharter::ParseMorphArg(String& argument){
 	__uint8_t seg = 0;
-	std::string period;
-	std::string mspeed;
+	String period;
+	String mspeed;
 
 	for (__uint8_t i=0 ; i< argument.length() ; i++){
-		char c = argument.at(i);
+		char c = argument.charAt(i);
 		if (c == '|'){
 			if (++seg == 2)
 				break;
@@ -145,7 +146,7 @@ void DisplayCharter::ParseMorphArg(std::string& argument){
   //mspeed.trim();
 
 	if ((period.length() > 0) && (mspeed.length() > 0)){
-		SetMorph(atoi(period.data()), atoi(mspeed.data()));
+		SetMorph(atoi(period.c_str()), atoi(mspeed.c_str()));
 	}
 }
 

@@ -2,7 +2,7 @@
 #define MAIN_DISPLAYCHARTER_H_
 
 #include "DotstarStripe.h"
-#include <string>
+#include "String.h"
 
 #define RING_LEDCOUNT 15
 
@@ -15,10 +15,10 @@ class DisplayCharter
     void SetBackground(__uint8_t r, __uint8_t g, __uint8_t b);
     void SetWhirl(__uint8_t wspeed, bool clockwise);
     void SetMorph(__uint16_t period, __uint8_t mspeed);
-    __uint16_t ParseLedArg(std::string& argument, __uint16_t iPos);
-    void ParseBgArg(std::string& argument);
-    void ParseWhirlArg(std::string& argument);
-    void ParseMorphArg(std::string& argument);
+    __uint16_t ParseLedArg(String& argument, __uint16_t iPos);
+    void ParseBgArg(String& argument);
+    void ParseWhirlArg(String& argument);
+    void ParseMorphArg(String& argument);
     void Display(DotstarStripe &dotstar);
 
   private:

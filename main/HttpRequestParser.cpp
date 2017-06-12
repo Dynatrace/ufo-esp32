@@ -1,5 +1,6 @@
 #include "HttpRequestParser.h"
 #include "DownAndUploadHandler.h"
+#include "String.h"
 #include "freertos/FreeRTOS.h"
 #include <esp_log.h>
 
@@ -44,7 +45,6 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 	while (uPos < uLen){
 		char c = sBuffer[uPos];
 		uPos++;
-
 		switch (muParseState){
 			case STATE_Method:
 				if (c == ' '){
@@ -70,6 +70,7 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 				}
 				else
 					mUrlParser.ConsumeChar(c, mUrl, mpActParam);
+
 				switch (mUrlParser.GetState()){
 					case STATE_UrlComplete:
 					case STATE_ParamComplete:
@@ -115,7 +116,7 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 							return true;
 						}
 						else{
-							if (mBoundary.size()){
+							if (mBoundary.length()){
 							    muParseState = STATE_ProcessMultipartBodyStart;
 								mStringParser.Init();
 								mStringParser.AddStringToParse("\r\n\r\n");
@@ -231,8 +232,8 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 			    break;
 			case STATE_CopyBody:
 				uPos--;
-				mBody.append(sBuffer + uPos, uLen - uPos);
-				mbFinished = mBody.size() >= muContentLength;
+				mBody.concat(sBuffer + uPos, uLen - uPos);
+				mbFinished = mBody.length() >= muContentLength;
 				return true;
 				
 			case STATE_ProcessMultipartBodyStart:
@@ -241,7 +242,7 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 				__uint8_t u;
 				if (mStringParser.Found(u)){
 					muParseState = STATE_ProcessMultipartBody;
-					if (!mpUploadHandler || !mpUploadHandler->OnReceiveBegin((char*)mUrl.data(), muContentLength))
+					if (!mpUploadHandler || !mpUploadHandler->OnReceiveBegin(mUrl, muContentLength))
 						return SetError(5), false;
 				}
 				mbFinished = muActBodyLength >= muContentLength;
@@ -249,9 +250,9 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 			case STATE_ProcessMultipartBody:
 				uPos--;
 				uLen -= uPos;
-				if (muActBodyLength + 8 + mBoundary.size() < muContentLength){
-					if (muActBodyLength + 8 + mBoundary.size() + uLen > muContentLength){
-						__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.size());
+				if (muActBodyLength + 8 + mBoundary.length() < muContentLength){
+					if (muActBodyLength + 8 + mBoundary.length() + uLen > muContentLength){
+						__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.length());
 						if (!ProcessMultipartBody(sBuffer + uPos, u))
 							return SetError(6), false;
 					}

@@ -70,12 +70,12 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 }
 
 bool DynamicRequestHandler::HandleApiListRequest(std::list<TParam>& params, HttpResponse& rResponse){
-	std::string sBody;
+	String sBody;
 	mpUfo->GetApiStore().GetApisJson(sBody);
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
-	return rResponse.Send(sBody.data(), sBody.size());
+	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
@@ -87,9 +87,9 @@ bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, Http
 	while (it != params.end()){
 
 		if ((*it).paramName == "apiid")
-			uId = strtol((*it).paramValue.data(), NULL, 10) - 1;
+			uId = strtol((*it).paramValue.c_str(), NULL, 10) - 1;
 		else if ((*it).paramName == "apiedit")
-			sNewApi = (*it).paramValue.data();
+			sNewApi = (*it).paramValue.c_str();
 		else if ((*it).paramName == "delete")
 			bDelete = true;
 		it++;
@@ -121,9 +121,9 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += "\",\"heap\":\"";
 	sBody += esp_get_free_heap_size();
 	sBody += "\",\"ssid\":\"";
-	sBody += mpUfo->GetConfig().msSTASsid.data();
+	sBody += mpUfo->GetConfig().msSTASsid;
 	sBody += "\",\"hostname\":\"";
-	sBody += mpUfo->GetConfig().msHostname.data();
+	sBody += mpUfo->GetConfig().msHostname;
 	sBody += "\",";
 
 	if (mpUfo->GetConfig().mbAPMode){
@@ -166,25 +166,25 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	const char* sWifiEntCA = NULL;
 	const char* sWifiHostName = NULL;
 
-	std::string sBody;
+	String sBody;
 
 	std::list<TParam>::iterator it = params.begin();
 	while (it != params.end()){
 
 		if ((*it).paramName == "wifimode")
-			sWifiMode = (*it).paramValue.data();
+			sWifiMode = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifissid")
-			sWifiSsid = (*it).paramValue.data();
+			sWifiSsid = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifipwd")
-			sWifiPass = (*it).paramValue.data();
+			sWifiPass = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifientpwd")
-			sWifiEntPass = (*it).paramValue.data();
+			sWifiEntPass = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifientuser")
-			sWifiEntUser = (*it).paramValue.data();
+			sWifiEntUser = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifientca")
-			sWifiEntCA = (*it).paramValue.data();
+			sWifiEntCA = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifihostname")
-			sWifiHostName = (*it).paramValue.data();
+			sWifiHostName = (*it).paramValue.c_str();
 		it++;
 	}
 
@@ -216,7 +216,7 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			bOk = true;
 		}
 	}
-	if (sWifiHostName && mpUfo->GetConfig().msHostname.compare(sWifiHostName) != 0) {
+	if (sWifiHostName && !mpUfo->GetConfig().msHostname.equals(sWifiHostName)) {
 		mpUfo->GetConfig().msHostname = sWifiHostName;
 		bOk = true;
 	}
@@ -234,7 +234,7 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	}
 
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
-	return rResponse.Send(sBody.data(), sBody.size());
+	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 /*

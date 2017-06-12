@@ -1,7 +1,6 @@
 #include "ApiStore.h"
 #include <freertos/FreeRTOS.h>
 #include <esp_log.h>
-#include <string.h>
 
 #define MAX_APIS 20
 
@@ -37,7 +36,7 @@ bool ApiStore::SetApi(__uint8_t uId, const char* sApi){
 	}
 	else{
 		__uint8_t u = 0;
-		std::list<std::string>::iterator it = mApis.begin();
+		std::list<String>::iterator it = mApis.begin();
 		while (it != mApis.end()){
 			if (u == uId){
 				(*it) = sApi;
@@ -57,7 +56,7 @@ bool ApiStore::DeleteApi(__uint8_t uId){
 		return false;
 
 	__uint8_t u = 0;
-	std::list<std::string>::iterator it = mApis.begin();
+	std::list<String>::iterator it = mApis.begin();
 	while (it != mApis.end()){
 		if (u == uId){
 			mApis.erase(it);
@@ -70,10 +69,10 @@ bool ApiStore::DeleteApi(__uint8_t uId){
 }
 
 
-void ApiStore::GetApisJson(std::string& rsBody){
+void ApiStore::GetApisJson(String& rsBody){
 
 	rsBody = "{\"apis\":[";
-	std::list<std::string>::iterator it = mApis.begin();
+	std::list<String>::iterator it = mApis.begin();
 	while (it != mApis.end()){
 
 		rsBody += "\"";
@@ -146,7 +145,7 @@ bool ApiStore::WriteApis(){
 	}
 
 	__uint16_t uSize = 0;
-	std::list<std::string>::iterator it = mApis.begin();
+	std::list<String>::iterator it = mApis.begin();
 	while (it != mApis.end()){
 		uSize += (*it).length() + 1;
 		it++;
@@ -157,7 +156,7 @@ bool ApiStore::WriteApis(){
 	__uint16_t uPos = 0;
 	it = mApis.begin();
 	while (it != mApis.end()){
-		strcpy(sBuf + uPos, (*it).data());
+		strcpy(sBuf + uPos, (*it).c_str());
 		uPos += (*it).length();
 		sBuf[uPos++] = 0x00;
 		it++;

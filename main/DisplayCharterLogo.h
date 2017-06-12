@@ -2,7 +2,7 @@
 #define MAIN_DISPLAYCHARTERLOGO_H_
 
 #include "DotstarStripe.h"
-#include <string>
+#include "String.h"
 
 class DisplayCharterLogo {
 public:
@@ -12,7 +12,7 @@ public:
 	void Init();
 
 	void SetLed(__uint8_t uLed, __uint8_t r, __uint8_t g, __uint8_t b);
-	void ParseLogoLedArg(std::string& argument);
+	void ParseLogoLedArg(String& argument);
 
 
 	void Display(DotstarStripe &dotstar);
