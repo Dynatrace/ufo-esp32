@@ -113,6 +113,16 @@
 		</div>
 	</pageinfo>
 
+	<pagefirmwareprogress data-page="true">
+		<header class="header-bar">
+			<div class="center">
+				<h1 class="title">Firmware update in progress</h1>
+			</div>
+		<div class="content">
+			<div id="progressbar">0%</div>
+		</div>
+	</pagefirmwareprogress>
+
 	<pagefirmwareupdate data-page="true">
 		<header class="header-bar">
 			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
@@ -337,6 +347,7 @@
 		 * For the home page, we do not need to perform actions during
 		 * page events such as onCreate, onReady, etc
 		*/
+
 		app.on({ page: 'home', preventClose: false, content: null }, function (activity) {
 			var onApi = function (evt) {
 				var target = evt.target;
@@ -369,7 +380,6 @@
 						}
 					});
 				}
-
 			};
 
 			/*	var onFirmwareUpdate = function (evt) {
@@ -417,11 +427,7 @@
 				});
 			};
 
-			activity.onCreate(function () {
-				// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
-				document.querySelector('#firmware_restart').on('tap', onRestart);
-				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
-
+			var continueHome = function() {
 				var req = phonon.ajax({
 					method: 'GET',
 					url: 'apilist',
@@ -460,7 +466,29 @@
 						console.error(flagError);
 						console.log(res);
 					}
-				})
+				});
+			};
+
+			activity.onCreate(function () {
+				// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+				document.querySelector('#firmware_restart').on('tap', onRestart);
+				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+
+				phonon.ajax({
+					method: 'GET',
+					url: '/firmware?progress',
+					dataType: 'json',
+					success: function (res, xhr) {
+						if(res.status === 'notyetstartet') {
+							continueHome();
+						} else {
+							phonon.navigator().changePage('pagefirmwareprogress');
+						}
+					},
+					error: function() {
+						continueHome();
+					}
+				});
 			})
 		});
 
