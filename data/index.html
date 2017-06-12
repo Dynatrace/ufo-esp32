@@ -149,7 +149,7 @@
 				<ul class="list">
 					<li class="divider">from update server</li>
 					<li class="padded-list">
-						<button class="btn btn-flat primary" id="firmware_update"><a href="/firmware?update">download and update</a></button>
+						<button class="btn btn-flat primary" id="firmware_update"><a id="firmware_update_link" href="/firmware?update">download and update</a></button>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
@@ -396,20 +396,21 @@
 				}
 			};
 
-			/*	var onFirmwareUpdate = function (evt) {
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'firmware?update',
-						success: function (res, xhr) {
-							console.log(res);
-						},
+			var onFirmwareUpdate = function (evt) {
+				evt.preventDefault();
+				var req = phonon.ajax({
+					method: 'GET',
+					url: '/firmware?update',
+					success: function (res, xhr) {
+						phonon.navigator().changePage('pagefirmwareprogress');
 
-						error: function (res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					});
-				}; */
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			};
 
 			var onSwitchBootPartition = function (evt) {
 				var req = phonon.ajax({
@@ -484,10 +485,12 @@
 			};
 
 			activity.onCreate(function () {
-				// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+				document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
 				document.querySelector('#firmware_restart').on('tap', onRestart);
 				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+			});
 
+			activity.onReady(function() {
 				phonon.ajax({
 					method: 'GET',
 					url: '/firmware?progress',
@@ -508,7 +511,7 @@
 
 
 		app.on({ page: 'pagefirmwareprogress', preventClose: false, content: null }, function (activity) {
-			activity.onCreate(function() {
+			activity.onReady(function() {
 				var bar = document.getElementById('progressbarinner');
 				var text = document.getElementById('statusText');
 				var btn = document.getElementById('nextButton');
