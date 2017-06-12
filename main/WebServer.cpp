@@ -7,7 +7,7 @@
 #include <lwip/sockets.h>
 #include <esp_log.h>
 #include <esp_system.h>
-#include <string.h>
+#include <String.h>
 
 #include "sdkconfig.h"
 #include "fontwoff.h"
@@ -184,72 +184,74 @@ void WebServer::WebRequestHandler(int socket){
 			}
 		}
 
-		ESP_LOGD(tag, "Request parsed: %s", httpParser.GetUrl().data());
+		ESP_LOGD(tag, "Request parsed: %s", httpParser.GetUrl().c_str());
 
 		if (ssl)
 			httpResponse.Init(ssl, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 		else
 			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 		
-		if (!httpParser.GetUrl().compare("/") || !httpParser.GetUrl().compare("/index.html")){
+		if (httpParser.GetUrl().equals("/") || httpParser.GetUrl().equals("/index.html")){
 			httpResponse.AddHeader(HttpResponse::HeaderContentTypeHtml);
 			httpResponse.AddHeader("Content-Encoding: gzip");
 			if (!httpResponse.Send(indexhtml_h, sizeof(indexhtml_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.woff")){
+		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.woff")){
 			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontwoff_h, sizeof(fontwoff_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.ttf")){
+		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.ttf")){
 			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontttf_h, sizeof(fontttf_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.eot")){
+		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.eot")){
 			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fonteot_h, sizeof(fonteot_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/fonts/material-design-icons.svg")){
+		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.svg")){
 			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/api")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/api")){
 			if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/apilist")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/apilist")){
 			if (!requestHandler.HandleApiListRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/apiedit")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/apiedit")){
 			if (!requestHandler.HandleApiEditRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/info")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/info")){
 			if (!requestHandler.HandleInfoRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/config")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/config")){
 			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
 		} 
-		else if (!httpParser.GetUrl().compare("/firmware")) {
+		else if (httpParser.GetUrl().equals("/firmware")) {
 			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
+				break;
+		}
+		else if (httpParser.GetUrl().equals("/update")) {
+			String sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+				           "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
+						   "<h2>SUCCESS - firmware update succeded, rebooting shortly.</h2></body></html>";
+			if (!httpResponse.Send(sBody))
 				break;
 		}
 
 
-		else if (!httpParser.GetUrl().compare("/test")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/test")){
+			String sBody;
 			sBody = httpParser.IsGet() ? "GET " : "POST ";
 			sBody += httpParser.GetUrl();
 			sBody += httpParser.IsHttp11() ? " HTTP/1.1" : "HTTP/1.0";
@@ -270,7 +272,7 @@ void WebServer::WebRequestHandler(int socket){
 				sBody += "Body:\r\n";
 				sBody += httpParser.GetBody();
 			}
-			if (!httpResponse.Send(sBody.data(), sBody.size()))
+			if (!httpResponse.Send(sBody.c_str(), sBody.length()))
 				break;
 		}
 		else{

@@ -50,6 +50,7 @@ void UrlParser::ConsumeChar(char c, String& url, TParam* pParam){
 			else if (pParam){
 				if (muInDecode){
 					if (ProcessHash(c))
+						pParam->paramName += (char)muDecodedValue;
 				}
 				else
 					pParam->paramName += (c == '+') ? ' ' : (char)tolower(c);
@@ -68,6 +69,7 @@ void UrlParser::ConsumeChar(char c, String& url, TParam* pParam){
 			else if (pParam){
 				if (muInDecode){
 					if (ProcessHash(c))
+						pParam->paramValue += (char)muDecodedValue;
 				}
 				else
 					pParam->paramValue += (c == '+') ? ' ' : c;
