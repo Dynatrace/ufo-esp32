@@ -33,17 +33,17 @@ void DisplayCharterLogo::SetLed(__uint8_t uLed, __uint8_t r, __uint8_t g, __uint
 	}
 }
 
-void DisplayCharterLogo::ParseLogoLedArg(std::string& argument){
+void DisplayCharterLogo::ParseLogoLedArg(String& argument){
 	__uint16_t u=0;
 	__uint8_t uLed = 0;
 
 	while (u + 6 <= argument.length()){
-		SetLed(uLed, strtol(argument.substr(u + 0, 2).data(), NULL, 16),
-					 strtol(argument.substr(u + 2, 2).data(), NULL, 16),
-					 strtol(argument.substr(u + 4, 2).data(), NULL, 16));
+		SetLed(uLed, strtol(argument.substring(u + 0, u + 2).c_str(), NULL, 16),
+					 strtol(argument.substring(u + 2, u + 4).c_str(), NULL, 16),
+					 strtol(argument.substring(u + 4, u + 6).c_str(), NULL, 16));
 		uLed++;
 		u+= 6;
-		if ((u >= argument.length()) || (argument.at(u) != '|'))
+		if ((u >= argument.length()) || (argument.charAt(u) != '|'))
 			break;
 		u++;
 	}

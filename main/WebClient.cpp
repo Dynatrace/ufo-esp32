@@ -68,7 +68,7 @@ bool WebClient::AddHttpHeaderCStr(const char* header) {
 	return true;
 }
 
-void WebClient::SetDownloadHandler(DownloadHandler* pDownloadHandler) {
+void WebClient::SetDownloadHandler(DownAndUploadHandler* pDownloadHandler) {
 	mpDownloadHandler = pDownloadHandler;
 }
 

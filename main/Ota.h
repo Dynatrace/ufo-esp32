@@ -8,7 +8,7 @@
 
 #include <esp_ota_ops.h>
 //#include <string>
-#include "DownloadHandler.h"
+#include "DownAndUploadHandler.h"
 #include "String.h"
 #include "WebClient.h"
 
@@ -17,7 +17,7 @@
 #define OTA_PROGRESS_FLASHERROR	        -3
 #define OTA_PROGRESS_FINISHEDSUCCESS  -200
 
-class Ota : public DownloadHandler {
+class Ota : public DownAndUploadHandler {
 public:
 	static void StartUpdateFirmwareTask();
 	//static int  smErrorCode; //TODO this should provide "feedback" from the static class*/
@@ -37,8 +37,11 @@ public:
 
 	bool SwitchBootPartition();
 
+	bool InternalOnRecvBegin(bool isContentLength, unsigned int contentLength);
+
 public:
 	bool OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength);
+	bool OnReceiveBegin(String& sUrl, unsigned int contentLength);
 	bool OnReceiveEnd();
 	bool OnReceiveData(char* buf, int len); // override DownloadHandler virtual method
 

@@ -71,7 +71,7 @@ void Ufo::Start(){
 	gpio_pad_select_gpio(19);
 	gpio_set_direction(GPIO_NUM_19, GPIO_MODE_OUTPUT);
 
-	xTaskCreate(&task_function_webserver, "Task_WebServer", 4096, this, 5, NULL);
+	xTaskCreatePinnedToCore(&task_function_webserver, "Task_WebServer", 8192, this, 5, NULL, 0); //Ota update (upload) just works on core 0
 	xTaskCreate(&task_function_display, "Task_Display", 4096, this, 5, NULL);
 	xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 4096, this, 5, NULL);
 	xTaskCreate(&task_function_dynatrace_monitoring, "Task_DynatraceMonitoring", 4096, this, 5, NULL);

@@ -11,9 +11,7 @@
 #if defined(CONFIG_WIFI_ENABLED)
 #include "esp_wifi.h"
 #include "esp_err.h"
-
-
-#include <string>
+#include "String.h"
 #include <vector>
 
 class Config;
@@ -27,20 +25,21 @@ public:
 	void SetConfig(Config* pConfig)						{ mpConfig = pConfig; };
 	void SetStateDisplay(StateDisplay* pStateDisplay)  	{ mpStateDisplay = pStateDisplay; };
 
+	String GetLocalAddress();
 	void GetLocalAddress(char* sBuf);
 	void GetGWAddress(char* sBuf);
 	void GetNetmask(char* sBuf);
 	void GetMac(__uint8_t uMac[6]);
 
-	void StartAPMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname);
-	void StartSTAMode(std::string& rsSsid, std::string& rsPass, std::string& rsHostname);
-	void StartSTAModeEnterprise(std::string& rsSsid, std::string& rsUser, std::string& rsPass, std::string& rsCA, std::string& rsHostname);
+	void StartAPMode(String& rsSsid, String& rsPass, String& rsHostname);
+	void StartSTAMode(String& rsSsid, String& rsPass, String& rsHostname);
+	void StartSTAModeEnterprise(String& rsSsid, String& rsUser, String& rsPass, String& rsCA, String& rsHostname);
 
 
 	bool IsConnected() { return mbConnected; };
-	void addDNSServer(std::string ip);
-	struct in_addr getHostByName(std::string hostName);
-	void setIPInfo(std::string ip, std::string gw, std::string netmask);
+	void addDNSServer(String& ip);
+	struct in_addr getHostByName(String& hostName);
+	void setIPInfo(String& ip, String& gw, String& netmask);
 
 	esp_err_t OnEvent(system_event_t *event);
 
@@ -52,16 +51,16 @@ private:
 	Config* mpConfig;
 	StateDisplay* mpStateDisplay;
 
-	std::string      ip;
-	std::string      gw;
-	std::string      netmask;
+	String      ip;
+	String      gw;
+	String      netmask;
 
 	__uint8_t        muMode;
-	std::string      msSsid;
-	std::string      msPass;
-	std::string      msUser;
-	std::string      msCA;
-	std::string 	 msHostname;
+	String      msSsid;
+	String      msPass;
+	String      msUser;
+	String      msCA;
+	String 	 msHostname;
 
 	__uint8_t 		muConnectedClients;
 	bool 			mbConnected;

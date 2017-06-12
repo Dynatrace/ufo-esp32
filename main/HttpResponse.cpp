@@ -54,9 +54,9 @@ bool HttpResponse::Send(const char* sBody, __uint16_t uBodyLen){
 	if (!SendInternal(sData, len))
 			return false;
 
-	std::list<std::string>::iterator it = mHeaders.begin();
+	std::list<String>::iterator it = mHeaders.begin();
 	while (it != mHeaders.end()){
-		if (!SendInternal(it->data(), it->size()))
+		if (!SendInternal(it->c_str(), it->length()))
 			return false;
 		if (!SendInternal("\r\n", 2))
 			return false;

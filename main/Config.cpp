@@ -83,7 +83,7 @@ bool Config::Write()
 //------------------------------------------------------------------------------------
 
 
-bool Config::ReadString(nvs_handle h, const char* sKey, std::string& rsValue){
+bool Config::ReadString(nvs_handle h, const char* sKey, String& rsValue){
 	char* sBuf = NULL;
 	__uint32_t u = 0;
 
@@ -107,8 +107,8 @@ bool Config::ReadBool(nvs_handle h, const char* sKey, bool& rbValue){
 	return true;
 }
 
-bool Config:: WriteString(nvs_handle h, const char* sKey, std::string& rsValue){
-	esp_err_t err = nvs_set_str(h, sKey, rsValue.data());
+bool Config:: WriteString(nvs_handle h, const char* sKey, String& rsValue){
+	esp_err_t err = nvs_set_str(h, sKey, rsValue.c_str());
 	if (err != ESP_OK){
 		ESP_LOGD("CONFIG", "!!!!!!!!!!!!!!!!!!! Error %d", err);
 		return false;

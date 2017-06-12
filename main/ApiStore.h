@@ -9,7 +9,7 @@
 #define MAIN_APISTORE_H_
 
 #include "nvs.h"
-#include <string>
+#include "String.h"
 #include <list>
 
 class ApiStore {
@@ -22,14 +22,14 @@ public:
 	bool SetApi(__uint8_t uId, const char* sApi);
 	bool DeleteApi(__uint8_t uId);
 
-	void GetApisJson(std::string& rsBody);
+	void GetApisJson(String& rsBody);
 
 private:
 	bool ReadApis();
 	bool WriteApis();
 
 private:
-	std::list<std::string> mApis;
+	std::list<String> mApis;
 
 };
 

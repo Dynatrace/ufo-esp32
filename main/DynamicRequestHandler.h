@@ -3,7 +3,6 @@
 
 #include "UrlParser.h"
 #include "HttpResponse.h"
-#include <string>
 #include <list>
 
 class Ufo;
@@ -23,7 +22,7 @@ public:
 	bool HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& response);
 
 
-	void CheckForRestart();
+	bool ShouldRestart() { return mbRestart; }
 
 private:
 	Ufo* mpUfo;

@@ -2,7 +2,7 @@
 #define MAIN_URL_PARSER_H_
 
 #include "freertos/FreeRTOS.h"
-#include <string>
+#include "String.h"
 
 
 #define MAX_Params		10
@@ -15,9 +15,11 @@
 
 
 struct TParam{
-	std::string paramName;
-	std::string paramValue;
+	String paramName;
+	String paramValue;
 };
+
+class String;
 
 class UrlParser {
 public:
@@ -26,7 +28,7 @@ public:
 
 	void Init();
 
-	void ConsumeChar(char c, std::string& url, TParam* pParam);
+	void ConsumeChar(char c, String& url, TParam* pParam);
 	void SignalEnd();
 
 	__uint8_t GetState() { return muState; };
