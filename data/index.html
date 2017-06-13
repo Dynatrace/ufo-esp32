@@ -19,6 +19,12 @@
 	<style name="icons.min.css" phononversion="1.4.5">
 		@font-face{font-family:MaterialDesignIcons;src:url(../fonts/material-design-icons.eot?-613f9d);src:url(../fonts/material-design-icons.eot?#iefix-613f9d) format("embedded-opentype"),url(../fonts/material-design-icons.woff?-613f9d) format("woff"),url(../fonts/material-design-icons.ttf?-613f9d) format("truetype"),url(../fonts/material-design-icons.svg?-613f9d#material-design-icons) format("svg");font-weight:400;font-style:normal}.icon{display:inline-block;font-family:MaterialDesignIcons;font-size:24px;line-height:1;text-decoration:none;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.icon-home:before{content:"\e600"}.icon-info-outline:before{content:"\e601"}.icon-settings:before{content:"\e606"}.icon-add:before{content:"\e602"}.icon-edit:before{content:"\e603"}.icon-arrow-back:before{content:"\e604"}.icon-arrow-forward:before{content:"\e60a"}.icon-check:before{content:"\e605"}.icon-chevron-left:before{content:"\e609"}.icon-chevron-right:before{content:"\e60f"}.icon-close:before{content:"\e608"}.icon-expand-less:before{content:"\e610"}.icon-expand-more:before{content:"\e611"}.icon-menu:before{content:"\e60b"}.icon-more-horiz:before{content:"\e60c"}.icon-more-vert:before{content:"\e60d"}.icon-sync:before{content:"\e60e"}.icon-sync-problem:before{content:"\e607"}.icon-star:before{content:"\e612"}.icon-star-outline:before{content:"\e613"}i.icon{font-style:normal}.with-circle{padding:10px;border-radius:50%;border:1px solid #eee}
 	</style>
+	<style name="custom.css" phononversion="1.4.5">
+		#progressbar { border: 1px solid #eee; position: relative; height: 30px;}
+		#progressbarinner { height: 100%; width: 100%; background-color: #0084e7; position: absolute; left: 0; top: 0; transition: width 0.1s ease; color: transparent;}
+		#nextButton { line-height: 42px; transition: all 0.2s ease;}
+		#nextButton[hidden] {opacity: 0; pointer-events: none;}
+	</style>
 	<script name="forms.min.js" phononversion="1.4.5">
 		!function(e){"use strict";function t(e){e.on("focus",n),e.on("blur",i)}function n(e){e.target.parentNode.classList.add("input-filled")}function i(e){""===e.target.value.trim()&&e.target.parentNode.classList.remove("input-filled")}function o(e){""===e.value.trim()||e.parentNode.classList.contains("input-filled")||e.parentNode.classList.add("input-filled")}document.on("pagecreated",function(e){for(var n=document.querySelector(e.detail.page),i=n.querySelectorAll("input.with-label"),l=i.length-1;l>=0;l--)t(i[l]),o(i[l])}),document.on("pageopened",function(e){for(var t=document.querySelector(e.detail.page),n=t.querySelectorAll("input.with-label"),i=n.length-1;i>=0;i--)o(n[i])})}("undefined"!=typeof window?window:this);
 	</script>
@@ -113,6 +119,24 @@
 		</div>
 	</pageinfo>
 
+	<pagefirmwareprogress data-page="true">
+		<header class="header-bar">
+			<div class="center">
+				<h1 class="title">Firmware update</h1>
+			</div>
+		</header>
+		<div class="content">
+			<div class="padded-full">
+				<div id="progressbar">
+					<div id="progressbarinner"></div>
+				</div>
+				<p id="statusText" class="padded-top padded-bottom">
+				</p>
+				<a id="nextButton" hidden class="btn fit-parent primary" href="/">Next</a>
+			</div>
+		</div>
+	</pagefirmwareprogress>
+
 	<pagefirmwareupdate data-page="true">
 		<header class="header-bar">
 			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
@@ -125,7 +149,7 @@
 				<ul class="list">
 					<li class="divider">from update server</li>
 					<li class="padded-list">
-						<button class="btn btn-flat primary" id="firmware_update"><a href="/firmware?update">download and update</a></button>
+						<button class="btn btn-flat primary" id="firmware_update"><!--<a href="/#!pagefirmwareprogress">-->download and update<!--</a>--></button>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
@@ -137,7 +161,7 @@
 				</ul>
 
 				<form method='POST' action='/update' enctype='multipart/form-data'>
-					<span class="padded-list">Select firmware file like ufo.ino.bin or index.html (do not upload the ufo.spiffs.bin here)</span>
+					<span class="padded-list">Select firmware file ufo-esp32.bin</span>
 					<li>
 						<input class="padded-full" type="file" name="update" id="firmwarefilename" />
 					</li>
@@ -337,6 +361,7 @@
 		 * For the home page, we do not need to perform actions during
 		 * page events such as onCreate, onReady, etc
 		*/
+
 		app.on({ page: 'home', preventClose: false, content: null }, function (activity) {
 			var onApi = function (evt) {
 				var target = evt.target;
@@ -369,23 +394,23 @@
 						}
 					});
 				}
-
 			};
 
-			/*	var onFirmwareUpdate = function (evt) {
-					var req = phonon.ajax({
-						method: 'GET',
-						url: 'firmware?update',
-						success: function (res, xhr) {
-							console.log(res);
-						},
+			var onFirmwareUpdate = function (evt) {
+				evt.preventDefault();
+				var req = phonon.ajax({
+					method: 'GET',
+					url: '/firmware?update',
+					success: function (res, xhr) {
+						phonon.navigator().changePage('pagefirmwareprogress');
 
-						error: function (res, flagError, xhr) {
-							console.error(flagError);
-							console.log(res);
-						}
-					});
-				}; */
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			};
 
 			var onSwitchBootPartition = function (evt) {
 				var req = phonon.ajax({
@@ -417,11 +442,7 @@
 				});
 			};
 
-			activity.onCreate(function () {
-				// document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
-				document.querySelector('#firmware_restart').on('tap', onRestart);
-				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
-
+			var continueHome = function() {
 				var req = phonon.ajax({
 					method: 'GET',
 					url: 'apilist',
@@ -460,8 +481,101 @@
 						console.error(flagError);
 						console.log(res);
 					}
-				})
+				});
+			};
+
+			activity.onCreate(function () {
+				document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
+				document.querySelector('#firmware_restart').on('tap', onRestart);
+				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+			});
+
+			activity.onReady(function() {
+				phonon.ajax({
+					method: 'GET',
+					url: '/firmware?progress',
+					dataType: 'json',
+					success: function (res, xhr) {
+						if(res.status === 'notyetstarted') {
+							continueHome();
+						} else {
+							phonon.navigator().changePage('pagefirmwareprogress');
+						}
+					},
+					error: function() {
+						continueHome();
+					}
+				});
 			})
+		});
+
+
+		app.on({ page: 'pagefirmwareprogress', preventClose: false, content: null }, function (activity) {
+			activity.onReady(function() {
+				var bar = document.getElementById('progressbarinner');
+				var text = document.getElementById('statusText');
+				var btn = document.getElementById('nextButton');
+				btn.hidden = true;
+				var messages = {
+					inprogress: 'Firmware update in progress',
+					finishedsuccess: 'Firmware successfully updated. Rebooting now.',
+					connectionerror: 'Firmware could not be downloaded.',
+					flasherror: 'Firmware could not be flashed.'
+				};
+
+				var errorState = function(time) {
+					setTimeout(function() {
+						btn.hidden = false;
+					}, time || 30000)
+				};
+
+				var stateHandling = {
+					finishedsuccess: function(res) {
+						setTimeout(function() {
+							bar.style.width = '100%';
+							btn.hidden = false;
+						}, 10000);
+					},
+					connectionerror: function(res) {
+						errorState();
+					},
+					flasherror: function(res) {
+						errorState();
+					}
+				}
+
+				var atLeast = function(lower, amount) {
+					if(amount < lower) {
+						return lower;
+					}
+					return amount;
+				};
+				
+				var update = function() {
+					phonon.ajax({
+						method: 'GET',
+						url: '/firmware?progress',
+						dataType: 'json',
+						success: function (res, xhr) {
+							try {
+								bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
+								text.innerHTML = messages[res.status] || '&nbsp;';
+								if(res.status === 'inprogress') {
+									setTimeout(update, 1000);
+								} else {
+									var handle = stateHandling[res.status];
+									if(typeof handle !== 'undefined') handle(res);
+								}
+							} catch(e) {
+								text.innerHTML = 'undefined error! Please wait';
+								errorState(5000);
+							}
+						}
+					});
+				};
+
+				update();
+			});
 		});
 
 		document.on('pageopened', function (evt) {

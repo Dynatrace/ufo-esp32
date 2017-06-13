@@ -12,6 +12,10 @@
 #include "String.h"
 #include "WebClient.h"
 
+//#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"  // testing with local go server
+#define OTA_LATEST_FIRMWARE_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"
+
+
 #define OTA_PROGRESS_NOTYETSTARTED      -1
 #define OTA_PROGRESS_CONNECTIONERROR    -2
 #define OTA_PROGRESS_FLASHERROR	        -3

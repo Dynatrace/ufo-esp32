@@ -26,9 +26,6 @@
 #include "String.h"
 #include "WebClient.h"
 
-//#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"  // testing with local go server
-#define LATEST_FIRMWARE_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"
-
 //#define BUFFSIZE 1024
 //#define TEXT_BUFFSIZE 1024
 
@@ -216,7 +213,7 @@ void task_function_firmwareupdate(void* user_data) {
 	ESP_LOGW(LOGTAG, "Starting Firmware Update Task ....");
 
     Ota ota;
-    if(ota.UpdateFirmware(LATEST_FIRMWARE_URL)) {
+    if(ota.UpdateFirmware(OTA_LATEST_FIRMWARE_URL)) {
       	ESP_LOGI(LOGTAG, "Firmware updated. Rebooting now......");
     } else {
 	  	ESP_LOGE(LOGTAG, "OTA update failed!");
