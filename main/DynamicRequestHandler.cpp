@@ -153,9 +153,9 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += ",\"dtenabled\":\"";
 	sBody += mpUfo->GetConfig().mbDTEnabled;
 	sBody += "\",\"dtenvid\":\"";
-	sBody += mpUfo->GetConfig().msDTEnvId.data();
+	sBody += mpUfo->GetConfig().msDTEnvId;
 	sBody += "\",\"dtapitoken\":\"";
-	sBody += mpUfo->GetConfig().msDTApiToken.data();
+	sBody += mpUfo->GetConfig().msDTApiToken;
 	sBody += "\",\"dtinterval\":\"";
 	sBody += mpUfo->GetConfig().miDTInterval;
 	sBody += "\"}";
@@ -168,8 +168,8 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 
 bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
-	const char* sEnvId = NULL;
-	const char* sApiToken = NULL;
+	String sEnvId;
+	String sApiToken;
 	bool bEnabled = false;
 	int iInterval = 0;
 
@@ -177,14 +177,14 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 
 	std::list<TParam>::iterator it = params.begin();
 	while (it != params.end()){
-		if ((*it).paramName == "dynatrace-on")
-			bEnabled = (*it).paramValue.data();
-		else if ((*it).paramName == "dynatrace-environmentid")
-			sEnvId = (*it).paramValue.data();
-		else if ((*it).paramName == "dynatrace-apitoken")
-			sApiToken = (*it).paramValue.data();
-		else if ((*it).paramName == "dynatrace-interval")
-			iInterval = atoi((*it).paramValue.data());
+		if ((*it).paramName == "dtenabled")
+			bEnabled = (*it).paramValue;
+		else if ((*it).paramName == "dtenvid")
+			sEnvId = (*it).paramValue;
+		else if ((*it).paramName == "dtapitoken")
+			sApiToken = (*it).paramValue;
+		else if ((*it).paramName == "dtinterval")
+			iInterval = (*it).paramValue.toInt();
 		it++;
 	}
 
@@ -195,7 +195,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	else 		mpUfo->GetConfig().msDTApiToken.clear();
 	mpUfo->GetConfig().miDTInterval = iInterval;
 
-	mpUfo->GetConfig().Write();
+	mpUfo->GetConfig().Write(&mpUfo->GetConfig().mbDTChanged);
 
 	ESP_LOGI(tag, "Dynatrace Integration Saved");
 
