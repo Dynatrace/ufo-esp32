@@ -217,8 +217,7 @@ void WebServer::WebRequestHandler(int socket){
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
-		else if (!httpParser.GetUrl().compare("/dynatraceintegration")){
-			std::string sBody;
+		else if (httpParser.GetUrl().equals("/dynatraceintegration")){
 			if (!requestHandler.HandleDynatraceIntegrationRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
