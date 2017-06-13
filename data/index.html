@@ -403,6 +403,7 @@
 					url: '/firmware?update',
 					success: function (res, xhr) {
 						phonon.navigator().changePage('pagefirmwareprogress');
+						console.log("initiated firmware update successfully.")
 
 					},
 					error: function (res, flagError, xhr) {
@@ -488,6 +489,9 @@
 				document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
 				document.querySelector('#firmware_restart').on('tap', onRestart);
 				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+				document.querySelector('#firmware_update').on('click', onFirmwareUpdate);
+				document.querySelector('#firmware_restart').on('click', onRestart);
+				document.querySelector('#firmware_switchbootpartition').on('click', onSwitchBootPartition);
 			});
 
 			activity.onReady(function() {
@@ -512,6 +516,8 @@
 
 		app.on({ page: 'pagefirmwareprogress', preventClose: false, content: null }, function (activity) {
 			activity.onReady(function() {
+				console.log("pagefirmwareprogress onReady");
+
 				var bar = document.getElementById('progressbarinner');
 				var text = document.getElementById('statusText');
 				var btn = document.getElementById('nextButton');
