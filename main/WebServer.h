@@ -18,7 +18,11 @@ public:
 
 	bool Start();
 
-	void WebRequestHandler(int socket);
+	void WebRequestHandler(int socket, int conCount);
+
+	__uint8_t GetConcurrentConnections();
+	void SignalConnection();
+	void SignalConnectionExit();
 
 private:
 	Ufo* mpUfo;
@@ -28,6 +32,10 @@ private:
 	SSL_CTX* mpSslCtx;
 
 	Ota mOta;
+	
+	portMUX_TYPE myMutex;
+	__uint8_t muConcurrentConnections;
+
 
 };
 

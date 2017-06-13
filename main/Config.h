@@ -11,18 +11,23 @@ public:
 
 	bool Read();
 	bool Write();
+	bool Write(bool* pFlag);
 
 	void ToggleAPMode() { mbAPMode = !mbAPMode; };
+	bool Changed(bool* pChanged);
 
 private:
 	bool ReadString(nvs_handle h, const char* sKey, String& rsValue);
 	bool ReadBool(nvs_handle h, const char* sKey, bool& rbValue);
+	bool ReadInt(nvs_handle h, const char* sKey, int& rbValue);
 	bool WriteString(nvs_handle h, const char* sKey, String& rsValue);
 	bool WriteBool(nvs_handle h, const char* sKey, bool bValue);
+	bool WriteInt(nvs_handle h, const char* sKey, int bValue);
 
 
 public:
 	bool mbAPMode;
+
 	String msAPSsid;
 	String msAPPass;
 	String msSTASsid;
@@ -31,6 +36,13 @@ public:
 	String msSTAENTCA;
 	String msHostname;
 
+    String msDTEnvId;
+    String msDTApiToken;
+	bool mbDTEnabled;
+    int miDTInterval;
+	bool mbDTChanged = false;
+
+	bool mbDummy = false;
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;
 

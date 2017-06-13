@@ -21,6 +21,8 @@ public:
 
 	void TaskWebServer();
 	void TaskDisplay();
+	void TaskDynatraceIntegration();
+	void TaskDynatraceMonitoring();
 
 	void InitLogoLeds();
 	void ShowLogoLeds();

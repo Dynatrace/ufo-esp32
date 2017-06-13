@@ -19,6 +19,7 @@ public:
 	bool HandleInfoRequest(std::list<TParam>& params, HttpResponse& rResponse);
 	bool HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse);
 	bool HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response);
+	bool HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& response);
 
 
 	bool ShouldRestart() { return mbRestart; }

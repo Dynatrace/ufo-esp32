@@ -7,6 +7,8 @@
 #include "Ota.h"
 #include "String.h"
 
+static char tag[] = "WebServer";
+
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;
 	mpDisplayCharterLevel1 = pDCLevel1;
@@ -140,14 +142,58 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 		sBody.printf("\"ipsubnetmask\":\"%s\",", sHelp);
 	}
 	mpUfo->GetWifi().GetMac((__uint8_t*)sHelp);
+
 	sBody.printf("\"macaddress\":\"%x:%x:%x:%x:%x:%x\",", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-	sBody.printf("\"firmwareversion\":\"%s\"", FIRMWARE_VERSION);
+	sBody.printf("\"firmwareversion\":\"%s\",", FIRMWARE_VERSION);
+	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
+	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvId.c_str());
+	sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
+	sBody.printf("\"dtinterval\":\"%u\"", mpUfo->GetConfig().miDTInterval);
 	sBody += '}';
 
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
 	return rResponse.Send(sBody.c_str(), sBody.length());
+}
+
+bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& rResponse){
+
+	String sEnvId;
+	String sApiToken;
+	bool bEnabled = false;
+	int iInterval = 0;
+
+	String sBody;
+
+	std::list<TParam>::iterator it = params.begin();
+	while (it != params.end()){
+		if ((*it).paramName == "dtenabled")
+			bEnabled = (*it).paramValue;
+		else if ((*it).paramName == "dtenvid")
+			sEnvId = (*it).paramValue;
+		else if ((*it).paramName == "dtapitoken")
+			sApiToken = (*it).paramValue;
+		else if ((*it).paramName == "dtinterval")
+			iInterval = (*it).paramValue.toInt();
+		it++;
+	}
+
+	mpUfo->GetConfig().mbDTEnabled = bEnabled;
+	if (sEnvId) mpUfo->GetConfig().msDTEnvId = sEnvId;
+	else 		mpUfo->GetConfig().msDTEnvId.clear();
+	if (sApiToken) mpUfo->GetConfig().msDTApiToken = sApiToken;
+	else 		mpUfo->GetConfig().msDTApiToken.clear();
+	mpUfo->GetConfig().miDTInterval = iInterval;
+
+	mpUfo->GetConfig().Write(&mpUfo->GetConfig().mbDTChanged);
+
+	ESP_LOGI(tag, "Dynatrace Integration Saved");
+
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	rResponse.AddHeader("Location: /#!pagedynatraceintegrationsettings");
+	rResponse.SetRetCode(302);
+	return rResponse.Send();
 }
 
 bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){

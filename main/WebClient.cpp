@@ -102,7 +102,7 @@ void WebClient::PrepareRequest(String& sRequest) {
 	}
 
 	if (mpPostData) {
-		ESP_LOGI(LOGTAG, "SETTING Content-Length to %u", muPostDataSize);
+		ESP_LOGD(LOGTAG, "SETTING Content-Length to %u", muPostDataSize);
 		char contentLength[64];
 		sprintf(contentLength, "Content-Length: %u\r\n", muPostDataSize);
 		sRequest += contentLength;
@@ -119,11 +119,11 @@ unsigned short WebClient::HttpGet() {
 	for (short redirects = 0; redirects < 5; redirects++) {
 		statuscode = HttpExecute();
 		if (statuscode != 302 && statuscode != 301) {
-			ESP_LOGI(LOGTAG, "HttpExecute* finished with %u", mHttpResponseParser.GetStatusCode());
+			ESP_LOGD(LOGTAG, "HttpExecute* finished with %u", mHttpResponseParser.GetStatusCode());
 			return statuscode;
 		}
 		mpUrl->Parse(mHttpResponseParser.GetRedirectLocation());
-		ESP_LOGI(LOGTAG, "Redirecting to: %s", mHttpResponseParser.GetRedirectLocation().c_str());
+		ESP_LOGD(LOGTAG, "Redirecting to: %s", mHttpResponseParser.GetRedirectLocation().c_str());
 	}
 	return 399; // max redirects exceeded
 
@@ -163,7 +163,7 @@ unsigned short WebClient::HttpExecute() {
 	// Code to print the resolved IP.
 	// Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code
 	struct in_addr *addr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
-	ESP_LOGI(LOGTAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
+	ESP_LOGD(LOGTAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
 
 	// Socket
 	int socket = socket(res->ai_family, res->ai_socktype, 0);
@@ -172,7 +172,7 @@ unsigned short WebClient::HttpExecute() {
 		freeaddrinfo(res);
 		return 1004;
 	}
-	ESP_LOGI(LOGTAG, "... allocated socket\r\n");
+	ESP_LOGD(LOGTAG, "... allocated socket\r\n");
 
 	// CONNECT
 	if (connect(socket, res->ai_addr, res->ai_addrlen) != 0) {
@@ -181,7 +181,7 @@ unsigned short WebClient::HttpExecute() {
 		freeaddrinfo(res);
 		return 1005;
 	}
-	ESP_LOGI(LOGTAG, "... connected");
+	ESP_LOGD(LOGTAG, "... connected");
 	freeaddrinfo(res);
 
 	// Build HTTP Request
@@ -190,7 +190,7 @@ unsigned short WebClient::HttpExecute() {
 
 
 	// send HTTP request
-	ESP_LOGI(LOGTAG, "sRequest: %s", sRequest.c_str());
+	ESP_LOGD(LOGTAG, "sRequest: %s", sRequest.c_str());
 	if (write(socket, sRequest.c_str(), sRequest.length()) < 0) {
 		ESP_LOGE(LOGTAG, "... socket send failed");
 		close(socket);
@@ -208,7 +208,7 @@ unsigned short WebClient::HttpExecute() {
 	}
 
 
-	ESP_LOGI(LOGTAG, "... socket send success");
+	ESP_LOGD(LOGTAG, "... socket send success");
 
 	// Read HTTP response
 	mHttpResponseParser.Init(mpDownloadHandler, muMaxResponseDataSize);
@@ -251,13 +251,13 @@ unsigned short WebClient::HttpExecuteSecure() {
 	mbedtls_ssl_init(&ssl);
 	mbedtls_x509_crt_init(&cacert);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
-	ESP_LOGI(LOGTAG, "Seeding the random number generator");
 
+	ESP_LOGD(LOGTAG, "Seeding the random number generator");
 	mbedtls_ssl_config_init(&conf);
 
 	mbedtls_entropy_init(&entropy);
-	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-	NULL, 0)) != 0) {
+
+	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0)) != 0) {
 		ESP_LOGE(LOGTAG, "mbedtls_ctr_drbg_seed returned %d", ret);
 		abort();
 	}
@@ -273,7 +273,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 	 abort();
 	 } */
 
-	ESP_LOGI(LOGTAG, "Setting hostname for TLS session...");
+	ESP_LOGD(LOGTAG, "Setting hostname for TLS session...");
 
 	/* Hostname set here should match CN in server certificate */
 	if ((ret = mbedtls_ssl_set_hostname(&ssl, mpUrl->GetPortAsString().c_str())) != 0) {
@@ -281,7 +281,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		abort();
 	}
 
-	ESP_LOGI(LOGTAG, "Setting up the SSL/TLS structure...");
+	ESP_LOGD(LOGTAG, "Setting up the SSL/TLS structure...");
 
 	if ((ret = mbedtls_ssl_config_defaults(&conf,
 	MBEDTLS_SSL_IS_CLIENT,
@@ -312,7 +312,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 	mbedtls_net_init(&server_fd);
 
 	ESP_LOGI(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
-	ESP_LOGI(LOGTAG, "Port as string '%s'", mpUrl->GetPortAsString().c_str());
+	ESP_LOGD(LOGTAG, "Port as string '%s'", mpUrl->GetPortAsString().c_str());
 	if ((ret = mbedtls_net_connect(&server_fd, mpUrl->GetHost().c_str(), mpUrl->GetPortAsString().c_str(), MBEDTLS_NET_PROTO_TCP))
 			!= 0) {
 		ESP_LOGE(LOGTAG, "mbedtls_net_connect returned -%x", -ret);
@@ -323,7 +323,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
-	ESP_LOGI(LOGTAG, "Performing the SSL/TLS handshake...");
+	ESP_LOGD(LOGTAG, "Performing the SSL/TLS handshake...");
 
 	while ((ret = mbedtls_ssl_handshake(&ssl)) != 0) {
 		if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
@@ -332,7 +332,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		}
 	}
 
-	ESP_LOGI(LOGTAG, "Verifying peer X.509 certificate...");
+	ESP_LOGD(LOGTAG, "Verifying peer X.509 certificate...");
 
 	if ((flags = mbedtls_ssl_get_verify_result(&ssl)) != 0) {
 		/* In real life, we probably want to close connection if ret != 0 */
@@ -341,14 +341,14 @@ unsigned short WebClient::HttpExecuteSecure() {
 		mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
 		ESP_LOGW(LOGTAG, "verification info: %s", buf);
 	} else {
-		ESP_LOGI(LOGTAG, "Certificate verified.");
+		ESP_LOGD(LOGTAG, "Certificate verified.");
 	}
 
 	// Build HTTP Request
 
 	PrepareRequest(sRequest);
 
-	ESP_LOGI(LOGTAG, "Writing HTTP request... <%s>", sRequest.c_str());
+	ESP_LOGD(LOGTAG, "Writing HTTP request... <%s>", sRequest.c_str());
 
 	while ((ret = mbedtls_ssl_write(&ssl, (const unsigned char*)sRequest.c_str(), sRequest.length())) <= 0) {
 		if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
