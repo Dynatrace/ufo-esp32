@@ -100,7 +100,7 @@ void Ufo::TaskWebServer(){
 			ESP_LOGI("Ufo", "starting Webserver");
 			mServer.Start();
 		}
-		vTaskDelay(100 / portTICK_PERIOD_MS);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 
@@ -131,13 +131,17 @@ void Ufo::TaskDisplay(){
 
 void Ufo::TaskDynatraceIntegration(){
 	ESP_LOGI("Ufo", "starting Dynatrace Integraion");
-	DynatraceIntegration dt(this, mDisplayCharterLevel1, mDisplayCharterLevel2);
+	DynatraceIntegration dt(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 	dt.Init();
 	while (dt.mActive) {
 		if (mWifi.IsConnected()) {
+			if (mConfig.Changed(&mConfig.mbDTChanged)) {
+				dt.Init();
+			}
 			dt.Poll();
+			vTaskDelay((mConfig.miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
 		}
-		vTaskDelay(10);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 
@@ -146,7 +150,7 @@ void Ufo::TaskDynatraceMonitoring(){
 	while (1) {
 		if (mWifi.IsConnected()){
 		}
-		vTaskDelay(1);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 
