@@ -564,7 +564,8 @@
 					inprogress: 'Firmware update in progress',
 					finishedsuccess: 'Firmware successfully updated. Rebooting now.',
 					connectionerror: 'Firmware could not be downloaded.',
-					flasherror: 'Firmware could not be flashed.'
+					flasherror: 'Firmware could not be flashed.',
+					notyetstarted: 'Firmware update not yet started. Please wait.'
 				};
 
 				var errorState = function(time) {
@@ -604,7 +605,7 @@
 							try {
 								bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
 								text.innerHTML = messages[res.status] || '&nbsp;';
-								if(res.status === 'inprogress') {
+								if(res.status === 'inprogress' || res.status === 'notyetstarted') {
 									setTimeout(update, 1000);
 								} else {
 									var handle = stateHandling[res.status];
