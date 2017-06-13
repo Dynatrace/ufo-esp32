@@ -113,7 +113,6 @@ bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, Http
 
 bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
-	char sBuf[100];
 	char sHelp[20];
 	String sBody;
 
@@ -129,8 +128,7 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody += "\",";
 
 	if (mpUfo->GetConfig().mbAPMode){
-		sprintf(sBuf, "\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
-		sBody += sBuf;
+		sBody.printf("\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
 	}
 	else{
 		//mpUfo->GetWifi().GetLocalAddress(sHelp);
@@ -139,26 +137,19 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 		sBody += "\"ipaddress\":\"";
 		sBody += mpUfo->GetWifi().GetLocalAddress();
 		mpUfo->GetWifi().GetGWAddress(sHelp);
-		sprintf(sBuf, "\",\"ipgateway\":\"%s\",", sHelp);
-		sBody += sBuf;
+		sBody.printf("\",\"ipgateway\":\"%s\",", sHelp);
 		mpUfo->GetWifi().GetNetmask(sHelp);
-		sprintf(sBuf, "\"ipsubnetmask\":\"%s\",", sHelp);
-		sBody += sBuf;
+		sBody.printf("\"ipsubnetmask\":\"%s\",", sHelp);
 	}
 	mpUfo->GetWifi().GetMac((__uint8_t*)sHelp);
-	sprintf(sBuf, "\"macaddress\":\"%x:%x:%x:%x:%x:%x\",", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-	sBody += sBuf;	
-	sprintf(sBuf, "\"firmwareversion\":\"%s\"", FIRMWARE_VERSION);
-	sBody += sBuf;
-	sBody += ",\"dtenabled\":\"";
-	sBody += mpUfo->GetConfig().mbDTEnabled;
-	sBody += "\",\"dtenvid\":\"";
-	sBody += mpUfo->GetConfig().msDTEnvId;
-	sBody += "\",\"dtapitoken\":\"";
-	sBody += mpUfo->GetConfig().msDTApiToken;
-	sBody += "\",\"dtinterval\":\"";
-	sBody += mpUfo->GetConfig().miDTInterval;
-	sBody += "\"}";
+
+	sBody.printf("\"macaddress\":\"%x:%x:%x:%x:%x:%x\",", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
+	sBody.printf("\"firmwareversion\":\"%s\",", FIRMWARE_VERSION);
+	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
+	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvId.c_str());
+	sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
+	sBody.printf("\"dtinterval\":\"%u\"", mpUfo->GetConfig().miDTInterval);
+	sBody += '}';
 
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
@@ -352,24 +343,11 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 				Ota::StartUpdateFirmwareTask();
 				//TODO implement firmware version check;
 			}
-			sBody = "<html><head><title>Firmware update progress</title>"
-					"<meta http-equiv=\"refresh\" content=\"5; url=/firmware?progresspage\"></head><body>"
-					"<h1>Firmware update task initiated....</h1></body></html>";
-			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
-			response.SetRetCode(200);
-		} else if ((*it).paramName == "progresspage") {
-			if (Ota::GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS) {
-				sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
-				        "<meta http-equiv=\"refresh\" content=\"20; url=/\"></head><body><h1>Progress: ";
-			} else {
-				sBody = "<html><head><title>Firmware update progress</title>"
-						"<meta http-equiv=\"refresh\" content=\"5\"></head><body><h1>Progress: ";
-				char buf[64];
-				sprintf(buf, "%d%%", Ota::GetProgress());
-				sBody += buf;
-			}
-			sBody += "</h1></body><html>";
-			response.AddHeader(HttpResponse::HeaderContentTypeHtml);
+			// {"status":"firmware update initiated.", "url":"https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"}
+			sBody = "{\"status\":\"firmware update initiated.\", \"url\":\"";
+			sBody += OTA_LATEST_FIRMWARE_URL;
+			sBody += "\"}";
+			response.AddHeader(HttpResponse::HeaderContentTypeJson);
 			response.SetRetCode(200);
 		} else if ((*it).paramName == "check") {
 			//TODO implement firmware version check;

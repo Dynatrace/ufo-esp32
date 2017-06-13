@@ -31,6 +31,7 @@ static char tag[] = "WebServer";
 struct TServerSocketPair{
 	WebServer* pServer;
 	int socket;
+	int number;
 };
 
 void request_handler_function(void *pvParameter);
@@ -39,10 +40,33 @@ void request_handler_function(void *pvParameter);
 
 WebServer::WebServer() {
 	mpSslCtx = NULL;
+	muConcurrentConnections = 0;
+	myMutex = portMUX_INITIALIZER_UNLOCKED;
 }
 
 WebServer::~WebServer() {
 	SSL_CTX_free(mpSslCtx);
+}
+
+__uint8_t WebServer::GetConcurrentConnections(){
+	__uint8_t u;
+	taskENTER_CRITICAL(&myMutex);
+	u = muConcurrentConnections;
+	taskEXIT_CRITICAL(&myMutex);
+	return u;
+}
+
+void WebServer::SignalConnection(){
+	taskENTER_CRITICAL(&myMutex);
+	muConcurrentConnections++;
+	taskEXIT_CRITICAL(&myMutex);
+}
+
+void WebServer::SignalConnectionExit(){
+	taskENTER_CRITICAL(&myMutex);
+	if (muConcurrentConnections)
+	 	muConcurrentConnections--;
+	taskEXIT_CRITICAL(&myMutex);
 }
 
 bool WebServer::Start(){
@@ -108,8 +132,15 @@ bool WebServer::Start(){
 	}
 	ESP_LOGI(tag, "Webserver started listening");
 
+	int conNumber = 0;
+	
 	while (1) {
-		
+
+		//while (GetConcurrentConnections() >= 2){
+		//	vTaskDelay(100 / portTICK_PERIOD_MS);
+		//}
+		ESP_LOGD(tag, "--- enter accept - %d connections\n", GetConcurrentConnections()
+		);
 		// Listen for a new client connection.
 		socklen_t clientAddressLength = sizeof(clientAddress);
 		int clientSock = accept(sock, (struct sockaddr *)&clientAddress, &clientAddressLength);
@@ -118,11 +149,14 @@ bool WebServer::Start(){
 			close(sock);
 			return false;
 		}
-		ESP_LOGD(tag, "new connection\n");
+		SignalConnection();
+		conNumber++;
+		ESP_LOGD(tag, "new connection - %d\n", conNumber);
 
  		TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
 		pServerSocketPair->pServer = this;
 		pServerSocketPair->socket = clientSock;
+		pServerSocketPair->number = conNumber;
 		xTaskCreate(&request_handler_function, "WebSocketHandler", 10240, pServerSocketPair, 5, NULL);
 	}
 }
@@ -130,12 +164,12 @@ bool WebServer::Start(){
 void request_handler_function(void *pvParameter)
 {
 	TServerSocketPair* serverSocket = (TServerSocketPair*)pvParameter;
-	serverSocket->pServer->WebRequestHandler(serverSocket->socket);
+	serverSocket->pServer->WebRequestHandler(serverSocket->socket, serverSocket->number);
 	delete serverSocket;
 	vTaskDelete(NULL);
 }
 
-void WebServer::WebRequestHandler(int socket){
+void WebServer::WebRequestHandler(int socket, int conNumber){
 
 	// We now have a new client ...
 	int total =	1024;
@@ -145,22 +179,27 @@ void WebServer::WebRequestHandler(int socket){
 	DynamicRequestHandler requestHandler(mpUfo, mpDisplayCharterLevel1, mpDisplayCharterLevel2);
 	SSL* ssl = NULL;
 
+	ESP_LOGD(tag, "<%d> WebRequestHandler - heapfree: %d", conNumber, esp_get_free_heap_size());
+   
 	if (mpSslCtx){
+		ESP_LOGD(tag, "<%d> SSL_new", conNumber);
 		ssl = SSL_new(mpSslCtx);
 		if (!ssl) {
-			ESP_LOGE(tag, "SSL_new: %s", strerror(errno));
+			ESP_LOGE(tag, "<%d> SSL_new: %s", conNumber, strerror(errno));
 			goto EXIT;
 		}
+		ESP_LOGD(tag, "<%d> SSL_new DONE", conNumber);
 
 		SSL_set_fd(ssl, socket);
 
 		if (!SSL_accept(ssl)){
-			ESP_LOGE(tag, "SSL_accept: %s", strerror(errno));
+			ESP_LOGE(tag, "<%d> SSL_accept %s", conNumber, strerror(errno));
 			goto EXIT;
 		}
 	}
-	ESP_LOGD(tag, "Socket Accepted");
-
+	ESP_LOGD(tag, "<%d> Socket Accepted", conNumber);
+	ESP_LOGD(tag, "<%d> WebRequestHandler after - heapfree: %d", conNumber, esp_get_free_heap_size());
+   
 	while (1){
 		httpParser.Init(&mOta);
 
@@ -172,11 +211,11 @@ void WebServer::WebRequestHandler(int socket){
 				sizeRead = recv(socket, data, total, 0);
 
 			if (sizeRead <= 0) {
-				ESP_LOGE(tag, "Connection closed during parsing");
+				ESP_LOGE(tag, "<%d> Connection closed during parsing", conNumber);
 				goto EXIT;
 			}
 			if (!httpParser.ParseRequest(data, sizeRead)){
-				ESP_LOGE(tag, "HTTP Parsing error: %d", httpParser.GetError());
+				ESP_LOGE(tag, "<%d> HTTP Parsing error: %d", conNumber, httpParser.GetError());
 				goto EXIT;
 			}
 			if (httpParser.RequestFinished()){
@@ -184,7 +223,7 @@ void WebServer::WebRequestHandler(int socket){
 			}
 		}
 
-		ESP_LOGD(tag, "Request parsed: %s", httpParser.GetUrl().c_str());
+		ESP_LOGD(tag, "<%d> Request parsed: %s", conNumber,  httpParser.GetUrl().c_str());
 
 		if (ssl)
 			httpResponse.Init(ssl, httpParser.IsHttp11(), httpParser.IsConnectionClose());
@@ -290,12 +329,15 @@ void WebServer::WebRequestHandler(int socket){
 			close(socket);
 			break;
 		}
+		//break; //close connections immediately
 	}
 
 EXIT:
+	ESP_LOGD(tag, "<%d> Connection EXIT", conNumber);
 	if (ssl)
 		SSL_free(ssl);
 
 	free(data);
 	close(socket);
+	SignalConnectionExit();
 }
