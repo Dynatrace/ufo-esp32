@@ -567,11 +567,11 @@
 				var btn = document.getElementById('nextButton');
 				btn.hidden = true;
 				var messages = {
-					inprogress: 'Firmware update in progress',
+					inprogress: 'Firmware update in progress.',
 					finishedsuccess: 'Firmware successfully updated. Rebooting now.',
 					connectionerror: 'Firmware could not be downloaded.',
 					flasherror: 'Firmware could not be flashed.',
-					notyetstarted: 'Firmware update not yet started. Please wait.'
+					notyetstarted: 'Firmware update is being prepared. Please wait.'
 				};
 
 				var errorState = function(time) {
@@ -609,7 +609,8 @@
 						dataType: 'json',
 						success: function (res, xhr) {
 							try {
-								bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
+								// bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
+								bar.style.width = parseInt(res.progress) + '%';
 								text.innerHTML = messages[res.status] || '&nbsp;';
 								if(res.status === 'inprogress' || res.status === 'notyetstarted') {
 									setTimeout(update, 1000);
