@@ -22,6 +22,7 @@ void DisplayCharter::Init(){
 	morphingPercentage = 0;
 }
 
+
 void DisplayCharter::SetLeds(__uint8_t pos, __uint8_t count, __uint8_t r, __uint8_t g, __uint8_t b){
 	for (__uint8_t i=0 ; i<count ; i++){
 		__uint8_t o = (pos + i) % RING_LEDCOUNT;
@@ -32,10 +33,29 @@ void DisplayCharter::SetLeds(__uint8_t pos, __uint8_t count, __uint8_t r, __uint
 	}
 }
 
+void DisplayCharter::SetLeds(__uint8_t pos, __uint8_t count, __uint32_t color) {
+
+	__uint8_t r = (color & 0xff0000) >> 16;
+	__uint8_t g = (color & 0x00ff00) >> 8;
+	__uint8_t b = (color & 0x0000ff);
+
+	this->SetLeds(pos, count, r, g, b);
+
+}
+
+
 void DisplayCharter::SetBackground( __uint8_t r, __uint8_t g, __uint8_t b){
 	mBackgroundRed = r;
 	mBackgroundGreen = g;
 	mBackgroundBlue = b;
+}
+
+void DisplayCharter::SetBackground( __uint32_t color){
+	__uint8_t r = (color & 0xff0000) >> 16;
+	__uint8_t g = (color & 0x00ff00) >> 8;
+	__uint8_t b = (color & 0x0000ff);
+
+	this->SetBackground(r, g, b);
 }
 
 void DisplayCharter::SetWhirl(__uint8_t wspeed, bool clockwise){
