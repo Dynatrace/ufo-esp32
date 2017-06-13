@@ -133,11 +133,11 @@ void Ufo::TaskDynatraceIntegration(){
 	ESP_LOGI("Ufo", "starting Dynatrace Integraion");
 	DynatraceIntegration dt(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 	dt.Init();
-	while (dt.mActive) {
-		if (mWifi.IsConnected()) {
-			if (mConfig.Changed(&mConfig.mbDTChanged)) {
-				dt.Init();
-			}
+	while (1) {
+		if (mConfig.Changed(&mConfig.mbDTChanged)) {
+			dt.Init();
+		}
+		if (mWifi.IsConnected() && dt.mActive) {
 			dt.Poll();
 			vTaskDelay((mConfig.miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
 		}
