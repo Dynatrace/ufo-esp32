@@ -105,6 +105,10 @@ void Wifi::Connect()
 	ESP_LOGD(tag, "-----------------------");
 	ESP_LOGD(tag, "%s", msCA.c_str());
 	ESP_LOGD(tag, "-----------------------");
+	char sHelp[20];
+	GetMac((__uint8_t*)sHelp);
+	ESP_LOGD(tag, " macaddress: %x:%x:%x:%x:%x:%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
+	ESP_LOGD(tag, "-----------------------");
 
 	nvs_flash_init();
 	tcpip_adapter_init();
