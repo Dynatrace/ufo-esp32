@@ -12,7 +12,9 @@ class DisplayCharter
     DisplayCharter();
     void Init();
     void SetLeds(__uint8_t pos, __uint8_t count, __uint8_t r, __uint8_t g, __uint8_t b);
+    void SetLeds(__uint8_t pos, __uint8_t count, __uint32_t color);
     void SetBackground(__uint8_t r, __uint8_t g, __uint8_t b);
+    void SetBackground(__uint32_t color);
     void SetWhirl(__uint8_t wspeed, bool clockwise);
     void SetMorph(__uint16_t period, __uint8_t mspeed);
     __uint16_t ParseLedArg(String& argument, __uint16_t iPos);

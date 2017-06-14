@@ -1,5 +1,6 @@
 #include <freertos/FreeRTOS.h>
 #include "Ufo.h"
+#include "DynatraceIntegration.h"
 #include "DotstarStripe.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
@@ -23,6 +24,17 @@ void task_function_display(void *pvParameter)
 	vTaskDelete(NULL);
 }
 
+void task_function_dynatrace_integration(void *pvParameter)
+{
+	((Ufo*)pvParameter)->TaskDynatraceIntegration();
+	vTaskDelete(NULL);
+}
+void task_function_dynatrace_monitoring(void *pvParameter)
+{
+	((Ufo*)pvParameter)->TaskDynatraceMonitoring();
+	vTaskDelete(NULL);
+}
+
 //----------------------------------------------------------------------------------------
 
 
@@ -38,8 +50,9 @@ Ufo::~Ufo() {
 }
 
 void Ufo::Start(){
-	ESP_LOGD("UFO", "===============================================\n");
-	ESP_LOGD("UFO", "Start\n");
+	ESP_LOGI("UFO", "===================== Dynatrace UFO ========================");
+	ESP_LOGI("UFO", "Firmware Version: %s", FIRMWARE_VERSION);
+	ESP_LOGI("UFO", "Start");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	mConfig.Read();
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
@@ -60,6 +73,8 @@ void Ufo::Start(){
 
 	xTaskCreatePinnedToCore(&task_function_webserver, "Task_WebServer", 12288, this, 5, NULL, 0); //Ota update (upload) just works on core 0
 	xTaskCreate(&task_function_display, "Task_Display", 4096, this, 5, NULL);
+	xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 4096, this, 5, NULL);
+	xTaskCreate(&task_function_dynatrace_monitoring, "Task_DynatraceMonitoring", 4096, this, 5, NULL);
 
 	if (mConfig.mbAPMode){
 		if (mConfig.muLastSTAIpAddress){
@@ -82,10 +97,10 @@ void Ufo::TaskWebServer(){
 
 	while (1){
 		if (mWifi.IsConnected()){
-			ESP_LOGD("Ufo", "starting server\n");
+			ESP_LOGI("Ufo", "starting Webserver");
 			mServer.Start();
 		}
-		vTaskDelay(100 / portTICK_PERIOD_MS);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 
@@ -111,6 +126,31 @@ void Ufo::TaskDisplay(){
 			mbButtonPressed = false;
 
 		vTaskDelay(1);
+	}
+}
+
+void Ufo::TaskDynatraceIntegration(){
+	ESP_LOGI("Ufo", "starting Dynatrace Integraion");
+	DynatraceIntegration dt(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
+	dt.Init();
+	while (1) {
+		if (mConfig.Changed(&mConfig.mbDTChanged)) {
+			dt.Init();
+		}
+		if (mWifi.IsConnected() && dt.mActive) {
+			dt.Poll();
+			vTaskDelay((mConfig.miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
+		}
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
+}
+
+void Ufo::TaskDynatraceMonitoring(){
+	ESP_LOGI("Ufo", "starting Dynatrace Monitoring");
+	while (1) {
+		if (mWifi.IsConnected()){
+		}
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 }
 

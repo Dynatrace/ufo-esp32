@@ -146,7 +146,7 @@ bool WebServer::Start(){
 		close(sock);
 		return false;
 	}
-	printf("started listening\n");
+	ESP_LOGI(tag, "Webserver started listening");
 
 	int conNumber = 0;
 	
@@ -297,8 +297,8 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
 				break;
 		}
-		else if (httpParser.GetUrl().equals("/api")){
-			if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
+		else if (httpParser.GetUrl().equals("/dynatraceintegration")){
+			if (!requestHandler.HandleDynatraceIntegrationRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
 		else if (httpParser.GetUrl().equals("/apilist")){

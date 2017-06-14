@@ -83,6 +83,9 @@
 					<a href="#!pagedynatraceintegrationsettings" class="padded-list">Dynatrace integration</a>
 				</li>
 				<li>
+					<a href="#!pagedynatracemonitoringsettings" class="padded-list">Dynatrace monitoring</a>
+				</li>
+				<li>
 					<!--<a href="wifisettings.html" class="padded-list">Wifi settings</a>-->
 					<a href="#!pagewifisettings" class="padded-list">WIFI Settings</a>
 				</li>
@@ -287,21 +290,21 @@
 		</header>
 		<div class="content">
 			<div class="input-wrapper list">
-				<form method='GET' action='/api'>
+				<form method='GET' action='/dynatraceintegration'>
 					<div class="padded-full">
 						<ul class="list">
 							<li class="">
 								<label class="checkbox">
-                                <input type="checkbox" class="" name="dynatrace-on" id="dynatrace-on">
+                                <input type="checkbox" class="" name="dtenabled" id="dtenabled">
                                 Enabled
                                 <span></span>
                             </label>
 							</li>
 						</ul>
 
-						<input type="text" name="dynatrace-environmentid" placeholder="environment-id" id="dynatrace-environmentid" />
-						<input type="password" name="dynatrace-apikey" placeholder="api-key" id="dynatrace-apikey" />
-						<input type="number" min="30" max="300" placeholder="interval in sec" name="dynatrace-interval" id="dynatrace-interval" />
+						<input type="text" name="dtenvid" placeholder="Environment ID (tenant)" id="dtenvid" />
+						<input type="text" name="dtapitoken" placeholder="API Token" id="dtapitoken" />
+						<input type="number" min="10" max="300" placeholder="polling interval in sec" name="dtinterval" id="dtinterval" />
 						<!--<ul class="list">
                         <li class="padded-for-list">
                             <label class="radio">
@@ -320,6 +323,47 @@
 		</div>
 	</pagedynatraceintegrationsettings>
 
+	<pagedynatracemonitoringsettings data-page="true">
+		<header class="header-bar">
+			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
+			<div class="center">
+				<h1 class="title">Dynatrace Monitoring Settings</h1>
+			</div>
+		</header>
+		<div class="content">
+			<div class="input-wrapper list">
+				<form method='GET' action='/dynatracemonitoring'>
+					<div class="padded-full">
+						<ul class="list">
+							<li class="">
+								<label class="checkbox">
+                                <input type="checkbox" class="" name="dtmonenabled" id="dtmonenabled">
+                                Enabled
+                                <span></span>
+                            </label>
+							</li>
+						</ul>
+
+						<input type="text" name="dtmonenvid" placeholder="Environment ID" id="dtmonenvid" />
+						<input type="password" name="dtmonappid" placeholder="Application ID" id="dtmonappid" />
+						<input type="number" min="30" max="300" placeholder="send interval in sec" name="dtmoninterval" id="dtmoninterval" />
+						<!--<ul class="list">
+                        <li class="padded-for-list">
+                            <label class="radio">
+                                <input type="radio" name="test">
+                                Radio1
+                                <span></span>
+                            </label>
+                        </li>
+					 </ul>-->
+					</div>
+					<div class="padded-full">
+						<button class="btn btn-submit fit-parent primary" type="submit">Apply settings.</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</pagedynatracemonitoringsettings>
 
 
 	<!-- scripts -->
@@ -403,6 +447,7 @@
 					url: '/firmware?update',
 					success: function (res, xhr) {
 						phonon.navigator().changePage('pagefirmwareprogress');
+						console.log("initiated firmware update successfully.")
 
 					},
 					error: function (res, flagError, xhr) {
@@ -488,6 +533,9 @@
 				document.querySelector('#firmware_update').on('tap', onFirmwareUpdate);
 				document.querySelector('#firmware_restart').on('tap', onRestart);
 				document.querySelector('#firmware_switchbootpartition').on('tap', onSwitchBootPartition);
+				document.querySelector('#firmware_update').on('click', onFirmwareUpdate);
+				document.querySelector('#firmware_restart').on('click', onRestart);
+				document.querySelector('#firmware_switchbootpartition').on('click', onSwitchBootPartition);
 			});
 
 			activity.onReady(function() {
@@ -512,15 +560,18 @@
 
 		app.on({ page: 'pagefirmwareprogress', preventClose: false, content: null }, function (activity) {
 			activity.onReady(function() {
+				console.log("pagefirmwareprogress onReady");
+
 				var bar = document.getElementById('progressbarinner');
 				var text = document.getElementById('statusText');
 				var btn = document.getElementById('nextButton');
 				btn.hidden = true;
 				var messages = {
-					inprogress: 'Firmware update in progress',
+					inprogress: 'Firmware update in progress.',
 					finishedsuccess: 'Firmware successfully updated. Rebooting now.',
 					connectionerror: 'Firmware could not be downloaded.',
-					flasherror: 'Firmware could not be flashed.'
+					flasherror: 'Firmware could not be flashed.',
+					notyetstarted: 'Firmware update is being prepared. Please wait.'
 				};
 
 				var errorState = function(time) {
@@ -558,9 +609,10 @@
 						dataType: 'json',
 						success: function (res, xhr) {
 							try {
-								bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
+								// bar.style.width = atLeast(0, parseInt(res.progress) - 5) + '%';
+								bar.style.width = parseInt(res.progress) + '%';
 								text.innerHTML = messages[res.status] || '&nbsp;';
-								if(res.status === 'inprogress') {
+								if(res.status === 'inprogress' || res.status === 'notyetstarted') {
 									setTimeout(update, 1000);
 								} else {
 									var handle = stateHandling[res.status];
@@ -664,16 +716,16 @@
 			if (evt.detail.page == "pagedynatraceintegrationsettings") {
 				var req = phonon.ajax({
 					method: 'GET',
-					url: 'dtintinfo',
+					url: 'info',
 					//crossDomain: false,
 					dataType: 'text/json',
 					success: function (res, xhr) {
 						console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
-						document.getElementById('dynatrace-on').checked = result.enabled;
-						document.getElementById('dynatrace-environmentid').value = result.environmentid;
-						document.getElementById('dynatrace-apikey').value = result.apikey;
-						document.getElementById('dynatrace-interval').value = result.interval;
+						document.getElementById('dtenabled').checked = result.dtenabled;
+						document.getElementById('dtenvid').value = result.dtenvid;
+						document.getElementById('dtapitoken').value = result.dtapitoken;
+						document.getElementById('dtinterval').value = result.dtinterval;
 					},
 					error: function (res, flagError, xhr) {
 						console.error(flagError);
