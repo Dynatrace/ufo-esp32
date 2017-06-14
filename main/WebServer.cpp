@@ -20,9 +20,10 @@
 
 static char tag[] = "WebServer";
 
-    extern const unsigned char certkey_pem_start[] asm("_binary_certkey_pem_start");
-    extern const unsigned char certkey_pem_end[]   asm("_binary_certkey_pem_end");
-    const unsigned int certkey_pem_bytes = certkey_pem_end - certkey_pem_start;
+extern const unsigned char certkey_pem_start[] asm("_binary_certkey_pem_start");
+extern const unsigned char certkey_pem_end[]   asm("_binary_certkey_pem_end");
+unsigned int uWsCertLength = certkey_pem_end - certkey_pem_start;
+const unsigned char* sWsCert = certkey_pem_start;
 
 struct TServerSocketPair{
 	WebServer* pServer;
@@ -39,6 +40,7 @@ WebServer::WebServer() {
 	muConcurrentConnections = 0;
 	myMutex = portMUX_INITIALIZER_UNLOCKED;
 	mbFree = true;
+	mbRestart = false;
 }
 
 WebServer::~WebServer() {
@@ -92,32 +94,44 @@ bool WebServer::Start(){
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
 
-	if (mpUfo->GetConfig().muWebServerPort)
-		port = mpUfo->GetConfig().muWebServerPort;
-	else
-		port = mpUfo->GetConfig().mbWebServerUseSsl ? 443 : 80;
-		
-	if (mpUfo->GetConfig().mbWebServerUseSsl){
+	String s1 = "12345";
 
-		if (!mpSslCtx){
-			mpSslCtx = SSL_CTX_new(TLS_server_method());
-			if (!mpSslCtx) {
-				ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
-				return false;
+	if (mpUfo->GetConfig().mbAPMode){
+		port = 80;
+	}
+	else{
+		if (mpUfo->GetConfig().muWebServerPort)
+			port = mpUfo->GetConfig().muWebServerPort;
+		else
+			port = mpUfo->GetConfig().mbWebServerUseSsl ? 443 : 80;
+			
+		if (mpUfo->GetConfig().mbWebServerUseSsl){
+
+			if (!mpSslCtx){
+				mpSslCtx = SSL_CTX_new(TLS_server_method());
+				if (!mpSslCtx) {
+					ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
+					return false;
+				}
+				if (mpUfo->GetConfig().msWebServerCert.length()){
+					//ESP_LOGD(tag, "Using custom certificate <%s>", mpUfo->GetConfig().msWebServerCert.c_str());
+					sWsCert = (unsigned char*)mpUfo->GetConfig().msWebServerCert.c_str();
+					uWsCertLength = mpUfo->GetConfig().msWebServerCert.length();
+				}
+				if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  uWsCertLength, sWsCert)){
+					ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
+					SSL_CTX_free(mpSslCtx);
+					mpSslCtx = NULL;
+					return false;
+				}
+				if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, sWsCert,  uWsCertLength)){
+					ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
+					SSL_CTX_free(mpSslCtx);
+					mpSslCtx = NULL;
+					return false;
+				}
+				port = 443;
 			}
-			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  certkey_pem_bytes, certkey_pem_start)){
-				ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
-				SSL_CTX_free(mpSslCtx);
-				mpSslCtx = NULL;
-				return false;
-			}
-			if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, certkey_pem_start,  certkey_pem_bytes)){
-				ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
-				SSL_CTX_free(mpSslCtx);
-				mpSslCtx = NULL;
-				return false;
-			}
-			port = 443;
 		}
 	}
 
@@ -175,7 +189,7 @@ bool WebServer::Start(){
 		setsockopt(clientSock, SOL_SOCKET, SO_LINGER, &lin, sizeof(li);
 		*/
 
-		if (mpUfo->GetConfig().mbWebServerUseSsl)
+		if (mpSslCtx)
 			WebRequestHandler(clientSock, conNumber);
 		else{
 			TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
@@ -234,13 +248,9 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
    
 	while (1){
 		httpParser.Init(&mOta);
+		httpParser.AddUploadUrl("/updatecert");
 
 		while(1) {
-
-			if (!WaitForData(socket, 3)){
-				ESP_LOGD(tag, "<%d> No Data", conNumber);
-				goto EXIT;
-			}
 
 			ssize_t sizeRead;
 			if (ssl)
@@ -317,6 +327,28 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
 		} 
+		else if (httpParser.GetUrl().equals("/srvconfig")){
+			if (!requestHandler.HandleSrvConfigRequest(httpParser.GetParams(), httpResponse))
+				break;
+		} 
+		else if (httpParser.GetUrl().equals("/updatecert")){
+			mpUfo->GetConfig().msWebServerCert = httpParser.GetBody();
+			mpUfo->GetConfig().Write();
+			if (mpUfo->GetConfig().mbWebServerUseSsl && !mpUfo->GetConfig().mbAPMode){
+				String sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+							   "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
+							   "<h2>New certificate stored, rebooting shortly.</h2></body></html>";
+				mbRestart = true;
+				httpResponse.AddHeader(HttpResponse::HeaderNoCache);
+				httpResponse.Send(sBody);
+			}
+			else{
+				httpResponse.AddHeader(HttpResponse::HeaderNoCache);
+				httpResponse.AddHeader("Location: /");
+				httpResponse.SetRetCode(302);
+				httpResponse.Send();
+			}
+		} 
 		else if (httpParser.GetUrl().equals("/firmware")) {
 			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
 				break;
@@ -361,13 +393,19 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 				break;
 		}
 
-		if (requestHandler.ShouldRestart() || (mOta.GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS)){
+		if (mbRestart || requestHandler.ShouldRestart() || (mOta.GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS)){
+			ESP_LOGD(tag, "<%d> RESTARTING!", conNumber);
 			vTaskDelay(100);
 			esp_restart();
 		}
 
 		if (httpParser.IsConnectionClose()){
 			close(socket);
+			break;
+		}
+
+		if (!WaitForData(socket, 3)){
+			ESP_LOGD(tag, "<%d> No Data", conNumber);
 			break;
 		}
 	}

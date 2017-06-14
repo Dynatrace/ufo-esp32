@@ -117,15 +117,13 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	String sBody;
 
 	sBody.reserve(512);
-	sBody  = "{\"apmode\":\"";
-	sBody += mpUfo->GetConfig().mbAPMode;
-	sBody += "\",\"heap\":\"";
-	sBody += esp_get_free_heap_size();
-	sBody += "\",\"ssid\":\"";
-	sBody += mpUfo->GetConfig().msSTASsid;
-	sBody += "\",\"hostname\":\"";
-	sBody += mpUfo->GetConfig().msHostname;
-	sBody += "\",";
+	sBody.printf("{\"apmode\":\"%s\",", mpUfo->GetConfig().mbAPMode ? "1":"0");
+	sBody.printf("\"heap\":\"%d\",", esp_get_free_heap_size());
+	sBody.printf("\"ssid\":\"%s\",",  mpUfo->GetConfig().msSTASsid.c_str());
+	sBody.printf("\"hostname\":\"%s\",",  mpUfo->GetConfig().msHostname.c_str());
+	sBody.printf("\"enterpriseuser\":\"%s\",", mpUfo->GetConfig().msSTAENTUser.c_str());
+	sBody.printf("\"sslenabled\":\"%s\",", mpUfo->GetConfig().mbWebServerUseSsl ? "1":"0");
+	sBody.printf("\"listenport\":\"%d\",", mpUfo->GetConfig().muWebServerPort);
 
 	if (mpUfo->GetConfig().mbAPMode){
 		sBody.printf("\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
@@ -186,7 +184,8 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	else 		mpUfo->GetConfig().msDTApiToken.clear();
 	mpUfo->GetConfig().miDTInterval = iInterval;
 
-	mpUfo->GetConfig().Write(&mpUfo->GetConfig().mbDTChanged);
+	if (mpUfo->GetConfig().Write())
+		mpUfo->GetConfig().mbDTChanged = true;
 
 	ESP_LOGI(tag, "Dynatrace Integration Saved");
 
@@ -260,12 +259,13 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 		mpUfo->GetConfig().msHostname = sWifiHostName;
 		bOk = true;
 	}
-
 	if (bOk){
 		mpUfo->GetConfig().mbAPMode = false;
 		mpUfo->GetConfig().Write();
 		mbRestart = true;
-		sBody = "Restarting......";
+		sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+				"<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
+				"<h2>New settings stored, rebooting shortly.</h2></body></html>";
 		rResponse.SetRetCode(200);
 	}
 	else{
@@ -277,29 +277,47 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
+bool DynamicRequestHandler::HandleSrvConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
+	const char* sSslEnabled = NULL;
+	const char* sListenPort = NULL;
+
+	String sBody;
+
+	std::list<TParam>::iterator it = params.begin();
+	while (it != params.end()){
+		if ((*it).paramName == "sslenabled")
+			sSslEnabled = (*it).paramValue.c_str();
+		else if ((*it).paramName == "listenport")
+			sListenPort = (*it).paramValue.c_str();
+		it++;
+	}
+	mpUfo->GetConfig().mbWebServerUseSsl = (sSslEnabled != NULL);
+	mpUfo->GetConfig().muWebServerPort = atoi(sListenPort);
+	ESP_LOGD(tag, "HandleSrvConfigRequest %d, %d", mpUfo->GetConfig().mbWebServerUseSsl, mpUfo->GetConfig().muWebServerPort);
+	mpUfo->GetConfig().Write();
+	mbRestart = true;
+	sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+			"<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
+			"<h2>New settings stored, rebooting shortly.</h2></body></html>";
+	rResponse.SetRetCode(200);
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	return rResponse.Send(sBody);
+}
+
 /*
 GET: /firmware?update
-
 GET: /firmware?progress
-
 Response:
-
 { "session": "9724987887789", 
 "progress": "22",
 "status": "inprogress" }
-
 Session: 32bit unsigned int ID that changes when UFO reboots
 Progress: 0..100%
 Status: notyetstarted | inprogress | connectionerror | flasherror | finishedsuccess
-
 notyetstarted: Firmware update process has not started.
-
 inprogress: Firmware update is in progress.
-
 connectionerror: Firmware could not be downloaded. 
-
 flasherror: Firmware could not be flashed.
-
 finishedsuccess: Firmware successfully updated. Rebooting now.
 */
 

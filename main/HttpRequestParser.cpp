@@ -18,6 +18,8 @@ void HttpRequestParser::Init(DownAndUploadHandler* pUploadHandler){
 	Clear();
 
 	mpUploadHandler = pUploadHandler;
+	mUrlsToStoreUploadinBodyFor.clear();
+	mbStoreUploadInBody = false;
 
 	muError = 0;
 	mbFinished = false;
@@ -44,6 +46,8 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 	__uint16_t uPos = 0;
 	while (uPos < uLen){
 		char c = sBuffer[uPos];
+
+		//ESP_LOGD("HttpRequestParser", "St: %d, Char: %c", muParseState, c);	
 		uPos++;
 		switch (muParseState){
 			case STATE_Method:
@@ -242,14 +246,25 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 				__uint8_t u;
 				if (mStringParser.Found(u)){
 					muParseState = STATE_ProcessMultipartBody;
-					if (!mpUploadHandler || !mpUploadHandler->OnReceiveBegin(mUrl, muContentLength))
-						return SetError(5), false;
+					if (!mpUploadHandler || !mpUploadHandler->OnReceiveBegin(mUrl, muContentLength)){
+						std::list<String>::iterator it = mUrlsToStoreUploadinBodyFor.begin();
+						while (it != mUrlsToStoreUploadinBodyFor.end()){
+							if ((*it).equals(mUrl)){
+								mbStoreUploadInBody = true;
+								break;
+							}
+							it++;
+						}
+						if (!mbStoreUploadInBody)
+							return SetError(5), false;
+					}
 				}
 				mbFinished = muActBodyLength >= muContentLength;
 				break;
 			case STATE_ProcessMultipartBody:
 				uPos--;
 				uLen -= uPos;
+
 				if (muActBodyLength + 8 + mBoundary.length() < muContentLength){
 					if (muActBodyLength + 8 + mBoundary.length() + uLen > muContentLength){
 						__uint16_t u = muContentLength - (muActBodyLength + 8 + mBoundary.length());
@@ -263,7 +278,7 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 				}
 				muActBodyLength+= uLen;
 				mbFinished = muActBodyLength >= muContentLength;
-				if (mbFinished && mpUploadHandler)
+				if (mbFinished && mpUploadHandler && !mbStoreUploadInBody)
 					mpUploadHandler->OnReceiveEnd();
 				return true;
 		}
@@ -272,7 +287,11 @@ bool HttpRequestParser::ParseRequest(char* sBuffer, __uint16_t uLen){
 }
 
 bool HttpRequestParser::ProcessMultipartBody(char* sBuffer, __uint16_t uLen){
-	if (!mpUploadHandler)
-		return false;
-	return mpUploadHandler->OnReceiveData(sBuffer, uLen);
+	if (mbStoreUploadInBody){
+		mBody.concat(sBuffer, uLen);
+		return true;
+	}
+	if (mpUploadHandler)
+		return mpUploadHandler->OnReceiveData(sBuffer, uLen);
+	return false;
 }

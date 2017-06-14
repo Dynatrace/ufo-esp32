@@ -137,7 +137,7 @@ void Ufo::TaskDynatraceIntegration(){
 		if (mConfig.Changed(&mConfig.mbDTChanged)) {
 			dt.Init();
 		}
-		if (mWifi.IsConnected() && dt.mActive) {
+		if (mWifi.IsConnected() && GetConfig().mbDTEnabled && dt.mActive) {
 			dt.Poll();
 			vTaskDelay((mConfig.miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
 		}
@@ -171,7 +171,7 @@ void Ufo::ShowLogoLeds(){
 	mStripeLogo.Show();
 	mStripeLevel1.Show();
 }
-
+ 
 
 //-----------------------------------------------------------------------------------------
 

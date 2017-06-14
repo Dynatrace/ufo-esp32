@@ -32,6 +32,7 @@ private:
 	Ufo* mpUfo;
 	DisplayCharter* mpDisplayCharterLevel1;
 	DisplayCharter* mpDisplayCharterLevel2;
+	bool mbRestart;
 
 	SSL_CTX* mpSslCtx;
 

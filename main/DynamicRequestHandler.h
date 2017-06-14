@@ -18,6 +18,7 @@ public:
 	bool HandleApiEditRequest(std::list<TParam>& params, HttpResponse& rResponse);
 	bool HandleInfoRequest(std::list<TParam>& params, HttpResponse& rResponse);
 	bool HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse);
+	bool HandleSrvConfigRequest(std::list<TParam>& params, HttpResponse& rResponse);
 	bool HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response);
 	bool HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& response);
 

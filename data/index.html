@@ -89,6 +89,9 @@
 					<!--<a href="wifisettings.html" class="padded-list">Wifi settings</a>-->
 					<a href="#!pagewifisettings" class="padded-list">WIFI Settings</a>
 				</li>
+				<li>
+					<a href="#!pageserversettings" class="padded-list">Web Server Settings</a>
+				</li>
 			</ul>
 
 
@@ -255,6 +258,48 @@
 			</div>
 		</div>
 	</pagewifisettings>
+	<pageserversettings data-page="true">
+		<header class="header-bar">
+			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
+			<div class="center">
+				<h1 class="title">Dynatrace UFO - Configure Web Server</h1>
+			</div>
+		</header>
+		<div class="content">
+			<div class="input-wrapper list">
+				<li class="divider">Specify Listen Port and Scheme</li>
+				<form method='GET' action='/srvconfig'>
+					<div class="padded-full">
+						<ul class="list">
+							<li class="">
+								<label class="checkbox">
+                                <input type="checkbox" class="" name="sslenabled" id="sslenabled">
+                                Use HTTPS (TLS)
+                                <span></span>
+                            </label>
+							</li>
+							<input type="number" placeholder="Listen Port (optional)" name="listenport" id="listenport" />
+						</ul>
+					</div>
+					<div class="padded-full">
+						<button class="btn btn-submit fit-parent primary" type="submit">Apply settings and reboot.</button>
+					</div>
+				</form>
+				<li class="divider">Upload Server Certificate </li>
+				<form method='POST' action='/updatecert' enctype='multipart/form-data'>
+					<div class="padded-full">
+					<span class="padded-list">Select certificate file</span>
+					<li>
+						<input class="padded-full" type="file" name="update" id="certfilename" accept=".pem"/>
+					</li>
+					<li>
+						<button class="btn btn-submit fit-parent primary" type="submit">Upload</button>
+					</li>
+					</div>
+				</form>
+			</div>
+		</div>
+	</pageserversettings>
 
 	<pageapiedit data-page="true">
 		<header class="header-bar">
@@ -702,10 +747,35 @@
 					success: function (res, xhr) {
 						console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
+						if (result.enterpriseuser.length > 0){
+							document.getElementById('enterpriseuser').value =  result.enterpriseuser;
+							document.getElementById('wifimode2').checked = true;
+							wifiModeChange(0);
+						}
+						else
+							wifiModeChange(1);
 						document.getElementById('ssid').value = result.ssid;
 						document.getElementById('macaddress').innerHTML = result.macaddress;
 						document.getElementById('wifihostname').value = result.hostname;
 						document.getElementById('firmwareversion').innerHTML = result.firmwareversion;
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			}
+			if (evt.detail.page == "pageserversettings") {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'info',
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+						document.getElementById('sslenabled').checked = (result.sslenabled == '1');
+						if (result.listenport > 0)
+							document.getElementById('listenport').value = result.listenport;
 					},
 					error: function (res, flagError, xhr) {
 						console.error(flagError);
@@ -722,7 +792,7 @@
 					success: function (res, xhr) {
 						console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
-						document.getElementById('dtenabled').checked = result.dtenabled;
+						document.getElementById('dtenabled').checked = (result.dtenabled == '1');
 						document.getElementById('dtenvid').value = result.dtenvid;
 						document.getElementById('dtapitoken').value = result.dtapitoken;
 						document.getElementById('dtinterval').value = result.dtinterval;

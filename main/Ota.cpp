@@ -99,9 +99,9 @@ bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength
 bool Ota::OnReceiveBegin(String& sUrl, unsigned int contentLength){
     ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl.c_str(), contentLength);
     
-    if (!sUrl.equals("/update"))
-        return false;
-    return InternalOnRecvBegin(true, contentLength);
+    if (sUrl.equals("/update"))
+        return InternalOnRecvBegin(true, contentLength);
+    return false;
 }
 
 bool Ota::OnReceiveData(char* buf, int len) {

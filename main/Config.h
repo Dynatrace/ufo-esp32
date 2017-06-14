@@ -11,7 +11,6 @@ public:
 
 	bool Read();
 	bool Write();
-	bool Write(bool* pFlag);
 
 	void ToggleAPMode() { mbAPMode = !mbAPMode; };
 	bool Changed(bool* pChanged);
@@ -42,9 +41,9 @@ public:
     int miDTInterval;
 	bool mbDTChanged = false;
 
-	bool mbDummy = false;
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;
+	String msWebServerCert;
 
 	__uint32_t muLastSTAIpAddress;
 };

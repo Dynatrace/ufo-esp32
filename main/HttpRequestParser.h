@@ -32,6 +32,7 @@ public:
 
 	void Init(DownAndUploadHandler* pUploadHandler);
 	void Clear();
+	void AddUploadUrl(const char* sUrl) { mUrlsToStoreUploadinBodyFor.push_back(sUrl); };
 
 	bool ParseRequest(char* sBuffer, __uint16_t uLen);
 	bool ProcessMultipartBody(char* sBuffer, __uint16_t uLen);
@@ -50,6 +51,7 @@ public:
 	__uint8_t GetError()  	{ return muError; };
 
 private:
+	std::list<String> mUrlsToStoreUploadinBodyFor;
 	int mSocket;
 	UrlParser mUrlParser;
 	String mUrl;
@@ -62,7 +64,7 @@ private:
 	__uint32_t muActBodyLength;
 	DownAndUploadHandler* mpUploadHandler;
 	
-
+	bool mbStoreUploadInBody;
 	bool mbFinished;
 	bool mbHttp11;
 	bool mbConClose;
