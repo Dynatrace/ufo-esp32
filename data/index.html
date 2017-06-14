@@ -163,7 +163,7 @@
 				<form method='POST' action='/update' enctype='multipart/form-data'>
 					<span class="padded-list">Select firmware file ufo-esp32.bin</span>
 					<li>
-						<input class="padded-full" type="file" name="update" id="firmwarefilename" />
+						<input class="padded-full" type="file" name="update" id="firmwarefilename" accept=".bin"/>
 					</li>
 					<li>
 						<button class="btn btn-submit fit-parent primary" type="submit">Update</button>
@@ -593,7 +593,7 @@
 						document.getElementById('infoheap').innerHTML = result.heap;
 						document.getElementById('infofirmwareversion').innerHTML = result.firmwareversion;
 						document.getElementById('infomacaddress').innerHTML = result.macaddress;
-						if (result.apmode)
+						if (result.apmode == '1')
 							document.getElementById('networkmode').innerHTML = 'Network - Access Point mode';
 						else
 							document.getElementById('networkmode').innerHTML = 'Network';

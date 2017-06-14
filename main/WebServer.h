@@ -19,10 +19,14 @@ public:
 	bool Start();
 
 	void WebRequestHandler(int socket, int conCount);
+	bool WaitForData(int socket, __uint8_t timeoutS);
 
 	__uint8_t GetConcurrentConnections();
 	void SignalConnection();
 	void SignalConnectionExit();
+
+	void EnterCriticalSection();
+	void LeaveCriticalSection();
 
 private:
 	Ufo* mpUfo;
@@ -34,6 +38,7 @@ private:
 	Ota mOta;
 	
 	portMUX_TYPE myMutex;
+	bool mbFree;
 	__uint8_t muConcurrentConnections;
 
 
