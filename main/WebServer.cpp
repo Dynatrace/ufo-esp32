@@ -20,13 +20,9 @@
 
 static char tag[] = "WebServer";
 
-   extern const unsigned char cacert_pem_start[] asm("_binary_cacert_pem_start");
-    extern const unsigned char cacert_pem_end[]   asm("_binary_cacert_pem_end");
-    const unsigned int cacert_pem_bytes = cacert_pem_end - cacert_pem_start;
-
-    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
-    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
-    const unsigned int prvtkey_pem_bytes = prvtkey_pem_end - prvtkey_pem_start;  
+    extern const unsigned char certkey_pem_start[] asm("_binary_certkey_pem_start");
+    extern const unsigned char certkey_pem_end[]   asm("_binary_certkey_pem_end");
+    const unsigned int certkey_pem_bytes = certkey_pem_end - certkey_pem_start;
 
 struct TServerSocketPair{
 	WebServer* pServer;
@@ -42,6 +38,7 @@ WebServer::WebServer() {
 	mpSslCtx = NULL;
 	muConcurrentConnections = 0;
 	myMutex = portMUX_INITIALIZER_UNLOCKED;
+	mbFree = true;
 }
 
 WebServer::~WebServer() {
@@ -50,24 +47,45 @@ WebServer::~WebServer() {
 
 __uint8_t WebServer::GetConcurrentConnections(){
 	__uint8_t u;
-	taskENTER_CRITICAL(&myMutex);
+	//taskENTER_CRITICAL(&myMutex);
 	u = muConcurrentConnections;
-	taskEXIT_CRITICAL(&myMutex);
+	//taskEXIT_CRITICAL(&myMutex);
 	return u;
 }
 
 void WebServer::SignalConnection(){
-	taskENTER_CRITICAL(&myMutex);
+	//taskENTER_CRITICAL(&myMutex);
 	muConcurrentConnections++;
-	taskEXIT_CRITICAL(&myMutex);
+	//taskEXIT_CRITICAL(&myMutex);
 }
 
 void WebServer::SignalConnectionExit(){
-	taskENTER_CRITICAL(&myMutex);
+	//taskENTER_CRITICAL(&myMutex);
 	if (muConcurrentConnections)
 	 	muConcurrentConnections--;
+	//taskEXIT_CRITICAL(&myMutex);
+}
+
+void WebServer::EnterCriticalSection(){
+	while (true){
+		taskENTER_CRITICAL(&myMutex);
+		if (mbFree){
+			mbFree = false;
+			taskEXIT_CRITICAL(&myMutex);
+			return;
+		}
+		taskEXIT_CRITICAL(&myMutex);
+		vTaskDelay(10);
+	}
+
+}
+
+void WebServer::LeaveCriticalSection(){
+	taskENTER_CRITICAL(&myMutex);
+	mbFree = true;
 	taskEXIT_CRITICAL(&myMutex);
 }
+
 
 bool WebServer::Start(){
 	__uint16_t port; 
@@ -87,15 +105,13 @@ bool WebServer::Start(){
 				ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
 				return false;
 			}
-			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  cacert_pem_bytes, cacert_pem_start)){
-			//if (!SSL_CTX_use_certificate_ASN1(mpSslCtx, sizeof(certpem_h), (const unsigned char*)certpem_h)){
+			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  certkey_pem_bytes, certkey_pem_start)){
 				ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
 				SSL_CTX_free(mpSslCtx);
 				mpSslCtx = NULL;
 				return false;
 			}
-			if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, prvtkey_pem_start, prvtkey_pem_bytes)){
-			//if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, (const unsigned char*)keypem_h, sizeof(keypem_h))){
+			if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, certkey_pem_start,  certkey_pem_bytes)){
 				ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
 				SSL_CTX_free(mpSslCtx);
 				mpSslCtx = NULL;
@@ -124,7 +140,7 @@ bool WebServer::Start(){
 	}
 
 	// Flag the socket as listening for new connections.
-	rc = listen(sock, 5);
+	rc = listen(sock, mpUfo->GetConfig().mbWebServerUseSsl ? 1 : 5);
 	if (rc < 0) {
 		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
 		close(sock);
@@ -153,11 +169,21 @@ bool WebServer::Start(){
 		conNumber++;
 		ESP_LOGD(tag, "new connection - %d\n", conNumber);
 
- 		TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
-		pServerSocketPair->pServer = this;
-		pServerSocketPair->socket = clientSock;
-		pServerSocketPair->number = conNumber;
-		xTaskCreate(&request_handler_function, "WebSocketHandler", 10240, pServerSocketPair, 5, NULL);
+		/*struct linger li;
+        li->l_onoff = 0;
+        li->l_linger = 0;
+		setsockopt(clientSock, SOL_SOCKET, SO_LINGER, &lin, sizeof(li);
+		*/
+
+		if (mpUfo->GetConfig().mbWebServerUseSsl)
+			WebRequestHandler(clientSock, conNumber);
+		else{
+			TServerSocketPair* pServerSocketPair = (TServerSocketPair*)malloc(sizeof(TServerSocketPair));
+			pServerSocketPair->pServer = this;
+			pServerSocketPair->socket = clientSock;
+			pServerSocketPair->number = conNumber;
+			xTaskCreatePinnedToCore(&request_handler_function, "WebSocketHandler", 12288, pServerSocketPair, 4, NULL, 0);
+		}
 	}
 }
 
@@ -192,6 +218,12 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 
 		SSL_set_fd(ssl, socket);
 
+		if (!WaitForData(socket, 1)){
+			ESP_LOGE(tag, "<%d> No Data", conNumber);
+			goto EXIT;
+		}
+
+		ESP_LOGD(tag, "<%d> Enter SSL_accept", conNumber);
 		if (!SSL_accept(ssl)){
 			ESP_LOGE(tag, "<%d> SSL_accept %s", conNumber, strerror(errno));
 			goto EXIT;
@@ -204,6 +236,12 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 		httpParser.Init(&mOta);
 
 		while(1) {
+
+			if (!WaitForData(socket, 3)){
+				ESP_LOGD(tag, "<%d> No Data", conNumber);
+				goto EXIT;
+			}
+
 			ssize_t sizeRead;
 			if (ssl)
 				sizeRead = SSL_read(ssl, data, total);
@@ -214,6 +252,9 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 				ESP_LOGE(tag, "<%d> Connection closed during parsing", conNumber);
 				goto EXIT;
 			}
+			else
+				ESP_LOGD(tag, "<%d> received %d bytes", conNumber, sizeRead);
+				
 			if (!httpParser.ParseRequest(data, sizeRead)){
 				ESP_LOGE(tag, "<%d> HTTP Parsing error: %d", conNumber, httpParser.GetError());
 				goto EXIT;
@@ -329,7 +370,6 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			close(socket);
 			break;
 		}
-		//break; //close connections immediately
 	}
 
 EXIT:
@@ -340,4 +380,14 @@ EXIT:
 	free(data);
 	close(socket);
 	SignalConnectionExit();
+}
+
+bool WebServer::WaitForData(int socket, __uint8_t timeoutS){
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(socket, &readfds);
+	struct timeval tv;
+	tv.tv_usec = 0;
+	tv.tv_sec = timeoutS;
+	return select(FD_SETSIZE, &readfds, 0, 0, &tv);
 }
