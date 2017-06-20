@@ -230,6 +230,5 @@ void Ota::StartUpdateFirmwareTask() {
     miProgress = 0;
 	//xTaskCreate(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 5, NULL);
     // Pin firmware update task to core 0 --- otherwise we get weird crashes
-   	xTaskCreatePinnedToCore(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 5, NULL, 0);
 }
 

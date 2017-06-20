@@ -36,7 +36,7 @@
 #include "mbedtls/certs.h"
 
 #define DEFAULT_MAXRESPONSEDATASIZE 16*1024
-#define RECEIVE_BUFFER_SIZE 16*1024
+#define RECEIVE_BUFFER_SIZE 2*1024
 
 static const char LOGTAG[] = "WebClient";
 

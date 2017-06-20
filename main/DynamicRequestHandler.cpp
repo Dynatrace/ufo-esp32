@@ -6,6 +6,7 @@
 #include <esp_log.h>
 #include "Ota.h"
 #include "String.h"
+#include "WebClient.h"
 
 static char tag[] = "WebServer";
 
@@ -397,6 +398,42 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 	return response.Send(sBody.c_str(), sBody.length());
 }
 
+bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params, HttpResponse& response) {
+
+	String sBody;
+	response.SetRetCode(404); // not found
 
 
+	Url url;
+	url.Parse(OTA_LATEST_FIRMWARE_JSON_URL);
 
+	ESP_LOGD(tag, "Retrieve json from: %s", url.GetUrl().c_str());
+	WebClient webClient;
+	webClient.Prepare(&url);
+
+	unsigned short statuscode = webClient.HttpGet();
+    if (statuscode != 200)
+		return false;
+	int i = webClient.GetResponseData().indexOf("\"version\":\"");
+	ESP_LOGD(tag, "found version at: %d",i);
+	if (i <= 0)
+		return false;
+	String version = webClient.GetResponseData().substring(i + 11);
+	i = version.indexOf('"');
+	ESP_LOGD(tag, "found '' at: %d",i);
+	if (i <= 0)
+		return false;
+	version = version.substring(0, i);
+	ESP_LOGD(tag, "Version: %s", version.c_str());
+
+	if (!version.equalsIgnoreCase(FIRMWARE_VERSION)){
+		sBody = "{\"newversion\":\"New version available: ";
+		sBody += version;
+		sBody += "\"}";
+	}
+	else
+		sBody = "{}";
+	response.SetRetCode(200);
+	return response.Send(sBody);
+	
+}

@@ -17,9 +17,10 @@
 #define STATE_ReadContentLength			7
 #define STATE_SearchBoundary			8
 #define STATE_ParseBoundary				9
-#define STATE_CopyBody					10
-#define STATE_ProcessMultipartBodyStart	11
-#define STATE_ProcessMultipartBody		12
+#define STATE_ParseFormBody				10
+#define STATE_CopyBody					11
+#define STATE_ProcessMultipartBodyStart	12
+#define STATE_ProcessMultipartBody		13
 
 
 class DownAndUploadHandler;
@@ -64,6 +65,7 @@ private:
 	__uint32_t muActBodyLength;
 	DownAndUploadHandler* mpUploadHandler;
 	
+	bool mbParseFormBody;
 	bool mbStoreUploadInBody;
 	bool mbFinished;
 	bool mbHttp11;

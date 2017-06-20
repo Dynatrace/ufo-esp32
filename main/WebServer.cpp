@@ -353,6 +353,10 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
 				break;
 		}
+		else if (httpParser.GetUrl().equals("/checkfirmware")) {
+			if (!requestHandler.HandleCheckFirmwareRequest(httpParser.GetParams(), httpResponse))
+				break;
+		}
 		else if (httpParser.GetUrl().equals("/update")) {
 			String sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
 				           "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
@@ -360,7 +364,6 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			if (!httpResponse.Send(sBody))
 				break;
 		}
-
 
 		else if (httpParser.GetUrl().equals("/test")){
 			String sBody;
@@ -384,7 +387,8 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 				sBody += "Body:\r\n";
 				sBody += httpParser.GetBody();
 			}
-			if (!httpResponse.Send(sBody.c_str(), sBody.length()))
+			ESP_LOGD(tag, "<%d> test body <%s>", conNumber,  sBody.c_str());
+			if (!httpResponse.Send(sBody))
 				break;
 		}
 		else{

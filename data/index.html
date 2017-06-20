@@ -155,7 +155,8 @@
 				<ul class="list">
 					<li class="divider">from update server</li>
 					<li class="padded-list">
-						<button class="btn btn-flat primary" id="firmware_update"><!--<a href="/#!pagefirmwareprogress">-->download and update<!--</a>--></button>
+						<div id="versiondisplay">Checking for newer version...</div>
+						<div><font color="red" id="versionerror" style="Display:None">Failed to connect github.com to check for new version!</font></div>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
@@ -211,7 +212,7 @@
 					</li>
 				</ul>
 
-				<form method='GET' action='/config'>
+				<form method='POST' action='/config' id='configwifiform'>
 
 					<div class="padded-full">
 
@@ -242,9 +243,11 @@
 						</div>
 						<div id="enterprisefields" style='Display:None'>
 							Enterprise WPA2 User:<br>
-							<input type="text" name="wifientuser" id="enterpriseuser" /> Enterprise WPA2 Password:<br>
-							<input type="password" name="wifientpwd" id="enterprisepass" /> Enterprise WPA2 Certificate Authority (optional):<br>
-							<textarea name="wifientca"></textarea>
+							<input type="text" name="wifientuser" id="enterpriseuser" /> 
+							Enterprise WPA2 Password:<br>
+							<input type="password" name="wifientpwd" id="enterprisepass" /> 
+							Enterprise WPA2 Certificate Authority (optional):<br>
+							<textarea name="wifientca" id="enterpriseca" style='Height:100px'></textarea>
 						</div>
 						<div id="divwifihostname">
 							Hostname:<br>
@@ -252,7 +255,8 @@
 						</div>
 					</div>
 					<div class="padded-full">
-						<button class="btn btn-submit fit-parent primary" type="submit">Apply WIFI settings and reboot.</button>
+						<span class="padded-list"><font color="red" id="configwifierror"></font></span>
+						<button class="btn btn-submit fit-parent primary" type='button' onclick='configureWifi();'>Apply WIFI settings and reboot.</button>
 					</div>
 				</form>
 			</div>
@@ -267,8 +271,7 @@
 		</header>
 		<div class="content">
 			<div class="input-wrapper list">
-				<li class="divider">Specify Listen Port and Scheme</li>
-				<form method='GET' action='/srvconfig'>
+				<form method='POST' action='/srvconfig' id='configserverform'>
 					<div class="padded-full">
 						<ul class="list">
 							<li class="">
@@ -278,23 +281,15 @@
                                 <span></span>
                             </label>
 							</li>
-							<input type="number" placeholder="Listen Port (optional)" name="listenport" id="listenport" />
+							Listen Port (optional):<br>
+							<input type="number" name="listenport" id="listenport" />
+							Custom Certificate (optional)
+							<textarea name="servercert" id="servercert" style='Height:100px'></textarea>
 						</ul>
 					</div>
 					<div class="padded-full">
-						<button class="btn btn-submit fit-parent primary" type="submit">Apply settings and reboot.</button>
-					</div>
-				</form>
-				<li class="divider">Upload Server Certificate </li>
-				<form method='POST' action='/updatecert' enctype='multipart/form-data'>
-					<div class="padded-full">
-					<span class="padded-list">Select certificate file</span>
-					<li>
-						<input class="padded-full" type="file" name="update" id="certfilename" accept=".pem"/>
-					</li>
-					<li>
-						<button class="btn btn-submit fit-parent primary" type="submit">Upload</button>
-					</li>
+						<span class="padded-list"><font color="red" id="configservererror"></font></span>
+						<button class="btn btn-submit fit-parent primary" type='button' onclick='configureServer();'>Apply settings and reboot.</button>
 					</div>
 				</form>
 			</div>
@@ -441,6 +436,46 @@
 			},
 			i18n: null // for this example, we do not use internationalization
 		});
+
+		var uploadCert = function(){
+			input = document.getElementById('certfilename');
+			if (input && input.files) {
+				if (!input.files[0]) 
+					document.getElementById('certuploaderror').innerText="Please select a file before clicking 'Upload'";
+				else if (input.files[0].size > 10240){
+					var text = "Certificate is too big (";
+					text += input.files[0].size;
+					text += "B)! Max size is 10kB"
+					document.getElementById('certuploaderror').innerText=text;
+				}
+				else
+					document.getElementById('certuploadform').submit()
+			}
+		}
+
+		var configureServer = function(){
+			input = document.getElementById('servercert');
+			if (input.value.length  > 10240){
+				var text = "Certificate is too big (";
+				text += input.value.length;
+				text += "B)! Max size is 10kB"
+				document.getElementById('configservererror').innerText=text;
+			}
+			else
+				document.getElementById('configserverform').submit()
+		}
+
+		var configureWifi = function(){
+			input = document.getElementById('enterpriseca');
+			if (input.value.length  > 10240){
+				var text = "Certificate Athority is too big (";
+				text += input.value.length;
+				text += "B)! Max size is 10kB"
+				document.getElementById('configwifierror').innerText=text;
+			}
+			else
+				document.getElementById('configwifiform').submit()
+		}
 
 
 		var app = phonon.navigator();
@@ -817,6 +852,29 @@
 					document.getElementById('apieditid').value = id;
 
 				}
+			}
+			if (evt.detail.page == "pagefirmwareupdate") {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'checkfirmware',
+					//crossDomain: false,
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+							button = document.getElementById('firmware_update').style.display = '';
+							document.getElementById('versiondisplay').innerText = result.newversion;
+						}
+						else{
+							document.getElementById('versiondisplay').innerText = 'Version is up to date!';
+						}
+					},
+					error: function (res, flagError, xhr) {
+						document.getElementById('versiondisplay').style.display  = 'None';
+						document.getElementById('versionerror').style.display = ''
+
+					}
+				});
 			}
 		});
 
