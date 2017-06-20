@@ -157,6 +157,7 @@
 					<li class="padded-list">
 						<div id="versiondisplay">Checking for newer version...</div>
 						<div><font color="red" id="versionerror" style="Display:None">Failed to connect github.com to check for new version!</font></div>
+						<button class="btn btn-flat primary" id="firmware_update" style="Display:None">download and update</button>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
@@ -862,6 +863,7 @@
 					success: function (res, xhr) {
 						console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
+						if (result.newversion && (result.newversion != "")){
 							button = document.getElementById('firmware_update').style.display = '';
 							document.getElementById('versiondisplay').innerText = result.newversion;
 						}
