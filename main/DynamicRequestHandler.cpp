@@ -281,6 +281,8 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 bool DynamicRequestHandler::HandleSrvConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
 	const char* sSslEnabled = NULL;
 	const char* sListenPort = NULL;
+	const char* sServerCert = NULL;
+	const char* sCurrentHost = NULL;
 
 	String sBody;
 
@@ -290,16 +292,48 @@ bool DynamicRequestHandler::HandleSrvConfigRequest(std::list<TParam>& params, Ht
 			sSslEnabled = (*it).paramValue.c_str();
 		else if ((*it).paramName == "listenport")
 			sListenPort = (*it).paramValue.c_str();
+		else if ((*it).paramName == "servercert")
+			sServerCert = (*it).paramValue.c_str();
+		else if ((*it).paramName == "currenthost")
+			sCurrentHost = (*it).paramValue.c_str();
 		it++;
 	}
 	mpUfo->GetConfig().mbWebServerUseSsl = (sSslEnabled != NULL);
 	mpUfo->GetConfig().muWebServerPort = atoi(sListenPort);
+	mpUfo->GetConfig().msWebServerCert = sServerCert;
 	ESP_LOGD(tag, "HandleSrvConfigRequest %d, %d", mpUfo->GetConfig().mbWebServerUseSsl, mpUfo->GetConfig().muWebServerPort);
 	mpUfo->GetConfig().Write();
 	mbRestart = true;
+	
+	String newUrl = "/";
+	if (sCurrentHost){
+		String sHost = sCurrentHost;
+		int i = sHost.indexOf(':');
+		if (i >= 0)
+			sHost = sHost.substring(0, i);
+		if (sHost.length()){
+			if (sSslEnabled != NULL){
+				newUrl = "https://" + sHost;
+				if (mpUfo->GetConfig().muWebServerPort && (mpUfo->GetConfig().muWebServerPort != 443)){
+					newUrl += ':';
+					newUrl += sListenPort;
+				}
+			}
+			else{
+				newUrl = "http://" + sHost;
+				if (mpUfo->GetConfig().muWebServerPort && (mpUfo->GetConfig().muWebServerPort != 80)){
+					newUrl += ':';
+					newUrl += sListenPort;
+				}
+			}
+			newUrl += '/';
+		}
+	}
+
 	sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
-			"<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
-			"<h2>New settings stored, rebooting shortly.</h2></body></html>";
+			"<meta http-equiv=\"refresh\" content=\"10; url=";
+	sBody += newUrl;
+	sBody += "\"></head><body><h2>New settings stored, rebooting shortly.</h2></body></html>";
 	rResponse.SetRetCode(200);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	return rResponse.Send(sBody);

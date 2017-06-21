@@ -273,6 +273,7 @@
 		<div class="content">
 			<div class="input-wrapper list">
 				<form method='POST' action='/srvconfig' id='configserverform'>
+					<input type='hidden' name='currenthost' id='currenthost'/>
 					<div class="padded-full">
 						<ul class="list">
 							<li class="">
@@ -444,8 +445,8 @@
 				document.getElementById('firmwareuploadererror').innerText = "Please select a file before clicking 'Upload'";
 				//input.files[0].size > 10240...
 			else{
-				document.getElementById('firmwareuploadererror').innerText = ""
-				document.getElementById('firmwareuploadform').submit()
+				document.getElementById('firmwareuploadererror').innerText = "";
+				document.getElementById('firmwareuploadform').submit();
 			}
 		}
 
@@ -454,12 +455,13 @@
 			if (input.value.length  > 10240){
 				var text = "Certificate is too big (";
 				text += input.value.length;
-				text += "B)! Max size is 10kB"
+				text += "B)! Max size is 10kB";
 				document.getElementById('configservererror').innerText = text;
 			}
 			else{
+				document.getElementById('currenthost').value = window.location.host;
 				document.getElementById('configservererror').innerText = "";
-				document.getElementById('configserverform').submit()
+				document.getElementById('configserverform').submit();
 			}
 		}
 
@@ -468,12 +470,12 @@
 			if (input.value.length  > 10240){
 				var text = "Certificate Athority is too big (";
 				text += input.value.length;
-				text += "B)! Max size is 10kB"
+				text += "B)! Max size is 10kB";
 				document.getElementById('configwifierror').innerText = text;
 			}
 			else{
 				document.getElementById('configwifierror').innerText = "";
-				document.getElementById('configwifiform').submit()
+				document.getElementById('configwifiform').submit();
 			}
 		}
 
@@ -872,7 +874,7 @@
 					},
 					error: function (res, flagError, xhr) {
 						document.getElementById('versiondisplay').style.display  = 'None';
-						document.getElementById('versionerror').style.display = ''
+						document.getElementById('versionerror').style.display = '';
 
 					}
 				});

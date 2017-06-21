@@ -249,7 +249,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
    
     while (1){
 		httpParser.Init(&mOta);
-		httpParser.AddUploadUrl("/updatecert");
+		//httpParser.AddUploadUrl("/updatecert");
 
 		while(1) {
 
@@ -336,24 +336,6 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 		else if (httpParser.GetUrl().equals("/srvconfig")){
 			if (!requestHandler.HandleSrvConfigRequest(httpParser.GetParams(), httpResponse))
 				break;
-		} 
-		else if (httpParser.GetUrl().equals("/updatecert")){
-			mpUfo->GetConfig().msWebServerCert = httpParser.GetBody();
-			mpUfo->GetConfig().Write();
-			if (mpUfo->GetConfig().mbWebServerUseSsl && !mpUfo->GetConfig().mbAPMode){
-				String sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
-							   "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
-							   "<h2>New certificate stored, rebooting shortly.</h2></body></html>";
-				mbRestart = true;
-				httpResponse.AddHeader(HttpResponse::HeaderNoCache);
-				httpResponse.Send(sBody);
-			}
-			else{
-				httpResponse.AddHeader(HttpResponse::HeaderNoCache);
-				httpResponse.AddHeader("Location: /");
-				httpResponse.SetRetCode(302);
-				httpResponse.Send();
-			}
 		} 
 		else if (httpParser.GetUrl().equals("/firmware")) {
 			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
