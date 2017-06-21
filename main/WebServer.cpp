@@ -218,6 +218,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 	HttpResponse httpResponse;
 	DynamicRequestHandler requestHandler(mpUfo, mpDisplayCharterLevel1, mpDisplayCharterLevel2);
 	SSL* ssl = NULL;
+	bool receivedSomething = false;
 
 	ESP_LOGD(tag, "<%d> WebRequestHandler - heapfree: %d", conNumber, esp_get_free_heap_size());
    
@@ -246,7 +247,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 	ESP_LOGD(tag, "<%d> Socket Accepted", conNumber);
 	ESP_LOGD(tag, "<%d> WebRequestHandler after - heapfree: %d", conNumber, esp_get_free_heap_size());
    
-	while (1){
+    while (1){
 		httpParser.Init(&mOta);
 		httpParser.AddUploadUrl("/updatecert");
 
@@ -259,11 +260,16 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 				sizeRead = recv(socket, data, total, 0);
 
 			if (sizeRead <= 0) {
-				ESP_LOGE(tag, "<%d> Connection closed during parsing", conNumber);
+				if (receivedSomething){
+					ESP_LOGE(tag, "<%d> Connection closed during parsing", conNumber);
+				}
+				else{
+					ESP_LOGD(tag, "<%d> Connection closed during parsing", conNumber);
+				}
 				goto EXIT;
 			}
-			else
-				ESP_LOGD(tag, "<%d> received %d bytes", conNumber, sizeRead);
+			ESP_LOGD(tag, "<%d> received %d bytes", conNumber, sizeRead);
+			receivedSomething = true;
 				
 			if (!httpParser.ParseRequest(data, sizeRead)){
 				ESP_LOGE(tag, "<%d> HTTP Parsing error: %d", conNumber, httpParser.GetError());
@@ -412,6 +418,8 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			ESP_LOGD(tag, "<%d> No Data", conNumber);
 			break;
 		}
+		else
+			ESP_LOGD(tag, "<%d> More data available!", conNumber);
 	}
 
 EXIT:

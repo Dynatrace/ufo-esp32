@@ -403,7 +403,6 @@ bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params
 	String sBody;
 	response.SetRetCode(404); // not found
 
-
 	Url url;
 	url.Parse(OTA_LATEST_FIRMWARE_JSON_URL);
 
@@ -415,16 +414,13 @@ bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params
     if (statuscode != 200)
 		return false;
 	int i = webClient.GetResponseData().indexOf("\"version\":\"");
-	ESP_LOGD(tag, "found version at: %d",i);
 	if (i <= 0)
 		return false;
 	String version = webClient.GetResponseData().substring(i + 11);
 	i = version.indexOf('"');
-	ESP_LOGD(tag, "found '' at: %d",i);
 	if (i <= 0)
 		return false;
 	version = version.substring(0, i);
-	ESP_LOGD(tag, "Version: %s", version.c_str());
 
 	if (!version.equalsIgnoreCase(FIRMWARE_VERSION)){
 		sBody = "{\"newversion\":\"New version available: ";
