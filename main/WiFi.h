@@ -30,6 +30,7 @@ public:
 	void GetGWAddress(char* sBuf);
 	void GetNetmask(char* sBuf);
 	void GetMac(__uint8_t uMac[6]);
+	void GetApInfo(int8_t& riRssi, uint8_t& ruChannel);
 
 	void StartAPMode(String& rsSsid, String& rsPass, String& rsHostname);
 	void StartSTAMode(String& rsSsid, String& rsPass, String& rsHostname);

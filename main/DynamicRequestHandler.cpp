@@ -139,6 +139,12 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 		sBody.printf("\",\"ipgateway\":\"%s\",", sHelp);
 		mpUfo->GetWifi().GetNetmask(sHelp);
 		sBody.printf("\"ipsubnetmask\":\"%s\",", sHelp);
+
+		uint8_t uChannel;
+		int8_t iRssi;
+		mpUfo->GetWifi().GetApInfo(iRssi, uChannel);
+		sBody.printf("\"rssi\":\"%d\",", iRssi);
+		sBody.printf("\"channel\":\"%d\",", uChannel);
 	}
 	mpUfo->GetWifi().GetMac((__uint8_t*)sHelp);
 

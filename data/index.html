@@ -119,6 +119,8 @@
 				<li class="padded-list" id="liinfoipsubnetmask">Subnetmask: <span id="infoipsubnetmask">-</span></li>
 				<li class="padded-list" id="liinfoipgateway">Gateway: <span id="infoipgateway">-</span></li>
 				<li class="padded-list" id="liinfomacaddress">Macaddress: <span id="infomacaddress">-</span></li>
+				<li class="padded-list" id="lirssi">Signal strength: <span id="rssi">-</span></li>
+				<li class="padded-list" id="liapchannel">Channel: <span id="apchannel">-</span></li>
 				<li class="padded-list" id="liinfohostname">Hostname: <span id="infohostname">-</span></li>
 			</ul>
 		</div>
@@ -174,7 +176,7 @@
 					</li>
 					<li>
 						<span class="padded-list"><font color="red" id="firmwareuploadererror"></font></span>
-						<button class="btn btn-submit fit-parent primary" type='button' onclick='uploadFirmware();'>Update</button>
+						<button class="btn btn-submit fit-parent primary" type='button' id='uploadFirmware'>Update</button>
 					</li>
 				</form>
 			</div>
@@ -221,14 +223,14 @@
 							<li class="divider"></li>
 							<li class="padded-for-list">
 								<label class="radio">
-									<input type="radio" name="wifimode" value="1" id="wifimode1" onchange="wifiModeChange(1);" checked>
+									<input type="radio" name="wifimode" value="1" id="wifimode1" onchangex="wifiModeChange(1);" checked>
 									WPA/WPA2
 									<span></span>
 								</label>
 							</li>
 							<li class="padded-for-list">
 								<label class="radio">
-									<input type="radio" name="wifimode" value="2" id="wifimode2" onchange="wifiModeChange(2);">
+									<input type="radio" name="wifimode" value="2" id="wifimode2" onchangex="wifiModeChange(2);">
 									WPA2-Enterprise
 									<span></span>
 								</label>
@@ -257,7 +259,7 @@
 					</div>
 					<div class="padded-full">
 						<span class="padded-list"><font color="red" id="configwifierror"></font></span>
-						<button class="btn btn-submit fit-parent primary" type='button' onclick='configureWifi();'>Apply WIFI settings and reboot.</button>
+						<button class="btn btn-submit fit-parent primary" type='button' id='configureWifi'>Apply WIFI settings and reboot.</button>
 					</div>
 				</form>
 			</div>
@@ -285,13 +287,13 @@
 							</li>
 							Listen Port (optional):<br>
 							<input type="number" name="listenport" id="listenport" />
-							Custom Certificate (optional)
+							Custom Certificate + Private Key (optional)
 							<textarea name="servercert" id="servercert" style='Height:100px'></textarea>
 						</ul>
 					</div>
 					<div class="padded-full">
 						<span class="padded-list"><font color="red" id="configservererror"></font></span>
-						<button class="btn btn-submit fit-parent primary" type='button' onclick='configureServer();'>Apply settings and reboot.</button>
+						<button class="btn btn-submit fit-parent primary" type='button' id='configureServer'>Apply settings and reboot.</button>
 					</div>
 				</form>
 			</div>
@@ -418,17 +420,6 @@
 			window.location.href = "#!pageapiedit/" + apiid;
 		}
 
-		var wifiModeChange = function (mode) {
-			if (mode == 1) {
-				document.getElementById('enterprisefields').style.display = 'none';
-				document.getElementById('wpafields').style.display = '';
-			}
-			else {
-				document.getElementById('enterprisefields').style.display = '';
-				document.getElementById('wpafields').style.display = 'none';
-			}
-		}
-
 		phonon.options({
 			navigator: {
 				defaultPage: 'home',
@@ -439,47 +430,7 @@
 			i18n: null // for this example, we do not use internationalization
 		});
 
-		var uploadFirmware = function(){
-			input = document.getElementById('firmwarefilename');
-			if (input && input.files && !input.files[0]) 
-				document.getElementById('firmwareuploadererror').innerText = "Please select a file before clicking 'Upload'";
-				//input.files[0].size > 10240...
-			else{
-				document.getElementById('firmwareuploadererror').innerText = "";
-				document.getElementById('firmwareuploadform').submit();
-			}
-		}
-
-		var configureServer = function(){
-			input = document.getElementById('servercert');
-			if (input.value.length  > 10240){
-				var text = "Certificate is too big (";
-				text += input.value.length;
-				text += "B)! Max size is 10kB";
-				document.getElementById('configservererror').innerText = text;
-			}
-			else{
-				document.getElementById('currenthost').value = window.location.host;
-				document.getElementById('configservererror').innerText = "";
-				document.getElementById('configserverform').submit();
-			}
-		}
-
-		var configureWifi = function(){
-			input = document.getElementById('enterpriseca');
-			if (input.value.length  > 10240){
-				var text = "Certificate Athority is too big (";
-				text += input.value.length;
-				text += "B)! Max size is 10kB";
-				document.getElementById('configwifierror').innerText = text;
-			}
-			else{
-				document.getElementById('configwifierror').innerText = "";
-				document.getElementById('configwifiform').submit();
-			}
-		}
-
-
+		
 		var app = phonon.navigator();
 
 		/**
@@ -767,7 +718,18 @@
 						}
 						else
 							document.getElementById('liinfolastiptoap').style = 'Display:None';
-
+						if (result.rssi) {
+							document.getElementById('rssi').innerHTML = result.rssi + ' dBm';
+							delete document.getElementById('lirssi').style;
+						}
+						else
+							document.getElementById('lirssi').style = 'Display:None';
+						if (result.channel) {
+							document.getElementById('apchannel').innerHTML = result.channel;
+							delete document.getElementById('liapchannel').style;
+						}
+						else
+							document.getElementById('liapchannel').style = 'Display:None';
 
 					},
 					error: function (res, flagError, xhr) {
@@ -777,6 +739,33 @@
 				});
 			}
 			if (evt.detail.page == "pagewifisettings") {
+				var configureWifi = function(){
+					input = document.getElementById('enterpriseca');
+					if (input.value.length  > 10240){
+						var text = "Certificate Athority is too big (";
+						text += input.value.length;
+						text += "B)! Max size is 10kB";
+						document.getElementById('configwifierror').innerText = text;
+					}
+					else{
+						document.getElementById('configwifierror').innerText = "";
+						document.getElementById('configwifiform').submit();
+					}
+				}
+				document.querySelector('#configureWifi').on('tap', configureWifi);
+				document.querySelector('#configureWifi').on('click', configureWifi);
+			
+				var wifiModeChange1 = function() {
+					document.getElementById('enterprisefields').style.display = 'none';
+					document.getElementById('wpafields').style.display = '';
+				}
+				var wifiModeChange2 = function() {
+					document.getElementById('enterprisefields').style.display = '';
+					document.getElementById('wpafields').style.display = 'none';
+				}
+				document.querySelector('#wifimode1').on('change', wifiModeChange1);
+				document.querySelector('#wifimode2').on('change', wifiModeChange2);
+
 				var req = phonon.ajax({
 					method: 'GET',
 					url: 'info',
@@ -803,6 +792,23 @@
 				});
 			}
 			if (evt.detail.page == "pageserversettings") {
+				var configureServer = function(){
+					input = document.getElementById('servercert');
+					if (input.value.length  > 10240){
+						var text = "Certificate is too big (";
+						text += input.value.length;
+						text += "B)! Max size is 10kB";
+						document.getElementById('configservererror').innerText = text;
+					}
+					else{
+						document.getElementById('currenthost').value = window.location.host;
+						document.getElementById('configservererror').innerText = "";
+						document.getElementById('configserverform').submit();
+					}
+				}
+				document.querySelector('#configureServer').on('tap', configureServer);
+				document.querySelector('#configureServer').on('click', configureServer);
+
 				var req = phonon.ajax({
 					method: 'GET',
 					url: 'info',
@@ -856,6 +862,19 @@
 				}
 			}
 			if (evt.detail.page == "pagefirmwareupdate") {
+				var uploadFirmware = function(){
+					input = document.getElementById('firmwarefilename');
+					if (input && input.files && !input.files[0]) 
+						document.getElementById('firmwareuploadererror').innerText = "Please select a file before clicking 'Upload'";
+						//input.files[0].size > 10240...
+					else{
+						document.getElementById('firmwareuploadererror').innerText = "";
+						document.getElementById('firmwareuploadform').submit();
+					}
+				}
+				document.querySelector('#uploadFirmware').on('tap', uploadFirmware);
+				document.querySelector('#uploadFirmware').on('click', uploadFirmware);
+
 				var req = phonon.ajax({
 					method: 'GET',
 					url: 'checkfirmware',

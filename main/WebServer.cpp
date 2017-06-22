@@ -94,8 +94,6 @@ bool WebServer::Start(){
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
 
-	String s1 = "12345";
-
 	if (mpUfo->GetConfig().mbAPMode){
 		port = 80;
 	}
@@ -160,7 +158,7 @@ bool WebServer::Start(){
 		close(sock);
 		return false;
 	}
-	ESP_LOGI(tag, "Webserver started listening");
+	ESP_LOGI(tag, "Webserver started listening on %d %s", port, mpSslCtx ? "(secure)":"");
 
 	int conNumber = 0;
 	
@@ -346,9 +344,9 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 				break;
 		}
 		else if (httpParser.GetUrl().equals("/update")) {
-			String sBody = "<html><head><title>SUCCESS - firmware update succeded, rebooting shortly.</title>"
+			String sBody = "<html><head><title>SUCCESS - firmware update succeeded, rebooting shortly.</title>"
 				           "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
-						   "<h2>SUCCESS - firmware update succeded, rebooting shortly.</h2></body></html>";
+						   "<h2>SUCCESS - firmware update succeeded, rebooting shortly.</h2></body></html>";
 			if (!httpResponse.Send(sBody))
 				break;
 		}
