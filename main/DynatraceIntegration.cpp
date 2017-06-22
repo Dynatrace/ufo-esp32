@@ -190,6 +190,7 @@ bool DynatraceIntegration::GetData() {
             return false;
         }        
     }
+    dtClient.Clear();
     return true;
 }
 

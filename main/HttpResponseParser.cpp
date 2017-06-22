@@ -66,6 +66,12 @@ void HttpResponseParser::Init(DownAndUploadHandler* pDownloadHandler, unsigned i
 
 }
 
+void HttpResponseParser::Clear(){
+	mBody.clear();
+	msLocation.clear();
+	msContentType.clear();
+}
+
 bool HttpResponseParser::ParseResponse(char* sBuffer, unsigned int uLen) {
 
 	// when uLen == 0, then connection is closed

@@ -57,6 +57,11 @@ bool WebClient::Prepare(Url* pUrl) {
 	return true;
 }
 
+void WebClient::Clear(){
+	mlRequestHeaders.clear();
+	mHttpResponseParser.Clear();
+}
+
 
 bool WebClient::AddHttpHeader(String& sHeader) {
 	mlRequestHeaders.push_back(sHeader);
@@ -115,6 +120,8 @@ unsigned short WebClient::HttpGet() {
 	mpPostData = NULL;
 	muPostDataSize = 0;
 	unsigned short statuscode;
+	
+	if (!mpUrl) return 1001;
 
 	for (short redirects = 0; redirects < 5; redirects++) {
 		statuscode = HttpExecute();
@@ -138,8 +145,6 @@ unsigned short WebClient::HttpExecute() {
 	if (mpUrl->GetHost().length() == 0) {
 		return 1002;
 	}
-
-
 
 	if (mpUrl->GetSecure()) {
 		return HttpExecuteSecure();

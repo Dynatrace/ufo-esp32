@@ -106,7 +106,7 @@ void Ufo::TaskWebServer(){
 
 void Ufo::TaskDisplay(){
 	while (1){
-		if (mWifi.IsConnected() && mbApiCallReceived){
+		if (mWifi.IsConnected() && (mbApiCallReceived || (/*dtI running*/false && mStateDisplay.IpShownLongEnough()))){
 			mDisplayCharterLevel1.Display(mStripeLevel1);
 			mDisplayCharterLevel2.Display(mStripeLevel2);
 		}
@@ -134,10 +134,12 @@ void Ufo::TaskDynatraceIntegration(){
 	DynatraceIntegration dt(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 	dt.Init();
 	while (1) {
+
 		if (mConfig.Changed(&mConfig.mbDTChanged)) {
 			dt.Init();
 		}
 		if (mWifi.IsConnected() && GetConfig().mbDTEnabled && dt.mActive) {
+			ESP_LOGD("Ufo", "dt.Poll()");
 			dt.Poll();
 			vTaskDelay((mConfig.miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
 		}

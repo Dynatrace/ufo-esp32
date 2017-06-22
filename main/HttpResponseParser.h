@@ -26,6 +26,7 @@ public:
 	 */
 	void Init(DownAndUploadHandler* pDownloadHandler, unsigned int maxBodyBufferSize = 16*1024);
 
+	void Clear();
 
 	/*
 	 * feed parser with stream data, in a loop until ResponseFinised() is true

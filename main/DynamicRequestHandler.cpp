@@ -185,10 +185,8 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	}
 
 	mpUfo->GetConfig().mbDTEnabled = bEnabled;
-	if (sEnvId) mpUfo->GetConfig().msDTEnvId = sEnvId;
-	else 		mpUfo->GetConfig().msDTEnvId.clear();
-	if (sApiToken) mpUfo->GetConfig().msDTApiToken = sApiToken;
-	else 		mpUfo->GetConfig().msDTApiToken.clear();
+	mpUfo->GetConfig().msDTEnvId = sEnvId;
+	mpUfo->GetConfig().msDTApiToken = sApiToken;
 	mpUfo->GetConfig().miDTInterval = iInterval;
 
 	if (mpUfo->GetConfig().Write())

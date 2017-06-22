@@ -24,10 +24,12 @@ public:
 
 	void StartShowingIp();
 	void DisplayIp(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeLevel2);
+	bool IpShownLongEnough() { return mbFullCycleDone; }; 
 
 private:
 	bool mbAPMode;
 	bool mbConnected;
+	bool mbFullCycleDone;
 
 	__uint8_t muState;
 	__uint16_t muStateTimer;
