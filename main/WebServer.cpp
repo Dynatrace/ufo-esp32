@@ -278,7 +278,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			}
 		}
 
-		ESP_LOGD(tag, "<%d> Request parsed: %s", conNumber,  httpParser.GetUrl().c_str());
+		ESP_LOGI(tag, "<%d> Request parsed: %s", conNumber,  httpParser.GetUrl().c_str());
 
 		if (ssl)
 			httpResponse.Init(ssl, httpParser.IsHttp11(), httpParser.IsConnectionClose());

@@ -49,8 +49,8 @@ bool DynatraceIntegration::OnReceiveData(char* buf, int len) {
 }
 
 bool DynatraceIntegration::OnReceiveEnd() {
-    ESP_LOGI(LOGTAG, "Data received");
-    ESP_LOGI(LOGTAG, "%s", mJson.c_str());
+    ESP_LOGD(LOGTAG, "Data received");
+    ESP_LOGD(LOGTAG, "%s", mJson.c_str());
     this->Process();
     return true;
 }
@@ -63,8 +63,8 @@ bool DynatraceIntegration::Init() {
 
     mpDtUrl.Build(true, mDtEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mDtApiToken);
 
-	ESP_LOGI(LOGTAG, "Init");
-	ESP_LOGI(LOGTAG, "URL: %s", mpDtUrl.GetUrl().c_str());
+	ESP_LOGD(LOGTAG, "Init");
+	ESP_LOGD(LOGTAG, "URL: %s", mpDtUrl.GetUrl().c_str());
 
     return mInitialized;
 }
@@ -84,7 +84,7 @@ void DynatraceIntegration::HandleFailure() {
 
 
 void DynatraceIntegration::DisplayDefault() {
-	ESP_LOGI(LOGTAG, "DisplayDefault: %i", miTotalProblems);
+	ESP_LOGD(LOGTAG, "DisplayDefault: %i", miTotalProblems);
     mpDisplayLowerRing->Init();
     mpDisplayUpperRing->Init();
 
@@ -179,7 +179,7 @@ bool DynatraceIntegration::Poll() {
 
 bool DynatraceIntegration::GetData() {
     if (!mActive) return false;
-	ESP_LOGI(LOGTAG, "polling %s", mpDtUrl.GetUrl().c_str());
+	ESP_LOGD(LOGTAG, "polling %s", mpDtUrl.GetUrl().c_str());
     if (dtClient.Prepare(&mpDtUrl)) {
     	dtClient.SetDownloadHandler(this);
 
@@ -191,6 +191,7 @@ bool DynatraceIntegration::GetData() {
         }        
     }
     dtClient.Clear();
+    mJson.clear();
     return true;
 }
 

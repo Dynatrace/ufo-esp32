@@ -318,7 +318,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 	mbedtls_net_init(&server_fd);
 	netInitDone = true;
 
-	ESP_LOGI(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
+	ESP_LOGD(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
 	ESP_LOGD(LOGTAG, "Port as string '%s'", mpUrl->GetPortAsString().c_str());
 	if ((ret = mbedtls_net_connect(&server_fd, mpUrl->GetHost().c_str(), mpUrl->GetPortAsString().c_str(), MBEDTLS_NET_PROTO_TCP))
 			!= 0) {
@@ -326,7 +326,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		goto exit;
 	}
 
-	ESP_LOGI(LOGTAG, "Connected.");
+	ESP_LOGD(LOGTAG, "Connected.");
 
 	mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
@@ -375,7 +375,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 
 	//ESP_LOGI(LOGTAG, "%d bytes written", ret);
-	ESP_LOGI(LOGTAG, "Reading HTTP response...");
+	ESP_LOGD(LOGTAG, "Reading HTTP response...");
 
 	sRequest.clear(); // free memory
 
