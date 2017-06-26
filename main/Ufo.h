@@ -5,6 +5,9 @@
 #include "DisplayCharter.h"
 #include "DisplayCharterLogo.h"
 #include "StateDisplay.h"
+#include "DynatraceIntegration.h"
+#include "DynatraceMonitoring.h"
+#include "AWSIntegration.h"
 #include "Wifi.h"
 #include "Config.h"
 #include "WebServer.h"
@@ -21,8 +24,10 @@ public:
 
 	void TaskWebServer();
 	void TaskDisplay();
-	void TaskDynatraceIntegration();
-	void TaskDynatraceMonitoring();
+	
+	void StartDynatraceIntegration();
+	void StartAWS();
+	void StartDynatraceMonitoring();
 
 	void InitLogoLeds();
 	void ShowLogoLeds();
@@ -34,6 +39,7 @@ public:
 	ApiStore& GetApiStore() { return mApiStore; };
 
 private:
+	
 	DisplayCharter mDisplayCharterLevel1;
 	DisplayCharter mDisplayCharterLevel2;
 	DisplayCharterLogo mDisplayCharterLogo;
@@ -49,6 +55,10 @@ private:
 
 	Config mConfig;
 	ApiStore mApiStore;
+
+	DynatraceIntegration mDt;
+	DynatraceMonitoring mDtmon;
+	AWSIntegration mAws;
 
 	bool mbButtonPressed;
 	bool mbApiCallReceived;

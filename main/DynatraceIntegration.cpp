@@ -5,25 +5,27 @@
 #include "DisplayCharter.h"
 #include "Config.h"
 #include "String.h"
+#include "esp_system.h"
 #include <esp_log.h>
 #include <cJSON.h>
 
 static const char* LOGTAG = "Dynatrace";
 
 
-DynatraceIntegration::DynatraceIntegration(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
+void task_function_dynatrace_integration(void *pvParameter)
+{
+	((DynatraceIntegration*)pvParameter)->Connect();
+	vTaskDelete(NULL);
+}
 
+
+DynatraceIntegration::DynatraceIntegration() {
     miTotalProblems = -1;
     miApplicationProblems = -1;
     miServiceProblems = -1;
     miInfrastructureProblems = -1;
 
-    mpUfo = pUfo;  
-    mpDisplayLowerRing = pDisplayLowerRing;
-    mpDisplayUpperRing = pDisplayUpperRing;
-    mpConfig = &(mpUfo->GetConfig());
 	ESP_LOGI(LOGTAG, "Start");
-
 }
 
 
@@ -31,42 +33,45 @@ DynatraceIntegration::~DynatraceIntegration() {
 
 }
 
-bool DynatraceIntegration::OnReceiveBegin(String& sUrl, unsigned int contentLength){
-//    ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl.c_str(), contentLength);
-    return true;
-}
-
-bool DynatraceIntegration::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
-//    ESP_LOGI(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
-    return true;
-}
-
-bool DynatraceIntegration::OnReceiveData(char* buf, int len) {
-//    ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
-    mJson.printf("%s", buf);
-//    ESP_LOGI(LOGTAG, "%s", mJson.c_str());
-    return true;
-}
-
-bool DynatraceIntegration::OnReceiveEnd() {
-    ESP_LOGI(LOGTAG, "Data received");
-    ESP_LOGI(LOGTAG, "%s", mJson.c_str());
-    this->Process();
-    return true;
-}
-
 bool DynatraceIntegration::Init() {
+    return Init(mpUfo, mpDisplayLowerRing, mpDisplayUpperRing);
+}
+
+bool DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
+	ESP_LOGI(LOGTAG, "Init");
+
+    mpUfo = pUfo;  
+    mpDisplayLowerRing = pDisplayLowerRing;
+    mpDisplayUpperRing = pDisplayUpperRing;
+    mpConfig = &(mpUfo->GetConfig());
+
+    if (!mpConfig->mbDTEnabled) {
+        return false;
+    }
+    
     mInitialized = true;
-    mActive = true;
     mDtEnvId = mpConfig->msDTEnvId;
     mDtApiToken = mpConfig->msDTApiToken;
+    
+    xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 8192, this, 5, NULL);
+    return mInitialized;            
 
-    mpDtUrl.Build(true, mDtEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mDtApiToken);
+}
 
-	ESP_LOGI(LOGTAG, "Init");
-	ESP_LOGI(LOGTAG, "URL: %s", mpDtUrl.GetUrl().c_str());
+bool DynatraceIntegration::Connect() {
+	ESP_LOGI(LOGTAG, "Connect");
 
-    return mInitialized;
+    mDtUrl.Build(true, mDtEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mDtApiToken);
+    ESP_LOGI(LOGTAG, "URL: %s", mDtUrl.GetUrl().c_str());
+
+    while (1) {
+        if (mpUfo->GetWifi().IsConnected()) {
+            ESP_LOGI(LOGTAG, "UFO is online");
+            mActive = true;
+            this->Run();            
+        }
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
 
 void DynatraceIntegration::HandleFailure() {
@@ -124,8 +129,10 @@ void DynatraceIntegration::DisplayDefault() {
 }
 
 
-bool DynatraceIntegration::Process() {
-    json = cJSON_GetObjectItem(cJSON_Parse(mJson.c_str()), "result");
+bool DynatraceIntegration::Process(String& jsonString) {
+    
+    cJSON* parentJson = cJSON_Parse(jsonString.c_str());
+    cJSON* json = cJSON_GetObjectItem(parentJson, "result");
     bool changed = false;
 
     int iTotalProblems = cJSON_GetObjectItem(json, "totalOpenProblemsCount")->valueint;
@@ -138,6 +145,8 @@ bool DynatraceIntegration::Process() {
     ESP_LOGI(LOGTAG, "open Infrastructure problems: %i", iInfrastructureProblems);
     ESP_LOGI(LOGTAG, "open Application problems: %i", iApplicationProblems);
     ESP_LOGI(LOGTAG, "open Service problems: %i", iServiceProblems);
+
+    cJSON_Delete(parentJson);
 
     if (iInfrastructureProblems != miInfrastructureProblems) {
         changed = true;
@@ -164,26 +173,31 @@ void DynatraceIntegration::Shutdown() {
     mActive = false;
 }
 
-
-void task_dynatraceintegration_poll(void *pvParameter) {
-	ESP_LOGD(LOGTAG, "Starting DynatraceIntegration Poll Task ....");
-
-	((DynatraceIntegration*)pvParameter)->GetData();
-	vTaskDelete(NULL);
-}
-
-bool DynatraceIntegration::Poll() {
-   	xTaskCreatePinnedToCore(&task_dynatraceintegration_poll, "Task_DynatraceIntegration_Poll", 8192, this, 5, NULL, 0);
-    return true;
+bool DynatraceIntegration::Run() {
+	ESP_LOGI(LOGTAG, "Run");
+	while (1) {
+		if (mpConfig->Changed(&mpConfig->mbDTChanged)) {
+			Init();
+		}
+		if (mActive) {
+			GetData();
+            ESP_LOGI(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());    
+			vTaskDelay((mpConfig->miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
+		}
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+	}
 }
 
 bool DynatraceIntegration::GetData() {
     if (!mActive) return false;
-	ESP_LOGI(LOGTAG, "polling %s", mpDtUrl.GetUrl().c_str());
-    if (dtClient.Prepare(&mpDtUrl)) {
-    	dtClient.SetDownloadHandler(this);
+    if (!mpUfo->GetWifi().IsConnected()) return false;
+	ESP_LOGI(LOGTAG, "polling");
+    if (dtClient.Prepare(&mDtUrl)) {
 
         unsigned short responseCode = dtClient.HttpGet();
+        Process(dtClient.GetResponseData());
+        dtClient.Clear();
+
         if (responseCode != 200) {
             ESP_LOGE(LOGTAG, "Communication with Dynatrace failed - error %u", responseCode);
             this->HandleFailure();
