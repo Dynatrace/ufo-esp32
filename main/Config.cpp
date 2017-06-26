@@ -19,6 +19,8 @@ Config::Config() {
 	mbWebServerUseSsl = false;
 	muWebServerPort = 0;
 
+	mbDTEnabled = false;
+
 	muLastSTAIpAddress = 0;
 }
 
@@ -45,16 +47,16 @@ bool Config::Read(){
 	ReadString(h, "DTEnvId", msDTEnvId);
 	ReadString(h, "DTApiToken", msDTApiToken);
 	ReadInt(h, "DTInterval", miDTInterval);
+	ReadBool(h, "SrvSSLEnabled", mbWebServerUseSsl);
+	nvs_get_u16(h, "SrvListenPort", &muWebServerPort);
+	ReadString(h, "SrvCert", msWebServerCert);
 
 	nvs_close(h);
 	return true;
 }
 
-bool Config::Write() {
-	return Write(&this->mbDummy);
-}
 
-bool Config::Write(bool* pFlag)
+bool Config::Write()
 {
 	nvs_handle h;
 
@@ -92,10 +94,16 @@ bool Config::Write(bool* pFlag)
 	if (!WriteInt(h, "DTInterval", miDTInterval))
 		return nvs_close(h), false;
 
+	if (!WriteBool(h, "SrvSSLEnabled", mbWebServerUseSsl))	
+		return nvs_close(h), false;
+	if (nvs_set_u16(h, "SrvListenPort", muWebServerPort) != ESP_OK)
+		return nvs_close(h), false;
+	if (!WriteString(h, "SrvCert", msWebServerCert))
+		return nvs_close(h), false;
+
 
 	nvs_commit(h);
 	nvs_close(h);
-	*pFlag = true;
 	return true;
 }
 
@@ -144,7 +152,7 @@ bool Config::ReadInt(nvs_handle h, const char* sKey, int& riValue){
 bool Config:: WriteString(nvs_handle h, const char* sKey, String& rsValue){
 	esp_err_t err = nvs_set_str(h, sKey, rsValue.c_str());
 	if (err != ESP_OK){
-		ESP_LOGD("CONFIG", "!!!!!!!!!!!!!!!!!!! Error %d", err);
+		ESP_LOGE("Config", "  <%s> -> %d", sKey, err);
 		return false;
 	}
 	return true;

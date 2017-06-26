@@ -73,6 +73,15 @@ void Wifi::GetMac(__uint8_t uMac[6])
 	esp_wifi_get_mac(ESP_IF_WIFI_STA, uMac);
 }
 
+void Wifi::GetApInfo(int8_t& riRssi, uint8_t& ruChannel)
+{
+	wifi_ap_record_t info;
+
+	esp_wifi_sta_get_ap_info(&info);
+	riRssi = info.rssi;
+	ruChannel = info.primary;
+}
+
 void Wifi::StartAPMode(String& rsSsid, String& rsPass, String& rsHostname)
 {
 	msSsid = rsSsid;

@@ -65,7 +65,7 @@ void Ufo::Start(){
 	gpio_pad_select_gpio(19);
 	gpio_set_direction(GPIO_NUM_19, GPIO_MODE_OUTPUT);
 
-	xTaskCreatePinnedToCore(&task_function_webserver, "Task_WebServer", 8192, this, 5, NULL, 0); //Ota update (upload) just works on core 0
+	xTaskCreatePinnedToCore(&task_function_webserver, "Task_WebServer", 12288, this, 5, NULL, 0); //Ota update (upload) just works on core 0
 	xTaskCreate(&task_function_display, "Task_Display", 4096, this, 5, NULL);
 
 	if (mConfig.mbAPMode){
@@ -94,8 +94,8 @@ void Ufo::TaskWebServer(){
 
 	while (1){
 		if (mWifi.IsConnected()){
-			ESP_LOGI(LOGTAG, "starting Webserver");
-			mServer.Start();
+			ESP_LOGI("Ufo", "starting Webserver");
+			mServer.StartUfoSevrver();
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
@@ -104,7 +104,7 @@ void Ufo::TaskWebServer(){
 void Ufo::TaskDisplay(){
 	ESP_LOGI(LOGTAG, "starting Display - %s", mConfig.msDTEnvId.c_str());
 	while (1){
-		if (mWifi.IsConnected() && mbApiCallReceived){
+		if (mWifi.IsConnected() && (mbApiCallReceived || (/*dtI running*/false && mStateDisplay.IpShownLongEnough()))){
 			mDisplayCharterLevel1.Display(mStripeLevel1);
 			mDisplayCharterLevel2.Display(mStripeLevel2);
 		}
@@ -159,7 +159,7 @@ void Ufo::ShowLogoLeds(){
 	mStripeLogo.Show();
 	mStripeLevel1.Show();
 }
-
+ 
 //-----------------------------------------------------------------------------------------
 
 Ufo ufo;

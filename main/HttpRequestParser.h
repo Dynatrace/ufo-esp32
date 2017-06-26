@@ -17,9 +17,10 @@
 #define STATE_ReadContentLength			7
 #define STATE_SearchBoundary			8
 #define STATE_ParseBoundary				9
-#define STATE_CopyBody					10
-#define STATE_ProcessMultipartBodyStart	11
-#define STATE_ProcessMultipartBody		12
+#define STATE_ParseFormBody				10
+#define STATE_CopyBody					11
+#define STATE_ProcessMultipartBodyStart	12
+#define STATE_ProcessMultipartBody		13
 
 
 class DownAndUploadHandler;
@@ -32,6 +33,7 @@ public:
 
 	void Init(DownAndUploadHandler* pUploadHandler);
 	void Clear();
+	void AddUploadUrl(const char* sUrl) { mUrlsToStoreUploadinBodyFor.push_back(sUrl); };
 
 	bool ParseRequest(char* sBuffer, __uint16_t uLen);
 	bool ProcessMultipartBody(char* sBuffer, __uint16_t uLen);
@@ -50,6 +52,7 @@ public:
 	__uint8_t GetError()  	{ return muError; };
 
 private:
+	std::list<String> mUrlsToStoreUploadinBodyFor;
 	int mSocket;
 	UrlParser mUrlParser;
 	String mUrl;
@@ -62,7 +65,8 @@ private:
 	__uint32_t muActBodyLength;
 	DownAndUploadHandler* mpUploadHandler;
 	
-
+	bool mbParseFormBody;
+	bool mbStoreUploadInBody;
 	bool mbFinished;
 	bool mbHttp11;
 	bool mbConClose;

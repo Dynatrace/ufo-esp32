@@ -89,7 +89,7 @@ bool Ota::InternalOnRecvBegin(bool isContentLength, unsigned int contentLength){
 }
 
 bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength) {
-    ESP_LOGI(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
+    ESP_LOGD(LOGTAG, "OnReceiveBegin(%u, %u)", httpStatusCode, contentLength);
 
     if (httpStatusCode != 200)
         return false;
@@ -97,15 +97,15 @@ bool Ota::OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength
 }
 
 bool Ota::OnReceiveBegin(String& sUrl, unsigned int contentLength){
-    ESP_LOGI(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl.c_str(), contentLength);
+    ESP_LOGD(LOGTAG, "OnReceiveBegin(%s, %u)", sUrl.c_str(), contentLength);
     
-    if (!sUrl.equals("/update"))
-        return false;
-    return InternalOnRecvBegin(true, contentLength);
+    if (sUrl.equals("/update"))
+        return InternalOnRecvBegin(true, contentLength);
+    return false;
 }
 
 bool Ota::OnReceiveData(char* buf, int len) {
-    ESP_LOGI(LOGTAG, "OnReceiveData(%d)", len);
+    ESP_LOGD(LOGTAG, "OnReceiveData(%d)", len);
 
 	esp_err_t err;
     //ESP_LOGI(LOGTAG, "Before esp_ota_write");
@@ -121,7 +121,7 @@ bool Ota::OnReceiveData(char* buf, int len) {
     }
     muActualDataLength += len;
     miProgress = 100 * muActualDataLength / muContentLength;
-    ESP_LOGI(LOGTAG, "Have written image length %d, total %d", len, muActualDataLength);
+    ESP_LOGD(LOGTAG, "Have written image length %d, total %d", len, muActualDataLength);
     return err == ESP_OK;
 }
 
@@ -227,8 +227,9 @@ void task_function_firmwareupdate(void* user_data) {
 
 
 void Ota::StartUpdateFirmwareTask() {
+    miProgress = 0;
 	//xTaskCreate(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 5, NULL);
     // Pin firmware update task to core 0 --- otherwise we get weird crashes
-   	xTaskCreatePinnedToCore(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 5, NULL, 0);
+   	xTaskCreatePinnedToCore(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 6, NULL, 0);
 }
 

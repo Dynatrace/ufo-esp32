@@ -10,7 +10,7 @@
 #include "AWSIntegration.h"
 #include "Wifi.h"
 #include "Config.h"
-#include "WebServer.h"
+#include "UfoWebServer.h"
 #include "ApiStore.h"
 
 #define FIRMWARE_VERSION __DATE__ " - " __TIME__
@@ -51,7 +51,7 @@ private:
 	DotstarStripe mStripeLogo;
 
 	Wifi mWifi;
-	WebServer mServer;
+	UfoWebServer mServer;
 
 	Config mConfig;
 	ApiStore mApiStore;

@@ -36,7 +36,7 @@
 #include "mbedtls/certs.h"
 
 #define DEFAULT_MAXRESPONSEDATASIZE 16*1024
-#define RECEIVE_BUFFER_SIZE 16*1024
+#define RECEIVE_BUFFER_SIZE 2*1024
 
 static const char LOGTAG[] = "WebClient";
 
@@ -55,6 +55,11 @@ bool WebClient::Prepare(Url* pUrl) {
 	mpUrl = pUrl;
 
 	return true;
+}
+
+void WebClient::Clear(){
+	mlRequestHeaders.clear();
+	mHttpResponseParser.Clear();
 }
 
 
@@ -115,6 +120,8 @@ unsigned short WebClient::HttpGet() {
 	mpPostData = NULL;
 	muPostDataSize = 0;
 	unsigned short statuscode;
+	
+	if (!mpUrl) return 1001;
 
 	for (short redirects = 0; redirects < 5; redirects++) {
 		statuscode = HttpExecute();
@@ -138,8 +145,6 @@ unsigned short WebClient::HttpExecute() {
 	if (mpUrl->GetHost().length() == 0) {
 		return 1002;
 	}
-
-
 
 	if (mpUrl->GetSecure()) {
 		return HttpExecuteSecure();
@@ -247,6 +252,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 	mbedtls_x509_crt cacert;
 	mbedtls_ssl_config conf;
 	mbedtls_net_context server_fd;
+	bool netInitDone = false;
 
 	mbedtls_ssl_init(&ssl);
 	mbedtls_x509_crt_init(&cacert);
@@ -259,7 +265,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0)) != 0) {
 		ESP_LOGE(LOGTAG, "mbedtls_ctr_drbg_seed returned %d", ret);
-		abort();
+		goto exit;
 	}
 
 	/*   ESP_LOGI(LOGTAG, "Loading the CA root certificate...");
@@ -278,7 +284,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 	/* Hostname set here should match CN in server certificate */
 	if ((ret = mbedtls_ssl_set_hostname(&ssl, mpUrl->GetPortAsString().c_str())) != 0) {
 		ESP_LOGE(LOGTAG, "mbedtls_ssl_set_hostname returned -0x%x", -ret);
-		abort();
+		goto exit;
 	}
 
 	ESP_LOGD(LOGTAG, "Setting up the SSL/TLS structure...");
@@ -310,8 +316,9 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	// the following onwards needs working WIFI and IP address
 	mbedtls_net_init(&server_fd);
+	netInitDone = true;
 
-	ESP_LOGI(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
+	ESP_LOGD(LOGTAG, "Connecting to %s:%hu...", mpUrl->GetHost().c_str(), mpUrl->GetPort());
 	ESP_LOGD(LOGTAG, "Port as string '%s'", mpUrl->GetPortAsString().c_str());
 	if ((ret = mbedtls_net_connect(&server_fd, mpUrl->GetHost().c_str(), mpUrl->GetPortAsString().c_str(), MBEDTLS_NET_PROTO_TCP))
 			!= 0) {
@@ -319,7 +326,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 		goto exit;
 	}
 
-	ESP_LOGI(LOGTAG, "Connected.");
+	ESP_LOGD(LOGTAG, "Connected.");
 
 	mbedtls_ssl_set_bio(&ssl, &server_fd, mbedtls_net_send, mbedtls_net_recv, NULL);
 
@@ -368,7 +375,7 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 
 	//ESP_LOGI(LOGTAG, "%d bytes written", ret);
-	ESP_LOGI(LOGTAG, "Reading HTTP response...");
+	ESP_LOGD(LOGTAG, "Reading HTTP response...");
 
 	sRequest.clear(); // free memory
 
@@ -415,8 +422,16 @@ unsigned short WebClient::HttpExecuteSecure() {
 
 	mbedtls_ssl_close_notify(&ssl);
 
-	exit: mbedtls_ssl_session_reset(&ssl);
-	mbedtls_net_free(&server_fd);
+exit: 
+	mbedtls_ssl_session_reset(&ssl);
+	if (netInitDone) 
+		mbedtls_net_free(&server_fd);
+
+	mbedtls_x509_crt_free(&cacert);
+    mbedtls_ssl_free(&ssl);
+    mbedtls_ssl_config_free(&conf);
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
 
 	if (!mHttpResponseParser.ResponseFinished() && ret != 0) {
 		mbedtls_strerror(ret, buf, 100);

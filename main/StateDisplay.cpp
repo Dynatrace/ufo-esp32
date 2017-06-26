@@ -12,6 +12,7 @@ StateDisplay::StateDisplay() {
 	muState = 0;
 	muStateTimer = 0;
 	msIp[0] = 0x00;
+	mbFullCycleDone = false;
 }
 
 StateDisplay::~StateDisplay() {
@@ -128,6 +129,7 @@ void StateDisplay::StartShowingIp(){
 	uColorValue[0] = 0xFF;
 	uColorValue[1] = 0x00;
 	uColorValue[2] = 0x00;
+	mbFullCycleDone = false;
 	uTick = IPSPEED;
 	bShortBreak = false;
 }
@@ -148,8 +150,10 @@ void StateDisplay::DisplayIp(DotstarStripe& rStripeLevel1, DotstarStripe& rStrip
 
 		if (!msIp[uPos]){
 			uPos = 0;
-			if (++uColor >= 3)
+			if (++uColor >= 3){
 				uColor = 0;
+				mbFullCycleDone = true;
+			}
 			switch (uColor){
 				case 0:
 					uColorValue[0] = 0xFF;

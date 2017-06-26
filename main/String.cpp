@@ -47,9 +47,7 @@ int String::printf(const char* format, ...) {
     } else {  // printf into empty string, so simply reuse sting
         reserve(addLen + 1);
         addLen = vsnprintf((char*)c_str(), addLen+1, format, args);
-        if (len > 0) {
-            len = addLen;
-        }
+        len = addLen;
     }
     return addLen; 
 }
@@ -360,8 +358,12 @@ unsigned char String::concat(const char *cstr, unsigned int length)
     if(!reserve(newlen)) {
         return 0;
     }
-    strcpy(buffer + len, cstr);
+    //this is increadible!!!
+    //strcpy(buffer + len, cstr);
+    memcpy(buffer + len, cstr, length);
     len = newlen;
+    buffer[newlen] = 0x00;
+
     return 1;
 }
 

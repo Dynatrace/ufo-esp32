@@ -89,7 +89,7 @@ void DynatraceIntegration::HandleFailure() {
 
 
 void DynatraceIntegration::DisplayDefault() {
-	ESP_LOGI(LOGTAG, "DisplayDefault: %i", miTotalProblems);
+	ESP_LOGD(LOGTAG, "DisplayDefault: %i", miTotalProblems);
     mpDisplayLowerRing->Init();
     mpDisplayUpperRing->Init();
 
@@ -204,6 +204,8 @@ bool DynatraceIntegration::GetData() {
             return false;
         }        
     }
+    dtClient.Clear();
+    mJson.clear();
     return true;
 }
 
