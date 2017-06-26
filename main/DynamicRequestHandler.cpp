@@ -8,7 +8,7 @@
 #include "String.h"
 #include "WebClient.h"
 
-static char tag[] = "WebServer";
+static char tag[] = "DynamicRequestHandler";
 
 DynamicRequestHandler::DynamicRequestHandler(Ufo* pUfo, DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2) {
 	mpUfo = pUfo;

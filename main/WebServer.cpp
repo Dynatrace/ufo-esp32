@@ -1,13 +1,10 @@
 #include "WebServer.h"
-#include "ufo.h"
-#include "config.h"
 #include "HttpRequestParser.h"
 #include "HttpResponse.h"
-#include "DynamicRequestHandler.h"
+#include "String.h"
 #include <lwip/sockets.h>
 #include <esp_log.h>
 #include <esp_system.h>
-#include <String.h>
 
 #include "sdkconfig.h"
 #include "fontwoff.h"
@@ -40,7 +37,6 @@ WebServer::WebServer() {
 	muConcurrentConnections = 0;
 	myMutex = portMUX_INITIALIZER_UNLOCKED;
 	mbFree = true;
-	mbRestart = false;
 }
 
 WebServer::~WebServer() {
@@ -89,49 +85,40 @@ void WebServer::LeaveCriticalSection(){
 }
 
 
-bool WebServer::Start(){
-	__uint16_t port; 
+bool WebServer::Start(__uint16_t port, bool useSsl, String* pCertificate){
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
 
-	if (mpUfo->GetConfig().mbAPMode){
-		port = 80;
-	}
-	else{
-		if (mpUfo->GetConfig().muWebServerPort)
-			port = mpUfo->GetConfig().muWebServerPort;
-		else
-			port = mpUfo->GetConfig().mbWebServerUseSsl ? 443 : 80;
 			
-		if (mpUfo->GetConfig().mbWebServerUseSsl){
+	if (useSsl){
 
-			if (!mpSslCtx){
-				mpSslCtx = SSL_CTX_new(TLS_server_method());
-				if (!mpSslCtx) {
-					ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
-					return false;
-				}
-				if (mpUfo->GetConfig().msWebServerCert.length()){
-					//ESP_LOGD(tag, "Using custom certificate <%s>", mpUfo->GetConfig().msWebServerCert.c_str());
-					sWsCert = (unsigned char*)mpUfo->GetConfig().msWebServerCert.c_str();
-					uWsCertLength = mpUfo->GetConfig().msWebServerCert.length();
-				}
-				if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  uWsCertLength, sWsCert)){
-					ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
-					SSL_CTX_free(mpSslCtx);
-					mpSslCtx = NULL;
-					return false;
-				}
-				if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, sWsCert,  uWsCertLength)){
-					ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
-					SSL_CTX_free(mpSslCtx);
-					mpSslCtx = NULL;
-					return false;
-				}
-				port = 443;
+		if (!mpSslCtx){
+			mpSslCtx = SSL_CTX_new(TLS_server_method());
+			if (!mpSslCtx) {
+				ESP_LOGE(tag, "SSL_CTX_new: %s", strerror(errno));
+				return false;
 			}
+			if (pCertificate && pCertificate->length()){
+				//ESP_LOGD(tag, "Using custom certificate <%s>", certificate.c_str());
+				sWsCert = (unsigned char*)pCertificate->c_str();
+				uWsCertLength = pCertificate->length();
+			}
+			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  uWsCertLength, sWsCert)){
+				ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
+				SSL_CTX_free(mpSslCtx);
+				mpSslCtx = NULL;
+				return false;
+			}
+			if (!SSL_CTX_use_PrivateKey_ASN1(0, mpSslCtx, sWsCert,  uWsCertLength)){
+				ESP_LOGE(tag, "SSL_CTX_use_PrivateKey_ASN1: %s", strerror(errno));
+				SSL_CTX_free(mpSslCtx);
+				mpSslCtx = NULL;
+				return false;
+			}
+			port = 443;
 		}
 	}
+
 
 	// Create a socket that we will listen upon.
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -152,7 +139,7 @@ bool WebServer::Start(){
 	}
 
 	// Flag the socket as listening for new connections.
-	rc = listen(sock, mpUfo->GetConfig().mbWebServerUseSsl ? 1 : 5);
+	rc = listen(sock, useSsl ? 1 : 5);
 	if (rc < 0) {
 		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
 		close(sock);
@@ -214,7 +201,6 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 	char *data = (char*)malloc(total);
 	HttpRequestParser httpParser(socket);
 	HttpResponse httpResponse;
-	DynamicRequestHandler requestHandler(mpUfo, mpDisplayCharterLevel1, mpDisplayCharterLevel2);
 	SSL* ssl = NULL;
 	bool receivedSomething = false;
 
@@ -246,7 +232,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 	ESP_LOGD(tag, "<%d> WebRequestHandler after - heapfree: %d", conNumber, esp_get_free_heap_size());
    
     while (1){
-		httpParser.Init(&mOta);
+		httpParser.Init(mpUploadHandler);
 		//httpParser.AddUploadUrl("/updatecert");
 
 		while(1) {
@@ -284,111 +270,10 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			httpResponse.Init(ssl, httpParser.IsHttp11(), httpParser.IsConnectionClose());
 		else
 			httpResponse.Init(socket, httpParser.IsHttp11(), httpParser.IsConnectionClose());
+
+		if (!HandleRequest(httpParser, httpResponse))
+			break;
 		
-		if (httpParser.GetUrl().equals("/") || httpParser.GetUrl().equals("/index.html")){
-			httpResponse.AddHeader(HttpResponse::HeaderContentTypeHtml);
-			httpResponse.AddHeader("Content-Encoding: gzip");
-			if (!httpResponse.Send(indexhtml_h, sizeof(indexhtml_h)))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.woff")){
-			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
-			if (!httpResponse.Send(fontwoff_h, sizeof(fontwoff_h)))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.ttf")){
-			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
-			if (!httpResponse.Send(fontttf_h, sizeof(fontttf_h)))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.eot")){
-			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
-			if (!httpResponse.Send(fonteot_h, sizeof(fonteot_h)))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/fonts/material-design-icons.svg")){
-			httpResponse.AddHeader(HttpResponse::HeaderContentTypeBinary);
-			if (!httpResponse.Send(fontsvg_h, sizeof(fontsvg_h)))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/dynatraceintegration")){
-			if (!requestHandler.HandleDynatraceIntegrationRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/apilist")){
-			if (!requestHandler.HandleApiListRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/apiedit")){
-			if (!requestHandler.HandleApiEditRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/info")){
-			if (!requestHandler.HandleInfoRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/config")){
-			if (!requestHandler.HandleConfigRequest(httpParser.GetParams(), httpResponse))
-				break;
-		} 
-		else if (httpParser.GetUrl().equals("/srvconfig")){
-			if (!requestHandler.HandleSrvConfigRequest(httpParser.GetParams(), httpResponse))
-				break;
-		} 
-		else if (httpParser.GetUrl().equals("/firmware")) {
-			if (!requestHandler.HandleFirmwareRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/checkfirmware")) {
-			if (!requestHandler.HandleCheckFirmwareRequest(httpParser.GetParams(), httpResponse))
-				break;
-		}
-		else if (httpParser.GetUrl().equals("/update")) {
-			String sBody = "<html><head><title>SUCCESS - firmware update succeeded, rebooting shortly.</title>"
-				           "<meta http-equiv=\"refresh\" content=\"10; url=/\"></head><body>"
-						   "<h2>SUCCESS - firmware update succeeded, rebooting shortly.</h2></body></html>";
-			if (!httpResponse.Send(sBody))
-				break;
-		}
-
-		else if (httpParser.GetUrl().equals("/test")){
-			String sBody;
-			sBody = httpParser.IsGet() ? "GET " : "POST ";
-			sBody += httpParser.GetUrl();
-			sBody += httpParser.IsHttp11() ? " HTTP/1.1" : "HTTP/1.0";
-			sBody += "\r\n";
-			std::list<TParam> params = httpParser.GetParams();
-			std::list<TParam>::iterator it = params.begin();
-			while (it != params.end()){
-				sBody += (*it).paramName;
-				sBody += " = ";
-				sBody += (*it).paramValue;
-				sBody += "\r\n";
-				it++;
-			}
-			if (!httpParser.IsGet()){
-				sBody += "Boundary:<";
-				sBody += httpParser.GetBoundary();
-				sBody += ">\r\n";
-				sBody += "Body:\r\n";
-				sBody += httpParser.GetBody();
-			}
-			ESP_LOGD(tag, "<%d> test body <%s>", conNumber,  sBody.c_str());
-			if (!httpResponse.Send(sBody))
-				break;
-		}
-		else{
-			httpResponse.SetRetCode(404);
-			if (!httpResponse.Send(NULL, 0))
-				break;
-		}
-
-		if (mbRestart || requestHandler.ShouldRestart() || (mOta.GetProgress() == OTA_PROGRESS_FINISHEDSUCCESS)){
-			ESP_LOGD(tag, "<%d> RESTARTING!", conNumber);
-			vTaskDelay(100);
-			esp_restart();
-		}
-
 		if (httpParser.IsConnectionClose()){
 			close(socket);
 			break;
@@ -421,3 +306,4 @@ bool WebServer::WaitForData(int socket, __uint8_t timeoutS){
 	tv.tv_sec = timeoutS;
 	return select(FD_SETSIZE, &readfds, 0, 0, &tv);
 }
+
