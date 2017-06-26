@@ -204,8 +204,6 @@ bool DynatraceIntegration::GetData() {
             return false;
         }        
     }
-    dtClient.Clear();
-    mJson.clear();
     return true;
 }
 
