@@ -1,4 +1,6 @@
 #include "DynatraceIntegration.h"
+#include "DynatraceMonitoring.h"
+#include "DynatraceAction.h"
 #include "WebClient.h"
 #include "Url.h"
 #include "Ufo.h"
@@ -45,6 +47,7 @@ DynatraceIntegration::~DynatraceIntegration() {
 
 void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
 	ESP_LOGI(LOGTAG, "Init");
+    DynatraceAction dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
 
     mpUfo = pUfo;  
     mpDisplayLowerRing = pDisplayLowerRing;
@@ -55,6 +58,7 @@ void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mActTaskId = 1;
     mActConfigRevision = 0;
     ProcessConfigChange();
+    dtIntegration.leave();
 }
 
 // care about starting or ending the task
@@ -114,6 +118,7 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
 
 void DynatraceIntegration::GetData() {
 	ESP_LOGI(LOGTAG, "polling");
+    DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
     if (dtClient.Prepare(&mDtUrl)) {
 
         unsigned short responseCode = dtClient.HttpGet();
@@ -126,6 +131,7 @@ void DynatraceIntegration::GetData() {
         }        
     }
     dtClient.Clear();
+    dtPollApi.leave();
 }
 
 void DynatraceIntegration::HandleFailure() {
@@ -230,6 +236,3 @@ void DynatraceIntegration::Process(String& jsonString) {
     }
 
 }
-
-
-

@@ -33,11 +33,14 @@ public:
 	void ShowLogoLeds();
 
 	void IndicateApiCall() 	{ mbApiCallReceived = true; };
+
 	Config& 				GetConfig()			{ return mConfig; };
 	Wifi& 					GetWifi()			{ return mWifi; };
 	DisplayCharterLogo& 	GetLogoDisplay() 	{ return mDisplayCharterLogo; };
 	ApiStore& 				GetApiStore() 		{ return mApiStore; };
 	DynatraceIntegration&	GetDtIntegration() 	{ return mDt; };
+
+	DynatraceMonitoring dt;
 	
 private:
 	
@@ -58,7 +61,6 @@ private:
 	ApiStore mApiStore;
 
 	DynatraceIntegration mDt;
-	DynatraceMonitoring mDtmon;
 	AWSIntegration mAws;
 
 	bool mbButtonPressed;

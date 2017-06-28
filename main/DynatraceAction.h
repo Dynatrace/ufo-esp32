@@ -14,11 +14,14 @@ public:
     DynatraceAction(DynatraceMonitoring* pMon);
 	virtual ~DynatraceAction();
     
-    __uint32_t enter();
-    __uint32_t enter(int pType);
-    __uint32_t enter(__uint32_t pParent);
-    __uint32_t enter(int pType, __uint32_t pParent);
+    __uint32_t enter(String pName);
+    __uint32_t enter(String pName, int pType);
+    __uint32_t enter(String pName, __uint32_t pParent);
+    __uint32_t enter(String pName, int pType, __uint32_t pParent);
 
+    void leave();
+    __uint32_t getId() { return mId; } 
+    String& getName() { return mName; }
 private:
 
     DynatraceMonitoring* mpMon;
