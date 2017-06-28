@@ -13,7 +13,6 @@ public:
 	bool Write();
 
 	void ToggleAPMode() { mbAPMode = !mbAPMode; };
-	bool Changed(bool* pChanged);
 
 private:
 	bool ReadString(nvs_handle h, const char* sKey, String& rsValue);
@@ -39,7 +38,6 @@ public:
     String msDTApiToken;
 	bool mbDTEnabled;
     int miDTInterval;
-	bool mbDTChanged = false;
 
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;

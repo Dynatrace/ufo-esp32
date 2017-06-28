@@ -109,14 +109,6 @@ bool Config::Write()
 
 //------------------------------------------------------------------------------------
 
-bool Config::Changed(bool* pChanged) {
-	bool ret = *pChanged;
-	*pChanged = false;
-	return ret;
-}
-
-//------------------------------------------------------------------------------------
-
 bool Config::ReadString(nvs_handle h, const char* sKey, String& rsValue){
 	char* sBuf = NULL;
 	__uint32_t u = 0;
