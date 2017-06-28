@@ -45,10 +45,12 @@ Ufo::~Ufo() {
 }
 
 void Ufo::Start(){
+	StartAWS();
+	StartDynatraceMonitoring();
 	ESP_LOGI(LOGTAG, "===================== Dynatrace UFO ========================");
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
-	DynatraceAction dtStartup = dt.enterAction("Startup");
+	DynatraceAction* dtStartup = dt.enterAction("Startup");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	mConfig.Read();
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
@@ -76,24 +78,22 @@ void Ufo::Start(){
 			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
 			ESP_LOGD(LOGTAG, "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
-		DynatraceAction dtWifi = dt.enterAction("Start AP Mode", &dtStartup);	
+		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
 		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass, mConfig.msHostname);
-		dtWifi.leave();
+		dtWifi->leave();
 	}
 	else{
-		DynatraceAction dtWifi = dt.enterAction("Start Wifi", &dtStartup);	
+		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
 		if (mConfig.msSTAENTUser.length())
 			mWifi.StartSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA, mConfig.msHostname);
 		else
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
-		dtWifi.leave();
+		dtWifi->leave();
 
-		this->StartDynatraceIntegration();
-		this->StartAWS();
-		this->StartDynatraceMonitoring();
+		StartDynatraceIntegration();
 
 	}
-	dtStartup.leave();
+	dtStartup->leave();
 
 }
 

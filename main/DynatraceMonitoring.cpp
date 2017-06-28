@@ -12,7 +12,7 @@ static const char* LOGTAG = "DTMon";
 
 void task_function_dynatrace_monitoring(void *pvParameter)
 {
-	((DynatraceMonitoring*)pvParameter)->Run();
+	((DynatraceMonitoring*)pvParameter)->Connect();
 	vTaskDelete(NULL);
 }
 
@@ -34,56 +34,102 @@ bool DynatraceMonitoring::Init(AWSIntegration* pAws) {
     return mInitialized;
 }
 
-void DynatraceMonitoring::Run() {
+bool DynatraceMonitoring::Connect() {
+	ESP_LOGI(LOGTAG, "Connecting");
+
+    while (!mConnected) {
+        if (mpAws->mActive) {
+            mConnected = true;
+        }
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    return Run();
+}
+
+bool DynatraceMonitoring::Run() {
 	ESP_LOGI(LOGTAG, "Run");
+    mActive = true;
     while (mpAws->mActive) {
         if (mActive) {
-        	ESP_LOGI(LOGTAG, "send monitoring payload");
-    		vTaskDelay(50000 / portTICK_PERIOD_MS);
+    		vTaskDelay(20000 / portTICK_PERIOD_MS);
+            mActive = Process();
         }
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
     Shutdown();
+    return mActive;
+}
+
+bool DynatraceMonitoring::Process() {
+
+    ESP_LOGI(LOGTAG, "Processing monitoring payload (%i actions)", mActionCount);
+
+    taskENTER_CRITICAL(&myMutex);
+    __uint8_t actionCount = mActionCount;
+    DynatraceAction* actionBuffer[100];
+    for (__uint8_t i=0; i<mActionCount; i++) {
+        actionBuffer[i] = mAction[i];
+    }
+    mActionCount = 0;
+    taskEXIT_CRITICAL(&myMutex);
+
+    for (uint i=0; i<actionCount; i++) {
+        Send(actionBuffer[i]);
+        delete actionBuffer[i];
+    }
+
+    return true;
+}
+
+void DynatraceMonitoring::Send(DynatraceAction* action) {
+    ESP_LOGI(LOGTAG, " - %i: %s", action->getId(), action->getName().c_str());
 }
 
 void DynatraceMonitoring::Shutdown() {
-
+	ESP_LOGI(LOGTAG, "Shutdown");
 }
 
-DynatraceAction DynatraceMonitoring::enterAction(String pName) {
+DynatraceAction* DynatraceMonitoring::enterAction(String pName) {
     return this->enterAction(pName, ACTION_MANUAL, NULL);    
 };
 
-DynatraceAction DynatraceMonitoring::enterAction(String pName, int pType) {
+DynatraceAction* DynatraceMonitoring::enterAction(String pName, int pType) {
     return this->enterAction(pName, pType, NULL);    
 };
 
-DynatraceAction DynatraceMonitoring::enterAction(String pName, DynatraceAction* pParent) {
+DynatraceAction* DynatraceMonitoring::enterAction(String pName, DynatraceAction* pParent) {
     return this->enterAction(pName, ACTION_MANUAL, pParent);
 };
 
-DynatraceAction DynatraceMonitoring::enterAction(String pName, int pType, DynatraceAction* pParent) {
+DynatraceAction* DynatraceMonitoring::enterAction(String pName, int pType, DynatraceAction* pParent) {
     __uint32_t id = 0;
     __uint32_t parentId = 0;
     if (pParent) {
         parentId = pParent->getId();
     }
-    DynatraceAction action(this);
-    id = action.enter(pName, pType, parentId);
+    DynatraceAction* action = new DynatraceAction(this);
+    id = action->enter(pName, pType, parentId);
     ESP_LOGD(LOGTAG, "Action %i created: %s", id, pName.c_str());
     return action;
 };
 
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
-    mAction[mActionCount++] = action;
-    ESP_LOGI(LOGTAG, "Action added to stack: %s", action->getName().c_str());
+    taskENTER_CRITICAL(&myMutex);
+    if (mActionCount < 100) {
+        ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
+        mAction[mActionCount++] = action;
+    } else {
+        ESP_LOGW(LOGTAG, "Action buffer full, action %s skipped", action->getName().c_str());
+        delete action;
+    }
+    taskEXIT_CRITICAL(&myMutex);
 }
 
-long int DynatraceMonitoring::getSequence0() {
+__uint32_t DynatraceMonitoring::getSequence0() {
     return seq0++;
 };
 
-long int DynatraceMonitoring::getSequence1() {
+__uint32_t DynatraceMonitoring::getSequence1() {
     return seq1++;
 };
 

@@ -1,6 +1,7 @@
 #ifndef MAIN_DYNATRACEMONITORING_H_
 #define MAIN_DYNATRACEMONITORING_H_
 
+#include "freertos/FreeRTOS.h"
 #include "Config.h"
 #include "String.h"
 #include <cJSON.h>
@@ -39,31 +40,37 @@ public:
 	virtual ~DynatraceMonitoring();
     
     bool Init(AWSIntegration* pAws);
-    void Run();
+    bool Connect();
+    bool Run();
+    bool Process();
+    void Send(DynatraceAction* action);
     void Shutdown();
     
-    DynatraceAction enterAction(String pName);
-    DynatraceAction enterAction(String pName, int pType);
-    DynatraceAction enterAction(String pName, DynatraceAction* pParent);
-    DynatraceAction enterAction(String pName, int pType, DynatraceAction* pParent);
+    DynatraceAction* enterAction(String pName);
+    DynatraceAction* enterAction(String pName, int pType);
+    DynatraceAction* enterAction(String pName, DynatraceAction* pParent);
+    DynatraceAction* enterAction(String pName, int pType, DynatraceAction* pParent);
 
     void addAction(DynatraceAction* action);
 
-    long int getSequence0();
-    long int getSequence1();
+    __uint32_t getSequence0();
+    __uint32_t getSequence1();
 
-    bool mInitialized;
-    bool mActive;
+    bool mInitialized = false;
+    bool mConnected = false;
+    bool mActive = false;
 
 private:
 
-    DynatraceAction* mAction[];
-    unsigned int mActionCount = 0;
+    DynatraceAction* mAction[100];
+    __uint8_t mActionCount;
 
-    long int seq0;
-    long int seq1;
+    __uint32_t seq0;
+    __uint32_t seq1;
 
     AWSIntegration* mpAws;
+
+    portMUX_TYPE myMutex;
 
 };
 

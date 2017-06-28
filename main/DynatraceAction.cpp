@@ -50,14 +50,20 @@ __uint32_t DynatraceAction::enter(String pName, int pType, __uint32_t pParent) {
 };
 
 void DynatraceAction::leave() {
+    leave(0, 0);
+}
+
+void DynatraceAction::leave(ushort pResponseCode, uint pResponseSize) {
 
     time_t now;
     time(&now);
     long int ms = 0;
-    
+
     mS1 = mpMon->getSequence1();
     mEnd = ms;
-
+    mResponseCode = pResponseCode;
+    mResponseSize = pResponseSize;
+    
     mpMon->addAction(this);
 
 };

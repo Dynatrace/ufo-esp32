@@ -61,7 +61,8 @@ bool AWSIntegration::Init(Ufo* pUfo) {
     mpUfo = pUfo;  
 	ESP_LOGI(LOGTAG, "Starting AWS Thread");
 	xTaskCreate(&task_function_aws, "Task_AWS", 8192, this, 5, NULL); 	
-	return true;
+	mInitialized = true;
+	return mInitialized;
 }
 
 bool AWSIntegration::Connect() {
@@ -69,7 +70,7 @@ bool AWSIntegration::Connect() {
 	vTaskDelay(12000 / portTICK_PERIOD_MS);
 	ESP_LOGI(LOGTAG, "Connecting");
 
-    while (!mInitialized) {
+    while (!mConnected) {
         if (mpUfo->GetWifi().IsConnected()) {
 			ESP_LOGI(LOGTAG, "Init");
 			char HostAddress[255] = AWS_IOT_MQTT_HOST;	
@@ -92,7 +93,7 @@ bool AWSIntegration::Connect() {
 				ESP_LOGE(LOGTAG, "AWS Init Error: %i", rc);
 				return false;
 			}
-			mInitialized = true;
+			mConnected = true;
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
@@ -105,7 +106,6 @@ bool AWSIntegration::Connect() {
         return false;
     }
 	ESP_LOGI(LOGTAG, "connected successfully");
-	mActive = true;
     return Run();
 }
 
@@ -120,7 +120,6 @@ bool AWSIntegration::Run() {
 
 	String topic("/dynatraceufo/");
 	topic.printf("%s", AWS_IOT_MQTT_CLIENT_ID);
-	// topic.printf(AWS_IOT_MQTT_CLIENT_ID);
 	ESP_LOGI(LOGTAG, "Subscribing to %s", topic.c_str());
 	rc = aws_iot_mqtt_subscribe(&client, topic.c_str(), topic.length(), QOS1, iot_subscribe_callback_handler, NULL);
 	if(SUCCESS != rc) {
@@ -129,6 +128,7 @@ bool AWSIntegration::Run() {
 	}
 	ESP_LOGI(LOGTAG, "subscription successful");
 
+	mActive = true;
 	while (mActive) {
 		String topic("/dynatraceufo/ufohub");
 		String payload("message from ");
@@ -136,8 +136,9 @@ bool AWSIntegration::Run() {
 		Publish(topic, payload);
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
 	}
-
-	return false;
+	
+	Shutdown();
+	return mActive;
 }
 
 bool AWSIntegration::Publish(String pTopic, String pPayload) {
@@ -172,3 +173,8 @@ bool AWSIntegration::Publish(String pTopic, String pPayload) {
 	return rc;	
 
 }
+
+void AWSIntegration::Shutdown() {
+	ESP_LOGI(LOGTAG, "Shutdown");
+}
+

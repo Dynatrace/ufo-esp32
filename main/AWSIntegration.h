@@ -20,6 +20,7 @@ public:
     bool Publish(String pTopic, String pPayload);
 
     bool mInitialized = false;
+    bool mConnected = false;
     bool mActive = false;
 
 private:
