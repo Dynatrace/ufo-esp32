@@ -121,7 +121,9 @@ void DynatraceIntegration::GetData() {
     DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
     if (dtClient.Prepare(&mDtUrl)) {
 
+        DynatraceAction dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, &dtPollApi);	
         unsigned short responseCode = dtClient.HttpGet();
+        dtHttpGet.leave();
 
         if (responseCode == 200) 
             Process(dtClient.GetResponseData());
