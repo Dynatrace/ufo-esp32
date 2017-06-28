@@ -42,10 +42,13 @@ public:
     void Run();
     void Shutdown();
     
-    __uint32_t enterAction();
-    __uint32_t enterAction(int pType);
-    __uint32_t enterAction(__uint32_t pParent);
-    __uint32_t enterAction(int pType, __uint32_t pParent);
+    DynatraceAction enterAction(String pName);
+    DynatraceAction enterAction(String pName, int pType);
+    DynatraceAction enterAction(String pName, DynatraceAction* pParent);
+    DynatraceAction enterAction(String pName, int pType, DynatraceAction* pParent);
+
+    void addAction(DynatraceAction* action);
+
     long int getSequence0();
     long int getSequence1();
 
@@ -54,7 +57,8 @@ public:
 
 private:
 
-    DynatraceAction* action[];
+    DynatraceAction* mAction[];
+    unsigned int mActionCount = 0;
 
     long int seq0;
     long int seq1;

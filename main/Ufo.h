@@ -38,6 +38,8 @@ public:
 	DisplayCharterLogo& GetLogoDisplay() { return mDisplayCharterLogo; };
 	ApiStore& GetApiStore() { return mApiStore; };
 
+	DynatraceMonitoring dt;
+
 private:
 	
 	DisplayCharter mDisplayCharterLevel1;
@@ -57,7 +59,6 @@ private:
 	ApiStore mApiStore;
 
 	DynatraceIntegration mDt;
-	DynatraceMonitoring mDtmon;
 	AWSIntegration mAws;
 
 	bool mbButtonPressed;

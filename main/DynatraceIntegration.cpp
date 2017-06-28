@@ -1,4 +1,6 @@
 #include "DynatraceIntegration.h"
+#include "DynatraceMonitoring.h"
+#include "DynatraceAction.h"
 #include "WebClient.h"
 #include "Url.h"
 #include "Ufo.h"
@@ -39,6 +41,7 @@ bool DynatraceIntegration::Init() {
 
 bool DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
 	ESP_LOGI(LOGTAG, "Init");
+    DynatraceAction dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
 
     mpUfo = pUfo;  
     mpDisplayLowerRing = pDisplayLowerRing;
@@ -54,6 +57,7 @@ bool DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mDtApiToken = mpConfig->msDTApiToken;
     
     xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 8192, this, 5, NULL);
+    dtIntegration.leave();
     return mInitialized;            
 
 }
@@ -191,10 +195,12 @@ bool DynatraceIntegration::Run() {
 bool DynatraceIntegration::GetData() {
     if (!mActive) return false;
     if (!mpUfo->GetWifi().IsConnected()) return false;
+    DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
 	ESP_LOGI(LOGTAG, "polling");
     if (dtClient.Prepare(&mDtUrl)) {
-
+        DynatraceAction dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, &dtPollApi);	
         unsigned short responseCode = dtClient.HttpGet();
+        dtHttpGet.leave();
         Process(dtClient.GetResponseData());
         dtClient.Clear();
 
@@ -204,6 +210,7 @@ bool DynatraceIntegration::GetData() {
             return false;
         }        
     }
+    dtPollApi.leave();
     return true;
 }
 

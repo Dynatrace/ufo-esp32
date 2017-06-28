@@ -50,30 +50,40 @@ void DynatraceMonitoring::Shutdown() {
 
 }
 
-__uint32_t DynatraceMonitoring::enterAction() {
-    return this->enterAction(ACTION_MANUAL, 0);    
+DynatraceAction DynatraceMonitoring::enterAction(String pName) {
+    return this->enterAction(pName, ACTION_MANUAL, NULL);    
 };
 
-__uint32_t DynatraceMonitoring::enterAction(int pType) {
-    return this->enterAction(pType, 0);    
+DynatraceAction DynatraceMonitoring::enterAction(String pName, int pType) {
+    return this->enterAction(pName, pType, NULL);    
 };
 
-__uint32_t DynatraceMonitoring::enterAction(__uint32_t pParent) {
-    return this->enterAction(ACTION_MANUAL, pParent);
+DynatraceAction DynatraceMonitoring::enterAction(String pName, DynatraceAction* pParent) {
+    return this->enterAction(pName, ACTION_MANUAL, pParent);
 };
 
-__uint32_t DynatraceMonitoring::enterAction(int pType, __uint32_t pParent) {
+DynatraceAction DynatraceMonitoring::enterAction(String pName, int pType, DynatraceAction* pParent) {
     __uint32_t id = 0;
+    __uint32_t parentId = 0;
+    if (pParent) {
+        parentId = pParent->getId();
+    }
     DynatraceAction action(this);
-    id = action.enter(pType, pParent);
-    return id;
+    id = action.enter(pName, pType, parentId);
+    ESP_LOGD(LOGTAG, "Action %i created: %s", id, pName.c_str());
+    return action;
 };
+
+void DynatraceMonitoring::addAction(DynatraceAction* action) {
+    mAction[mActionCount++] = action;
+    ESP_LOGI(LOGTAG, "Action added to stack: %s", action->getName().c_str());
+}
 
 long int DynatraceMonitoring::getSequence0() {
-    return ++seq0;
+    return seq0++;
 };
 
 long int DynatraceMonitoring::getSequence1() {
-    return ++seq1;
+    return seq1++;
 };
 
