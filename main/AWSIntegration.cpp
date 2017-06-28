@@ -59,6 +59,7 @@ AWSIntegration::~AWSIntegration() {
 
 bool AWSIntegration::Init(Ufo* pUfo) {
     mpUfo = pUfo;  
+	ESP_LOGI(LOGTAG, "Starting AWS Thread");
 	xTaskCreate(&task_function_aws, "Task_AWS", 8192, this, 5, NULL); 	
 	return true;
 }
@@ -93,7 +94,7 @@ bool AWSIntegration::Connect() {
 			}
 			mInitialized = true;
 		}
-		vTaskDelay(1);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 
 	connectParams = iotClientConnectParamsDefault;    

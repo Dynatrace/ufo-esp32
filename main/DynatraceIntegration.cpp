@@ -140,7 +140,11 @@ bool DynatraceIntegration::Process(String& jsonString) {
     int iApplicationProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "APPLICATION")->valueint;
     int iServiceProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "SERVICE")->valueint;
 
-	ESP_LOGD(LOGTAG, "processing %s", cJSON_Print(json));
+    if (LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG){
+        char* sJsonPrint = cJSON_Print(json);
+	    ESP_LOGD(LOGTAG, "processing %s", sJsonPrint);
+        free(sJsonPrint);
+    }
     ESP_LOGI(LOGTAG, "open Dynatrace problems: %i", iTotalProblems);
     ESP_LOGI(LOGTAG, "open Infrastructure problems: %i", iInfrastructureProblems);
     ESP_LOGI(LOGTAG, "open Application problems: %i", iApplicationProblems);
@@ -167,6 +171,7 @@ bool DynatraceIntegration::Process(String& jsonString) {
     }
 
     return changed;
+    
 }
 
 void DynatraceIntegration::Shutdown() {
