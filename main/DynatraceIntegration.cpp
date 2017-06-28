@@ -14,9 +14,18 @@
 static const char* LOGTAG = "Dynatrace";
 
 
+typedef struct{
+    DynatraceIntegration* pIntegration;
+    __uint8_t uTaskId;
+} TDtTaskParam;
+
 void task_function_dynatrace_integration(void *pvParameter)
 {
-	((DynatraceIntegration*)pvParameter)->Connect();
+    TDtTaskParam* p = (TDtTaskParam*)pvParameter;
+	p->pIntegration->Run(p->uTaskId);
+    ESP_LOGI(LOGTAG, "Ending Task %d", p->uTaskId);
+    delete p;
+
 	vTaskDelete(NULL);
 }
 
@@ -35,11 +44,8 @@ DynatraceIntegration::~DynatraceIntegration() {
 
 }
 
-bool DynatraceIntegration::Init() {
-    return Init(mpUfo, mpDisplayLowerRing, mpDisplayUpperRing);
-}
 
-bool DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
+void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
 	ESP_LOGI(LOGTAG, "Init");
     DynatraceAction dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
 
@@ -47,35 +53,87 @@ bool DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mpDisplayLowerRing = pDisplayLowerRing;
     mpDisplayUpperRing = pDisplayUpperRing;
     mpConfig = &(mpUfo->GetConfig());
-
-    if (!mpConfig->mbDTEnabled) {
-        return false;
-    }
-    
+    mEnabled = false;
     mInitialized = true;
-    mDtEnvId = mpConfig->msDTEnvId;
-    mDtApiToken = mpConfig->msDTApiToken;
-    
-    xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 8192, this, 5, NULL);
+    mActTaskId = 1;
+    mActConfigRevision = 0;
+    ProcessConfigChange();
     dtIntegration.leave();
-    return mInitialized;            
-
 }
 
-bool DynatraceIntegration::Connect() {
-	ESP_LOGI(LOGTAG, "Connect");
+// care about starting or ending the task
+void DynatraceIntegration::ProcessConfigChange(){
+    if (!mInitialized)
+        return; 
 
-    mDtUrl.Build(true, mDtEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mDtApiToken);
-    ESP_LOGI(LOGTAG, "URL: %s", mDtUrl.GetUrl().c_str());
+    //its a little tricky to handle an enable/disable race condition without ending up with 0 or 2 tasks running
+    //so whenever there is a (short) disabled situation detected we let the old task go and do not need to wait on its termination
+    if (mpConfig->mbDTEnabled){
+        if (!mEnabled){
+            TDtTaskParam* pParam = new TDtTaskParam;
+            pParam->pIntegration = this;
+            pParam->uTaskId = mActTaskId;
+            ESP_LOGI(LOGTAG, "Create Task %d", mActTaskId);
+            xTaskCreate(&task_function_dynatrace_integration, "Task_DynatraceIntegration", 8192, pParam, 5, NULL);
+        }
+    }
+    else{
+        if (mEnabled)
+            mActTaskId++;
+    }
+    mEnabled = mpConfig->mbDTEnabled;
+    mActConfigRevision++;
+}
 
+void DynatraceIntegration::Run(__uint8_t uTaskId) {
+    __uint8_t uConfigRevision = mActConfigRevision - 1;
+
+	ESP_LOGI(LOGTAG, "Run");
     while (1) {
         if (mpUfo->GetWifi().IsConnected()) {
-            ESP_LOGI(LOGTAG, "UFO is online");
-            mActive = true;
-            this->Run();            
+            //Configuration is not atomic - so in case of a change there is the possibility that we use inconsistent credentials - but who cares (the next time it would be fine again)
+            if (uConfigRevision != mActConfigRevision){
+                uConfigRevision = mActConfigRevision; //memory barrier would be needed here
+                mDtUrl.Build(true, mpConfig->msDTEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mpConfig->msDTApiToken);
+                ESP_LOGI(LOGTAG, "URL: %s", mDtUrl.GetUrl().c_str());
+            }
+
+            GetData();
+            ESP_LOGI(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());            
+
+            for (int i=0 ; i < mpConfig->miDTInterval ; i++){
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+                if (uTaskId != mActTaskId)
+                    return;
+            }
         }
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
+        else
+		    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        if (uTaskId != mActTaskId)
+            return;
     }
+}
+
+void DynatraceIntegration::GetData() {
+	ESP_LOGI(LOGTAG, "polling");
+    DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
+    if (dtClient.Prepare(&mDtUrl)) {
+
+        DynatraceAction dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, &dtPollApi);	
+        unsigned short responseCode = dtClient.HttpGet();
+        dtHttpGet.leave();
+
+        if (responseCode == 200) 
+            Process(dtClient.GetResponseData());
+        else{
+            ESP_LOGE(LOGTAG, "Communication with Dynatrace failed - error %u", responseCode);
+            HandleFailure();
+        }        
+    }
+    dtClient.Clear();
+    dtPollApi.leave();
 }
 
 void DynatraceIntegration::HandleFailure() {
@@ -133,22 +191,27 @@ void DynatraceIntegration::DisplayDefault() {
 }
 
 
-bool DynatraceIntegration::Process(String& jsonString) {
+void DynatraceIntegration::Process(String& jsonString) {
     
     cJSON* parentJson = cJSON_Parse(jsonString.c_str());
+    if (!parentJson)
+        return;
     cJSON* json = cJSON_GetObjectItem(parentJson, "result");
-    bool changed = false;
-
-    int iTotalProblems = cJSON_GetObjectItem(json, "totalOpenProblemsCount")->valueint;
-    int iInfrastructureProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "INFRASTRUCTURE")->valueint;
-    int iApplicationProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "APPLICATION")->valueint;
-    int iServiceProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "SERVICE")->valueint;
-
+    if (!json)
+        return;
+    
     if (LOG_LOCAL_LEVEL >= ESP_LOG_DEBUG){
         char* sJsonPrint = cJSON_Print(json);
 	    ESP_LOGD(LOGTAG, "processing %s", sJsonPrint);
         free(sJsonPrint);
     }
+
+    bool changed = false;
+    int iTotalProblems = cJSON_GetObjectItem(json, "totalOpenProblemsCount")->valueint;
+    int iInfrastructureProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "INFRASTRUCTURE")->valueint;
+    int iApplicationProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "APPLICATION")->valueint;
+    int iServiceProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "SERVICE")->valueint;
+
     ESP_LOGI(LOGTAG, "open Dynatrace problems: %i", iTotalProblems);
     ESP_LOGI(LOGTAG, "open Infrastructure problems: %i", iInfrastructureProblems);
     ESP_LOGI(LOGTAG, "open Application problems: %i", iApplicationProblems);
@@ -171,52 +234,7 @@ bool DynatraceIntegration::Process(String& jsonString) {
     miTotalProblems = iTotalProblems;
 
     if (changed) {
-        this->DisplayDefault();
+        DisplayDefault();
     }
 
-    return changed;
-    
 }
-
-void DynatraceIntegration::Shutdown() {
-    mActive = false;
-}
-
-bool DynatraceIntegration::Run() {
-	ESP_LOGI(LOGTAG, "Run");
-	while (1) {
-		if (mpConfig->Changed(&mpConfig->mbDTChanged)) {
-			Init();
-		}
-		if (mActive) {
-			GetData();
-            ESP_LOGI(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());    
-			vTaskDelay((mpConfig->miDTInterval-1) * 1000 / portTICK_PERIOD_MS);
-		}
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
-	}
-}
-
-bool DynatraceIntegration::GetData() {
-    if (!mActive) return false;
-    if (!mpUfo->GetWifi().IsConnected()) return false;
-    DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
-	ESP_LOGI(LOGTAG, "polling");
-    if (dtClient.Prepare(&mDtUrl)) {
-        DynatraceAction dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, &dtPollApi);	
-        unsigned short responseCode = dtClient.HttpGet();
-        dtHttpGet.leave();
-        Process(dtClient.GetResponseData());
-        dtClient.Clear();
-
-        if (responseCode != 200) {
-            ESP_LOGE(LOGTAG, "Communication with Dynatrace failed - error %u", responseCode);
-            this->HandleFailure();
-            return false;
-        }        
-    }
-    dtPollApi.leave();
-    return true;
-}
-
-

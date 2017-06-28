@@ -190,7 +190,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	mpUfo->GetConfig().miDTInterval = iInterval;
 
 	if (mpUfo->GetConfig().Write())
-		mpUfo->GetConfig().mbDTChanged = true;
+		mpUfo->GetDtIntegration().ProcessConfigChange();
 
 	ESP_LOGI(tag, "Dynatrace Integration Saved");
 

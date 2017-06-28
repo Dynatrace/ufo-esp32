@@ -19,27 +19,14 @@ public:
     DynatraceIntegration();
 	virtual ~DynatraceIntegration();
     
-    bool Init();
-    bool Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing);
-    bool Connect();
-    void Shutdown();
-    bool Run();
-    bool Poll();
-    bool GetData();
-
-    bool OnReceiveBegin(String& sUrl, unsigned int contentLength);
-    bool OnReceiveBegin(unsigned short int httpStatusCode, bool isContentLength, unsigned int contentLength);
-    bool OnReceiveData(char* buf, int len);
-    bool OnReceiveEnd();
-
-    bool mInitialized = false;
-    bool mActive = false;
-
-    String& getEnvId() { return mDtEnvId; }
+    void Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing);
+    void ProcessConfigChange();
+    void Run(__uint8_t uTaskId);
 
 private:
 
-    bool Process(String& jsonString);
+    void GetData();
+    void Process(String& jsonString);
     void DisplayDefault();
     void HandleFailure();
 
@@ -52,10 +39,10 @@ private:
 //	Wifi* mpWifi;
     
     Url mDtUrl;
-
-    String mDtEnvId;
-    String mDtApiToken;
-    String mUrl;
+    bool mInitialized = false;
+    bool mEnabled;
+    __uint8_t mActTaskId; 
+    __uint8_t mActConfigRevision;
 
     int miTotalProblems;
     int miApplicationProblems;

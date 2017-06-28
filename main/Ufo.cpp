@@ -52,9 +52,11 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "Start");
 	DynatraceAction* dtStartup = dt.enterAction("Startup");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
+	
 	mConfig.Read();
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 	mApiStore.Init();
+	mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 
 	gpio_pad_select_gpio(10);
 	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
@@ -132,11 +134,6 @@ void Ufo::TaskDisplay(){
 
 		vTaskDelay(1);
 	}
-}
-
-void Ufo::StartDynatraceIntegration(){
-	ESP_LOGI(LOGTAG, "starting Dynatrace Integraion");
-	mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 }
 
 void Ufo::StartDynatraceMonitoring(){
