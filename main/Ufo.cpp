@@ -45,8 +45,6 @@ Ufo::~Ufo() {
 }
 
 void Ufo::Start(){
-	StartAWS();
-	StartDynatraceMonitoring();
 	ESP_LOGI(LOGTAG, "===================== Dynatrace UFO ========================");
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
@@ -91,8 +89,8 @@ void Ufo::Start(){
 		else
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
 		dtWifi->leave();
-
-		StartDynatraceIntegration();
+		StartAWS();
+		StartDynatraceMonitoring();
 
 	}
 	dtStartup->leave();

@@ -25,7 +25,6 @@ public:
 	void TaskWebServer();
 	void TaskDisplay();
 	
-	void StartDynatraceIntegration();
 	void StartAWS();
 	void StartDynatraceMonitoring();
 

@@ -47,7 +47,7 @@ DynatraceIntegration::~DynatraceIntegration() {
 
 void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
 	ESP_LOGI(LOGTAG, "Init");
-    DynatraceAction dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
+    DynatraceAction* dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
 
     mpUfo = pUfo;  
     mpDisplayLowerRing = pDisplayLowerRing;
@@ -58,7 +58,7 @@ void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mActTaskId = 1;
     mActConfigRevision = 0;
     ProcessConfigChange();
-    dtIntegration.leave();
+    dtIntegration->leave();
 }
 
 // care about starting or ending the task
@@ -118,12 +118,12 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
 
 void DynatraceIntegration::GetData() {
 	ESP_LOGI(LOGTAG, "polling");
-    DynatraceAction dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
+    DynatraceAction* dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
     if (dtClient.Prepare(&mDtUrl)) {
 
-        DynatraceAction dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, &dtPollApi);	
+        DynatraceAction* dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, dtPollApi);	
         unsigned short responseCode = dtClient.HttpGet();
-        dtHttpGet.leave();
+        dtHttpGet->leave();
 
         if (responseCode == 200) 
             Process(dtClient.GetResponseData());
@@ -133,7 +133,7 @@ void DynatraceIntegration::GetData() {
         }        
     }
     dtClient.Clear();
-    dtPollApi.leave();
+    dtPollApi->leave();
 }
 
 void DynatraceIntegration::HandleFailure() {
