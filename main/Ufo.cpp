@@ -48,13 +48,12 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "===================== Dynatrace UFO ========================");
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
-	DynatraceAction* dtStartup = dt.enterAction("Startup");
+//	DynatraceAction* dtStartup = dt.enterAction("Startup");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	
 	mConfig.Read();
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 	mApiStore.Init();
-	mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 
 	gpio_pad_select_gpio(10);
 	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
@@ -78,22 +77,24 @@ void Ufo::Start(){
 			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
 			ESP_LOGD(LOGTAG, "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
-		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
+//		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
 		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass, mConfig.msHostname);
-		dtWifi->leave();
+//		dtWifi->leave();
 	}
 	else{
-		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
+//		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
 		if (mConfig.msSTAENTUser.length())
 			mWifi.StartSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA, mConfig.msHostname);
 		else
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
-		dtWifi->leave();
+	
+//		dtWifi->leave();
+		mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 		StartAWS();
 		StartDynatraceMonitoring();
 
 	}
-	dtStartup->leave();
+//	dtStartup->leave();
 
 }
 
@@ -109,7 +110,6 @@ void Ufo::TaskWebServer(){
 }
 
 void Ufo::TaskDisplay(){
-	ESP_LOGI(LOGTAG, "starting Display - %s", mConfig.msDTEnvId.c_str());
 	while (1){
 		if (mWifi.IsConnected() && (mbApiCallReceived || (/*dtI running*/false && mStateDisplay.IpShownLongEnough()))){
 			mDisplayCharterLevel1.Display(mStripeLevel1);
