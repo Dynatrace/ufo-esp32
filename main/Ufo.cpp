@@ -48,7 +48,7 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "===================== Dynatrace UFO ========================");
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
-//	DynatraceAction* dtStartup = dt.enterAction("Startup");
+	DynatraceAction* dtStartup = dt.enterAction("Startup");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	
 	mConfig.Read();
@@ -94,7 +94,7 @@ void Ufo::Start(){
 		StartDynatraceMonitoring();
 
 	}
-//	dtStartup->leave();
+	dtStartup->leave();
 
 }
 

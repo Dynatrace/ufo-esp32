@@ -114,6 +114,7 @@ DynatraceAction* DynatraceMonitoring::enterAction(String pName, int pType, Dynat
 };
 
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
+	ESP_LOGI(LOGTAG, "addAction");
     taskENTER_CRITICAL(&myMutex);
     if (mActionCount < 100) {
         ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
