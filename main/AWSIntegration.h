@@ -17,7 +17,7 @@ public:
     bool Connect();
     void Shutdown();
     bool Run();
-    bool Publish(String pTopic, String pPayload);
+    bool Publish(const char* pTopic, short pTopicLenth, String* pPayload);
 
     bool mInitialized = false;
     bool mConnected = false;
