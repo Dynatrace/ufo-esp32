@@ -49,7 +49,7 @@ DynatraceIntegration::~DynatraceIntegration() {
 
 void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing) {
 	ESP_LOGI(LOGTAG, "Init");
-//    DynatraceAction* dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
+    DynatraceAction* dtIntegration = pUfo->dt.enterAction("Init DynatraceIntegration");	
 
     mpUfo = pUfo;  
     mpDisplayLowerRing = pDisplayLowerRing;
@@ -60,7 +60,7 @@ void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mActTaskId = 1;
     mActConfigRevision = 0;
     ProcessConfigChange();
-//    dtIntegration->leave();
+    dtIntegration->leave();
 }
 
 // care about starting or ending the task
@@ -90,7 +90,7 @@ void DynatraceIntegration::ProcessConfigChange(){
 
 void DynatraceIntegration::Run(__uint8_t uTaskId) {
     __uint8_t uConfigRevision = mActConfigRevision - 1;
-
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
 	ESP_LOGI(LOGTAG, "Run");
     while (1) {
         if (mpUfo->GetWifi().IsConnected()) {
@@ -98,7 +98,8 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
             if (uConfigRevision != mActConfigRevision){
                 uConfigRevision = mActConfigRevision; //memory barrier would be needed here
                 mDtUrl.Build(true, mpConfig->msDTEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mpConfig->msDTApiToken);
-                ESP_LOGI(LOGTAG, "URL: %s", mDtUrl.GetUrl().c_str());
+                mDtUrlString = "https://"+mpConfig->msDTEnvId+".live.dynatrace.com/api/v1/problem/status";
+                ESP_LOGI(LOGTAG, "URL: %s", mDtUrlString.c_str());
             }
 
             GetData();
@@ -121,22 +122,22 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
 
 void DynatraceIntegration::GetData() {
 	ESP_LOGI(LOGTAG, "polling");
-//    DynatraceAction* dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
+    DynatraceAction* dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
     if (dtClient.Prepare(&mDtUrl)) {
 
-//        DynatraceAction* dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, dtPollApi);	
+        DynatraceAction* dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, dtPollApi);	
         unsigned short responseCode = dtClient.HttpGet();
-//        dtHttpGet->leave();
-
+        String response = dtClient.GetResponseData();
+        dtHttpGet->leave(&mDtUrlString, responseCode, response.length());
         if (responseCode == 200) 
-            Process(dtClient.GetResponseData());
+            Process(response);
         else{
             ESP_LOGE(LOGTAG, "Communication with Dynatrace failed - error %u", responseCode);
             HandleFailure();
         }        
     }
     dtClient.Clear();
-//    dtPollApi->leave();
+    dtPollApi->leave();
 }
 
 void DynatraceIntegration::HandleFailure() {
