@@ -20,10 +20,12 @@ public:
     __uint32_t enter(String pName, int pType, __uint32_t pParent);
 
     void leave();
-    void leave(ushort pResponseCode, uint pResponseSize);
+    void leave(String* pUrl, ushort pResponseCode, uint pResponseSize);
 
     __uint32_t getId() { return mId; } 
     String& getName() { return mName; }
+    String getPayload();
+
 private:
 
     DynatraceMonitoring* mpMon;
@@ -32,9 +34,9 @@ private:
     __uint32_t mParent;
     String mName;
     uint mType;
-    long int mStart;
+    __uint32_t mStart;
     __uint32_t mS0;
-    long int mEnd;
+    __uint32_t mEnd;
     __uint32_t mS1;
     ushort mResponseCode;
     uint mResponseSize;

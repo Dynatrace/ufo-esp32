@@ -8,7 +8,6 @@
 
 static const char* LOGTAG = "DTAction";
 
-
 DynatraceAction::DynatraceAction(DynatraceMonitoring* pMon) {
     mpMon = pMon;
     mId = mpMon->getSequence0();
@@ -37,33 +36,56 @@ __uint32_t DynatraceAction::enter(String pName, __uint32_t pParent) {
 __uint32_t DynatraceAction::enter(String pName, int pType, __uint32_t pParent) {
 
 	ESP_LOGI(LOGTAG, "Start action %s", pName.c_str());
-    time_t now;
-    time(&now);
-    long int ms = 0;
-    
+
     mName = pName;
     mType = pType;
     mParent = pParent;
     mS0 = mpMon->getSequence1();
-    mStart = ms;
+    mStart = mpMon->getTimestamp();
     return mId;
 };
 
 void DynatraceAction::leave() {
-    leave(0, 0);
+    mS1 = mpMon->getSequence1();
+    mEnd = mpMon->getTimestamp();
+    mpMon->addAction(this);
 }
 
-void DynatraceAction::leave(ushort pResponseCode, uint pResponseSize) {
-
-    time_t now;
-    time(&now);
-    long int ms = 0;
+void DynatraceAction::leave(String* pUrl, ushort pResponseCode, uint pResponseSize) {
 
     mS1 = mpMon->getSequence1();
-    mEnd = ms;
+    mEnd = mpMon->getTimestamp();
     mResponseCode = pResponseCode;
     mResponseSize = pResponseSize;
-    
+    mName = *pUrl;
+
     mpMon->addAction(this);
 
 };
+
+String DynatraceAction::getPayload() {
+    String sPayload = "{";
+    sPayload.printf("\"name\":\"%s\",", mName.c_str());
+    sPayload.printf("\"type\":\"%u\",", mType);
+    sPayload.printf("\"id\":\"%u\",", mId);
+    sPayload.printf("\"parent\":\"%u\",", mParent);
+    sPayload.printf("\"s0\":\"%u\",", mS0);
+    sPayload.printf("\"start\":\"%u\",", mStart);
+    sPayload.printf("\"t0\":\"%u\",", mStart - mpMon->mStartTimestamp);
+    sPayload.printf("\"s1\":\"%u\",", mS1);
+    sPayload.printf("\"end\":\"%u\",", mEnd);
+    sPayload.printf("\"t1\":\"%u\"", mEnd - mStart);
+
+    if (mType == WEBREQUEST) {
+        sPayload.printf(",\"network\": {");
+        sPayload.printf("\"responseCode\":\"%u\",", mResponseCode);
+        sPayload.printf("\"bytesSent\":\"%u\",", 0);
+        sPayload.printf("\"bytesReceived\":\"%u\"", mResponseSize);
+        sPayload.printf("}");
+    }
+
+    sPayload.printf("}");
+
+    return sPayload;
+}
+

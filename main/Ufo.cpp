@@ -77,21 +77,26 @@ void Ufo::Start(){
 			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
 			ESP_LOGD(LOGTAG, "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
-//		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
+		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
 		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass, mConfig.msHostname);
-//		dtWifi->leave();
+		dtWifi->leave();
 	}
 	else{
-//		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
+		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
 		if (mConfig.msSTAENTUser.length())
 			mWifi.StartSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA, mConfig.msHostname);
 		else
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
 	
-//		dtWifi->leave();
+		dtWifi->leave();
+		SetId();
+		// Dynatrace API Integration
 		mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
-		StartAWS();
-		StartDynatraceMonitoring();
+		// AWS communication layer
+		mAws.Init(this);		
+		// Dynatrace Monitoring
+		dt.Init(this, &mAws);
+
 
 	}
 	dtStartup->leave();
@@ -134,16 +139,6 @@ void Ufo::TaskDisplay(){
 	}
 }
 
-void Ufo::StartDynatraceMonitoring(){
-	ESP_LOGI(LOGTAG, "starting Dynatrace Monitoring");
-	dt.Init(&mAws);
-}
-
-void Ufo::StartAWS(){
-	ESP_LOGI(LOGTAG, "starting AWS Integration");
-	mAws.Init(this);
-}
-
 void Ufo::InitLogoLeds(){
 	mStripeLogo.SetLeds(0, 1, 0, 100, 255);
 	mStripeLogo.SetLeds(1, 1, 125, 255, 0);
@@ -161,7 +156,12 @@ void Ufo::ShowLogoLeds(){
 	mStripeLogo.Show();
 	mStripeLevel1.Show();
 }
- 
+
+void Ufo::SetId() {
+	char sHelp[20];
+	mWifi.GetMac((__uint8_t*)sHelp);
+	mId.printf("ufo-%x%x%x%x%x%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
+} 
 //-----------------------------------------------------------------------------------------
 
 Ufo ufo;

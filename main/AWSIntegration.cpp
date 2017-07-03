@@ -91,6 +91,7 @@ bool AWSIntegration::Connect() {
 			IoT_Error_t rc = aws_iot_mqtt_init(&client, &mqttInitParams);
 			if (rc) {
 				ESP_LOGE(LOGTAG, "AWS Init Error: %i", rc);
+				mpUfo->dt.Stop();
 				return false;
 			}
 			mConnected = true;
@@ -99,6 +100,13 @@ bool AWSIntegration::Connect() {
 	}
 
 	connectParams = iotClientConnectParamsDefault;    
+	connectParams.keepAliveIntervalInSec = 10;
+	connectParams.isCleanSession = true;
+	connectParams.MQTTVersion = MQTT_3_1_1;
+	connectParams.pClientID = mpUfo->GetId().c_str();
+	connectParams.clientIDLen = mpUfo->GetId().length();
+	connectParams.isWillMsgPresent = false;
+
 	ESP_LOGI(LOGTAG, "Connecting to %s", AWS_IOT_MQTT_HOST);
     IoT_Error_t rc = aws_iot_mqtt_connect(&client, &connectParams);
     if (rc) {
@@ -117,7 +125,7 @@ bool AWSIntegration::Run() {
 		ESP_LOGE(LOGTAG, "Unable to set Auto Reconnect to true - %d", rc);
 		return false;
 	}
-
+/*
 	String topic("/dynatraceufo/");
 	topic.printf("%s", AWS_IOT_MQTT_CLIENT_ID);
 	ESP_LOGI(LOGTAG, "Subscribing to %s", topic.c_str());
@@ -127,13 +135,12 @@ bool AWSIntegration::Run() {
 		return false;
 	}
 	ESP_LOGI(LOGTAG, "subscription successful");
-
+*/
 	mActive = true;
 	while (mActive) {
-		String topic("/dynatraceufo/ufohub");
 		String payload("message from ");
-		payload.printf("%s", AWS_IOT_MQTT_CLIENT_ID);
-		Publish(topic, payload);
+		payload.printf("%s", mpUfo->GetId().c_str());
+		Publish("/dynatraceufo/ufohub", 20, &payload);
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
 	}
 	
@@ -141,13 +148,14 @@ bool AWSIntegration::Run() {
 	return mActive;
 }
 
-bool AWSIntegration::Publish(String pTopic, String pPayload) {
+bool AWSIntegration::Publish(const char* pTopic, short pTopicLength, String* pPayload) {
 
 	IoT_Publish_Message_Params params;
 	IoT_Error_t rc = FAILURE;
 	
 	params.qos = QOS0;
-	params.payload = (void *) pPayload.c_str();
+	params.payload = (void *) pPayload->c_str();
+	params.payloadLen = pPayload->length();
 	params.isRetained = 0;
 
 	//Max time the yield function will wait for read messages
@@ -156,8 +164,9 @@ bool AWSIntegration::Publish(String pTopic, String pPayload) {
 		rc = aws_iot_mqtt_yield(&client, 100);
 	}
 
-	params.payloadLen = pPayload.length();
-	rc = aws_iot_mqtt_publish(&client, pTopic.c_str(), pTopic.length(), &params);
+	params.payloadLen = pPayload->length();
+
+	rc = aws_iot_mqtt_publish(&client, pTopic, pTopicLength, &params);
 
 	if (rc == MQTT_REQUEST_TIMEOUT_ERROR) {
 		ESP_LOGW(LOGTAG, "QOS1 publish ack not received.");
@@ -167,7 +176,7 @@ bool AWSIntegration::Publish(String pTopic, String pPayload) {
 	if(SUCCESS != rc) {
 		ESP_LOGE(LOGTAG, "An error occurred in Publish: %i", rc);
 	} else {
-		ESP_LOGI(LOGTAG, "successfully published to %s", pTopic.c_str());
+		ESP_LOGI(LOGTAG, "successfully published to %s", pTopic);
 	}
 
 	return rc;	

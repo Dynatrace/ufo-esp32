@@ -39,6 +39,8 @@ private:
 //	Wifi* mpWifi;
     
     Url mDtUrl;
+    String mDtUrlString;
+    
     bool mInitialized = false;
     bool mEnabled;
     __uint8_t mActTaskId; 
