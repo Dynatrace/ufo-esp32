@@ -25,9 +25,6 @@ public:
 	void TaskWebServer();
 	void TaskDisplay();
 	
-	void StartAWS();
-	void StartDynatraceMonitoring();
-
 	void InitLogoLeds();
 	void ShowLogoLeds();
 
@@ -38,10 +35,14 @@ public:
 	DisplayCharterLogo& 	GetLogoDisplay() 	{ return mDisplayCharterLogo; };
 	ApiStore& 				GetApiStore() 		{ return mApiStore; };
 	DynatraceIntegration&	GetDtIntegration() 	{ return mDt; };
+    String&					GetId()				{ return mId; };
 
 	DynatraceMonitoring dt;
 	
 private:
+
+	void SetId();
+    String mId;
 	
 	DisplayCharter mDisplayCharterLevel1;
 	DisplayCharter mDisplayCharterLevel2;
