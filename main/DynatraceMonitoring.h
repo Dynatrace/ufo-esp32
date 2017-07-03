@@ -28,7 +28,22 @@ typedef enum {
     SESSION_START = 18        
 } Action_Types;
 
+typedef struct {
+    String id;
+    String name;
+    String clientIp;
+    String mac;
+    String cpu;
+    String os;
+    int totalmem;
+    String manufacturer;
+    String modelId;
+    String appVersion;
+    String appBuild;
+} tdDevice;
 
+
+class Ufo;
 class AWSIntegration;
 class DynatraceAction;
 
@@ -39,11 +54,12 @@ public:
     DynatraceMonitoring();
 	virtual ~DynatraceMonitoring();
     
-    bool Init(AWSIntegration* pAws);
+    bool Init(Ufo* pUfo, AWSIntegration* pAws);
     bool Connect();
     bool Run();
     bool Process();
-    void Send(DynatraceAction* action);
+    void Stop();
+    void Send(String* json);
     void Shutdown();
     
     DynatraceAction* enterAction(String pName);
@@ -52,13 +68,16 @@ public:
     DynatraceAction* enterAction(String pName, int pType, DynatraceAction* pParent);
 
     void addAction(DynatraceAction* action);
+    String getPayload(DynatraceAction* pActions[], __uint8_t pCount);
 
     __uint32_t getSequence0();
     __uint32_t getSequence1();
+    __uint32_t getTimestamp();
 
     bool mInitialized = false;
     bool mConnected = false;
     bool mActive = false;
+    __uint32_t mStartTimestamp;
 
 private:
 
@@ -68,8 +87,11 @@ private:
     __uint32_t seq0;
     __uint32_t seq1;
 
+    Ufo* mpUfo;  
     AWSIntegration* mpAws;
 
+    tdDevice mDevice;
+    ushort mBatterylevel;
     portMUX_TYPE myMutex;
 
 };
