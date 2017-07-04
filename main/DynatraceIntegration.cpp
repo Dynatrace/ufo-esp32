@@ -1,5 +1,4 @@
 #include "DynatraceIntegration.h"
-#include "DynatraceMonitoring.h"
 #include "DynatraceAction.h"
 #include "WebClient.h"
 #include "Url.h"
@@ -60,7 +59,7 @@ void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mActTaskId = 1;
     mActConfigRevision = 0;
     ProcessConfigChange();
-    dtIntegration->leave();
+    mpUfo->dt.leaveAction(dtIntegration);
 }
 
 // care about starting or ending the task
@@ -128,16 +127,20 @@ void DynatraceIntegration::GetData() {
         DynatraceAction* dtHttpGet = mpUfo->dt.enterAction("HTTP Get Request", WEBREQUEST, dtPollApi);	
         unsigned short responseCode = dtClient.HttpGet();
         String response = dtClient.GetResponseData();
-        dtHttpGet->leave(&mDtUrlString, responseCode, response.length());
-        if (responseCode == 200) 
+        mpUfo->dt.leaveAction(dtHttpGet, &mDtUrlString, responseCode, response.length());
+        if (responseCode == 200) {
+            DynatraceAction* dtProcess = mpUfo->dt.enterAction("Process Dynatrace Metrics", dtPollApi);	
             Process(response);
-        else{
+            mpUfo->dt.leaveAction(dtProcess);
+        } else {
             ESP_LOGE(LOGTAG, "Communication with Dynatrace failed - error %u", responseCode);
+            DynatraceAction* dtFailure = mpUfo->dt.enterAction("Handle Dynatrace API failure", dtPollApi);	
             HandleFailure();
+            mpUfo->dt.leaveAction(dtFailure);
         }        
     }
     dtClient.Clear();
-    dtPollApi->leave();
+    mpUfo->dt.leaveAction(dtPollApi);
 }
 
 void DynatraceIntegration::HandleFailure() {

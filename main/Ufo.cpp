@@ -77,9 +77,7 @@ void Ufo::Start(){
 			sprintf(sBuf, "%d.%d.%d.%d", IP2STR((ip4_addr*)&mConfig.muLastSTAIpAddress));
 			ESP_LOGD(LOGTAG, "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
-		DynatraceAction* dtWifi = dt.enterAction("Start AP Mode", dtStartup);	
 		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass, mConfig.msHostname);
-		dtWifi->leave();
 	}
 	else{
 		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
@@ -88,7 +86,7 @@ void Ufo::Start(){
 		else
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
 	
-		dtWifi->leave();
+		dt.leaveAction(dtWifi);
 		SetId();
 		// Dynatrace API Integration
 		mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
@@ -99,7 +97,7 @@ void Ufo::Start(){
 
 
 	}
-	dtStartup->leave();
+	dt.leaveAction(dtStartup);
 
 }
 

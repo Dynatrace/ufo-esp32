@@ -150,6 +150,7 @@ void DynatraceMonitoring::Send(String* json) {
 
 void DynatraceMonitoring::Shutdown() {
 	ESP_LOGI(LOGTAG, "Shutdown");
+    mActive = false;
 }
 
 DynatraceAction* DynatraceMonitoring::enterAction(String pName) {
@@ -176,6 +177,18 @@ DynatraceAction* DynatraceMonitoring::enterAction(String pName, int pType, Dynat
     ESP_LOGD(LOGTAG, "Action %i created: %s", id, pName.c_str());
     return action;
 };
+
+void DynatraceMonitoring::leaveAction(DynatraceAction* action) {
+    if (action != NULL) {
+        action->leave();
+    }
+}
+
+void DynatraceMonitoring::leaveAction(DynatraceAction* action, String* pUrl, ushort pResponseCode, uint pResponseSize) {
+    if (action != NULL) {
+        action->leave(pUrl, pResponseCode, pResponseSize);
+    }    
+}
 
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
 //	ESP_LOGI(LOGTAG, "addAction");

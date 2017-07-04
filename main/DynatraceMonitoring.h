@@ -66,6 +66,8 @@ public:
     DynatraceAction* enterAction(String pName, int pType);
     DynatraceAction* enterAction(String pName, DynatraceAction* pParent);
     DynatraceAction* enterAction(String pName, int pType, DynatraceAction* pParent);
+    void leaveAction(DynatraceAction* action);
+    void leaveAction(DynatraceAction* action, String* pUrl, ushort pResponseCode, uint pResponseSize);
 
     void addAction(DynatraceAction* action);
     String getPayload(DynatraceAction* pActions[], __uint8_t pCount);
