@@ -15,6 +15,7 @@ static const char* LOGTAG = "AWS";
 void task_function_aws(void *pvParameter)
 {
 	((AWSIntegration*)pvParameter)->Connect();
+	((AWSIntegration*)pvParameter)->Shutdown();
 	vTaskDelete(NULL);
 }
 
@@ -111,6 +112,7 @@ bool AWSIntegration::Connect() {
     IoT_Error_t rc = aws_iot_mqtt_connect(&client, &connectParams);
     if (rc) {
         ESP_LOGE(LOGTAG, "AWS Connect Error: %i", rc);
+		mpUfo->dt.Stop();
         return false;
     }
 	ESP_LOGI(LOGTAG, "connected successfully");
@@ -138,13 +140,12 @@ bool AWSIntegration::Run() {
 */
 	mActive = true;
 	while (mActive) {
-		String payload("message from ");
-		payload.printf("%s", mpUfo->GetId().c_str());
-		Publish("/dynatraceufo/ufohub", 20, &payload);
+//		String payload("message from ");
+//		payload.printf("%s", mpUfo->GetId().c_str());
+//		Publish("/dynatraceufo/ufohub", 20, &payload);
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
 	}
 	
-	Shutdown();
 	return mActive;
 }
 
