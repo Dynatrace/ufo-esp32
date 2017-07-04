@@ -2,6 +2,7 @@
 #include "Ufo.h"
 #include "DisplayCharter.h"
 #include "Config.h"
+#include "DynatraceAction.h"
 #include "esp_system.h"
 #include <esp_log.h>
 #include "Ota.h"
@@ -23,6 +24,8 @@ DynamicRequestHandler::~DynamicRequestHandler() {
 }
 
 bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResponse& rResponse){
+
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle API Request");	
 
 	mpUfo->IndicateApiCall();
 
@@ -68,20 +71,25 @@ bool DynamicRequestHandler::HandleApiRequest(std::list<TParam>& params, HttpResp
 	}
 
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
-	rResponse.SetRetCode(200);
+	rResponse.SetRetCode(200);	
+	mpUfo->dt.leaveAction(dtHandleRequest);
+
 	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleApiListRequest(std::list<TParam>& params, HttpResponse& rResponse){
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle API List Request");	
 	String sBody;
 	mpUfo->GetApiStore().GetApisJson(sBody);
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle API Edit Request");	
 	__uint8_t uId = 0xff;
 	const char* sNewApi = NULL;
 	bool bDelete = false;
@@ -108,11 +116,14 @@ bool DynamicRequestHandler::HandleApiEditRequest(std::list<TParam>& params, Http
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.AddHeader("Location: /");
 	rResponse.SetRetCode(302);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send();
 }
 
 
 bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpResponse& rResponse){
+
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Info Request");	
 
 	char sHelp[20];
 	String sBody;
@@ -159,11 +170,13 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.SetRetCode(200);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Dynatrace Integration Request");	
 	String sEnvId;
 	String sApiToken;
 	bool bEnabled = false;
@@ -197,11 +210,13 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.AddHeader("Location: /#!pagedynatraceintegrationsettings");
 	rResponse.SetRetCode(302);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send();
 }
 
 bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Config Request");	
 	const char* sWifiMode = NULL;
 	const char* sWifiSsid = NULL;
 	const char* sWifiPass = NULL;
@@ -279,10 +294,12 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	}
 
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleSrvConfigRequest(std::list<TParam>& params, HttpResponse& rResponse){
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Server Config Request");	
 	const char* sSslEnabled = NULL;
 	const char* sListenPort = NULL;
 	const char* sServerCert = NULL;
@@ -340,6 +357,7 @@ bool DynamicRequestHandler::HandleSrvConfigRequest(std::list<TParam>& params, Ht
 	sBody += "\"></head><body><h2>New settings stored, rebooting shortly.</h2></body></html>";
 	rResponse.SetRetCode(200);
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send(sBody);
 }
 
@@ -361,6 +379,7 @@ finishedsuccess: Firmware successfully updated. Rebooting now.
 */
 
 bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response) {
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Firmware Request");	
 	std::list<TParam>::iterator it = params.begin();
 	String sBody;
 	response.SetRetCode(400); // invalid request
@@ -433,11 +452,13 @@ bool DynamicRequestHandler::HandleFirmwareRequest(std::list<TParam>& params, Htt
 		it++;
 	}
 	response.AddHeader(HttpResponse::HeaderNoCache);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return response.Send(sBody.c_str(), sBody.length());
 }
 
 bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params, HttpResponse& response) {
 
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Check Firmware Request");	
 	String sBody;
 	response.SetRetCode(404); // not found
 
@@ -468,6 +489,7 @@ bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params
 	else
 		sBody = "{}";
 	response.SetRetCode(200);
+	mpUfo->dt.leaveAction(dtHandleRequest);
 	return response.Send(sBody);
 	
 }
