@@ -35,6 +35,8 @@ bool DynatraceMonitoring::Init(Ufo* pUfo, AWSIntegration* pAws) {
 	ESP_LOGI(LOGTAG, "Init");
     mpUfo = pUfo;
     mpAws = pAws;      
+    mpConfig = &(mpUfo->GetConfig());
+
     mStartTimestamp = getTimestamp();
     mDevice.id = mpUfo->GetId();
     mDevice.name = mpUfo->GetId();
@@ -43,13 +45,27 @@ bool DynatraceMonitoring::Init(Ufo* pUfo, AWSIntegration* pAws) {
     mDevice.totalmem = 532480;
     mDevice.manufacturer = "Dynatrace";
     mDevice.modelId = "UFO2.0";
-    mDevice.appVersion = "2.0";
+    mDevice.appVersion = FIRMWARE_VERSION;
     mDevice.appBuild = "1000";
     mBatterylevel = 100;
     mInitialized = true;
-	xTaskCreate(&task_function_dynatrace_monitoring, "Task_DynatraceMonitoring", 8192, this, 5, NULL);
+    ProcessConfigChange();
     return mInitialized;
 }
+
+void DynatraceMonitoring::ProcessConfigChange(){
+    if (!mInitialized)
+        return; 
+
+    if (mpConfig->mbDTMonitoring) {
+    	xTaskCreate(&task_function_dynatrace_monitoring, "Task_DynatraceMonitoring", 8192, this, 5, NULL);    
+    } else {
+    	ESP_LOGI(LOGTAG, "Monitoring disabled");
+        Shutdown();
+        return;
+    }
+}
+
 
 bool DynatraceMonitoring::Connect() {
 	ESP_LOGI(LOGTAG, "Connecting");
@@ -66,21 +82,13 @@ bool DynatraceMonitoring::Connect() {
 
 bool DynatraceMonitoring::Run() {
 	ESP_LOGI(LOGTAG, "Run");
-    mActive = true;
+    mActive = mpAws->mActive;
     while (mpAws->mActive) {
-        if (mActive) {
-    		vTaskDelay(20000 / portTICK_PERIOD_MS);
-            mActive = Process();
-        }
-		vTaskDelay(10000 / portTICK_PERIOD_MS);
+        mActive = Process();
+		vTaskDelay(30000 / portTICK_PERIOD_MS);
     }
     Shutdown();
     return mActive;
-}
-
-void DynatraceMonitoring::Stop() {
-    ESP_LOGI(LOGTAG, "Stopping Dynatrace Monitoring");
-    mActive = false;
 }
 
 bool DynatraceMonitoring::Process() {
@@ -149,8 +157,13 @@ void DynatraceMonitoring::Send(String* json) {
 }
 
 void DynatraceMonitoring::Shutdown() {
-	ESP_LOGI(LOGTAG, "Shutdown");
+	ESP_LOGI(LOGTAG, "delete action buffer and shutdown");
     mActive = false;
+    mConnected = false;
+    for (__uint8_t i=0; i<mActionCount; i++) {
+        delete mAction[i];
+    }
+    mActionCount = 0;    
 }
 
 DynatraceAction* DynatraceMonitoring::enterAction(String pName) {
@@ -191,13 +204,11 @@ void DynatraceMonitoring::leaveAction(DynatraceAction* action, String* pUrl, ush
 }
 
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
-//	ESP_LOGI(LOGTAG, "addAction");
+    ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
 //    taskENTER_CRITICAL(&myMutex);
     if (mActionCount < 90) {
-        ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
         mAction[mActionCount++] = action;
     } else {
-        ESP_LOGW(LOGTAG, "Action buffer full, action %s skipped", action->getName().c_str());
         delete action;
     }
 //    taskEXIT_CRITICAL(&myMutex);

@@ -48,6 +48,7 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "===================== Dynatrace UFO ========================");
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
+
 	DynatraceAction* dtStartup = dt.enterAction("Startup");
 	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	
@@ -71,6 +72,9 @@ void Ufo::Start(){
 	xTaskCreatePinnedToCore(&task_function_webserver, "Task_WebServer", 12288, this, 5, NULL, 0); //Ota update (upload) just works on core 0
 	xTaskCreate(&task_function_display, "Task_Display", 4096, this, 5, NULL);
 
+	// Dynatrace Monitoring
+	dt.Init(this, &mAws);
+
 	if (mConfig.mbAPMode){
 		if (mConfig.muLastSTAIpAddress){
 			char sBuf[16];
@@ -78,6 +82,7 @@ void Ufo::Start(){
 			ESP_LOGD(LOGTAG, "Last IP when connected to AP: %d : %s", mConfig.muLastSTAIpAddress, sBuf);
 		}
 		mWifi.StartAPMode(mConfig.msAPSsid, mConfig.msAPPass, mConfig.msHostname);
+		dt.Shutdown();
 	}
 	else{
 		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
@@ -91,11 +96,7 @@ void Ufo::Start(){
 		// Dynatrace API Integration
 		mDt.Init(this, &mDisplayCharterLevel1, &mDisplayCharterLevel2);
 		// AWS communication layer
-		mAws.Init(this);		
-		// Dynatrace Monitoring
-		dt.Init(this, &mAws);
-
-
+		mAws.Init(this);
 	}
 	dt.leaveAction(dtStartup);
 
@@ -125,8 +126,14 @@ void Ufo::TaskDisplay(){
 
 		if (!gpio_get_level(GPIO_NUM_0)){
 			if (!mbButtonPressed){
+				ESP_LOGI("Ufo", "button pressed");
 				mConfig.ToggleAPMode();
 				mConfig.Write();
+				if (mConfig.mbAPMode){
+					ESP_LOGI("Ufo", "enter AP mode");
+				} else {
+					ESP_LOGI("Ufo", "enter standard mode");					
+				}
 				esp_restart();
 			}
 		}

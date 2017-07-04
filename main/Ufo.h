@@ -35,6 +35,7 @@ public:
 	DisplayCharterLogo& 	GetLogoDisplay() 	{ return mDisplayCharterLogo; };
 	ApiStore& 				GetApiStore() 		{ return mApiStore; };
 	DynatraceIntegration&	GetDtIntegration() 	{ return mDt; };
+	AWSIntegration&			GetAWSIntegration() { return mAws; };
     String&					GetId()				{ return mId; };
 
 	DynatraceMonitoring dt;

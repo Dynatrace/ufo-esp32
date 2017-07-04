@@ -60,11 +60,26 @@ AWSIntegration::~AWSIntegration() {
 
 bool AWSIntegration::Init(Ufo* pUfo) {
     mpUfo = pUfo;  
-	ESP_LOGI(LOGTAG, "Starting AWS Thread");
-	xTaskCreate(&task_function_aws, "Task_AWS", 8192, this, 5, NULL); 	
+    mpConfig = &(mpUfo->GetConfig());
 	mInitialized = true;
+    ProcessConfigChange();
 	return mInitialized;
 }
+
+void AWSIntegration::ProcessConfigChange(){
+    if (!mInitialized)
+        return; 
+
+    if (mpConfig->mbDTMonitoring) {
+		ESP_LOGI(LOGTAG, "Starting AWS Thread");
+		xTaskCreate(&task_function_aws, "Task_AWS", 8192, this, 5, NULL); 	
+    } else {
+    	ESP_LOGI(LOGTAG, "Monitoring disabled");
+        Shutdown();
+        return;
+    }
+}
+
 
 bool AWSIntegration::Connect() {
 
@@ -92,7 +107,7 @@ bool AWSIntegration::Connect() {
 			IoT_Error_t rc = aws_iot_mqtt_init(&client, &mqttInitParams);
 			if (rc) {
 				ESP_LOGE(LOGTAG, "AWS Init Error: %i", rc);
-				mpUfo->dt.Stop();
+				mpUfo->dt.Shutdown();
 				return false;
 			}
 			mConnected = true;
@@ -112,7 +127,7 @@ bool AWSIntegration::Connect() {
     IoT_Error_t rc = aws_iot_mqtt_connect(&client, &connectParams);
     if (rc) {
         ESP_LOGE(LOGTAG, "AWS Connect Error: %i", rc);
-		mpUfo->dt.Stop();
+		mpUfo->dt.Shutdown();
         return false;
     }
 	ESP_LOGI(LOGTAG, "connected successfully");
@@ -186,5 +201,7 @@ bool AWSIntegration::Publish(const char* pTopic, short pTopicLength, String* pPa
 
 void AWSIntegration::Shutdown() {
 	ESP_LOGI(LOGTAG, "Shutdown");
+	mConnected = false;
+	mActive = false;
 }
 

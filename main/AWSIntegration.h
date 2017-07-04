@@ -14,6 +14,7 @@ public:
 	virtual ~AWSIntegration();
     
     bool Init(Ufo* pUfo);
+    void ProcessConfigChange();
     bool Connect();
     void Shutdown();
     bool Run();
@@ -26,6 +27,7 @@ public:
 private:
 
     Ufo* mpUfo;  
+    Config* mpConfig;
 
     AWS_IoT_Client client;
 	IoT_Client_Init_Params mqttInitParams;

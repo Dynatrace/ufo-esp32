@@ -55,10 +55,10 @@ public:
 	virtual ~DynatraceMonitoring();
     
     bool Init(Ufo* pUfo, AWSIntegration* pAws);
+    void ProcessConfigChange();
     bool Connect();
     bool Run();
     bool Process();
-    void Stop();
     void Send(String* json);
     void Shutdown();
     
@@ -91,6 +91,7 @@ private:
 
     Ufo* mpUfo;  
     AWSIntegration* mpAws;
+    Config* mpConfig;
 
     tdDevice mDevice;
     ushort mBatterylevel;
