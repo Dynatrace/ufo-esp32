@@ -252,10 +252,8 @@
 							Enterprise WPA2 Certificate Authority (optional):<br>
 							<textarea name="wifientca" id="enterpriseca" style='Height:100px'></textarea>
 						</div>
-						<div id="divwifihostname">
-							Hostname:<br>
-							<input type="text" name="hostname" placeholder="default=ufo" id="wifihostname" />
-						</div>
+						Hostname:<br>
+						<input type="text" name="hostname" placeholder="default=ufo" id="wifihostname" />
 					</div>
 					<div class="padded-full">
 						<span class="padded-list"><font color="red" id="configwifierror"></font></span>
@@ -336,6 +334,15 @@
 			<div class="input-wrapper list">
 				<form method='GET' action='/dynatraceintegration'>
 					<div class="padded-full">
+						<p>
+							Connect your UFO to a Dynatrace Server to query the problem API.<br />
+							Following metrics will then be visualized by the UFO:
+							<ul>
+								<li>open Application problems</li>
+								<li>open Infrastructure problems</li>
+								<li>open Service problems</li>
+							</ul>
+						</p>
 						<ul class="list">
 							<li class="">
 								<label class="checkbox">
@@ -378,19 +385,30 @@
 			<div class="input-wrapper list">
 				<form method='GET' action='/dynatracemonitoring'>
 					<div class="padded-full">
+						<p>
+							Please help us to improve the Dynatrace UFO by providing anonymus usage and performance statistics by enabling the checkbox below. <br />
+							These data may include:
+							<ul>
+								<li>Timings for network requests</li>
+								<li>Timings for polling external Dynatrace APIs</li>
+								<li>Timings for component initializations</li>
+								<li>Errors and Crashes</li>
+								<li>Installed Firmware Version</li>
+							</ul>
+						</p>
+						<p>
+							We will use this information to improve firmware quality and provide new features for your UFO! The data will not be shared with anyone else.
+						</p>						
 						<ul class="list">
 							<li class="">
 								<label class="checkbox">
-                                <input type="checkbox" class="" name="dtmonenabled" id="dtmonenabled">
+                                <input type="checkbox" class="" name="dtmonitoring" id="dtmonitoring">
                                 Enabled
                                 <span></span>
                             </label>
 							</li>
 						</ul>
 
-						<input type="text" name="dtmonenvid" placeholder="Environment ID" id="dtmonenvid" />
-						<input type="password" name="dtmonappid" placeholder="Application ID" id="dtmonappid" />
-						<input type="number" min="30" max="300" placeholder="send interval in sec" name="dtmoninterval" id="dtmoninterval" />
 						<!--<ul class="list">
                         <li class="padded-for-list">
                             <label class="radio">
@@ -776,10 +794,10 @@
 						if (result.enterpriseuser.length > 0){
 							document.getElementById('enterpriseuser').value =  result.enterpriseuser;
 							document.getElementById('wifimode2').checked = true;
-							wifiModeChange(0);
+							wifiModeChange0();
 						}
 						else
-							wifiModeChange(1);
+							wifiModeChange1();
 						document.getElementById('ssid').value = result.ssid;
 						document.getElementById('macaddress').innerHTML = result.macaddress;
 						document.getElementById('wifihostname').value = result.hostname;
@@ -839,6 +857,23 @@
 						document.getElementById('dtenvid').value = result.dtenvid;
 						document.getElementById('dtapitoken').value = result.dtapitoken;
 						document.getElementById('dtinterval').value = result.dtinterval;
+					},
+					error: function (res, flagError, xhr) {
+						console.error(flagError);
+						console.log(res);
+					}
+				});
+			}
+			if (evt.detail.page == "pagedynatracemonitoringsettings") {
+				var req = phonon.ajax({
+					method: 'GET',
+					url: 'info',
+					//crossDomain: false,
+					dataType: 'text/json',
+					success: function (res, xhr) {
+						//console.log(xhr.response);
+						var result = JSON.parse(xhr.response);
+						document.getElementById('dtmonitoring').checked = (result.dtmonitoring == '1');
 					},
 					error: function (res, flagError, xhr) {
 						console.error(flagError);

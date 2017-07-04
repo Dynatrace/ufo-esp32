@@ -39,6 +39,8 @@ public:
 	bool mbDTEnabled;
     int miDTInterval;
 
+	bool mbDTMonitoring;
+
 	bool mbWebServerUseSsl;
 	__uint16_t muWebServerPort;
 	String msWebServerCert;

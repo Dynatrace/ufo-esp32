@@ -47,6 +47,7 @@ bool Config::Read(){
 	ReadString(h, "DTEnvId", msDTEnvId);
 	ReadString(h, "DTApiToken", msDTApiToken);
 	ReadInt(h, "DTInterval", miDTInterval);
+	ReadBool(h, "DTMonitoring", mbDTMonitoring);
 	ReadBool(h, "SrvSSLEnabled", mbWebServerUseSsl);
 	nvs_get_u16(h, "SrvListenPort", &muWebServerPort);
 	ReadString(h, "SrvCert", msWebServerCert);
@@ -92,6 +93,9 @@ bool Config::Write()
 	if (!WriteString(h, "DTApiToken", msDTApiToken))
 		return nvs_close(h), false;
 	if (!WriteInt(h, "DTInterval", miDTInterval))
+		return nvs_close(h), false;
+
+	if (!WriteBool(h, "DTMonitoring", mbDTMonitoring))
 		return nvs_close(h), false;
 
 	if (!WriteBool(h, "SrvSSLEnabled", mbWebServerUseSsl))	

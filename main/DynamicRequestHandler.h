@@ -22,7 +22,7 @@ public:
 	bool HandleFirmwareRequest(std::list<TParam>& params, HttpResponse& response);
 	bool HandleCheckFirmwareRequest(std::list<TParam>& params, HttpResponse& response);
 	bool HandleDynatraceIntegrationRequest(std::list<TParam>& params, HttpResponse& response);
-
+	bool HandleDynatraceMonitoringRequest(std::list<TParam>& params, HttpResponse& response);
 
 	bool ShouldRestart() { return mbRestart; }
 
