@@ -79,6 +79,10 @@ bool UfoWebServer::HandleRequest(HttpRequestParser& httpParser, HttpResponse& ht
 		if (!requestHandler.HandleDynatraceIntegrationRequest(httpParser.GetParams(), httpResponse))
 			return false;
 	}
+	else if (httpParser.GetUrl().equals("/api")){
+		if (!requestHandler.HandleApiRequest(httpParser.GetParams(), httpResponse))
+			return false;
+	}
 	else if (httpParser.GetUrl().equals("/apilist")){
 		if (!requestHandler.HandleApiListRequest(httpParser.GetParams(), httpResponse))
 			return false;
