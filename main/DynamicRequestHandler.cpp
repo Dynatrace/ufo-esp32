@@ -164,7 +164,8 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
 	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvId.c_str());
 	sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
-	sBody.printf("\"dtinterval\":\"%u\"", mpUfo->GetConfig().miDTInterval);
+	sBody.printf("\"dtinterval\":\"%u\",", mpUfo->GetConfig().miDTInterval);
+	sBody.printf("\"dtmonitoring\":\"%u\"", mpUfo->GetConfig().mbDTMonitoring);
 	sBody += '}';
 
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
@@ -209,6 +210,36 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 
 	rResponse.AddHeader(HttpResponse::HeaderNoCache);
 	rResponse.AddHeader("Location: /#!pagedynatraceintegrationsettings");
+	rResponse.SetRetCode(302);
+	mpUfo->dt.leaveAction(dtHandleRequest);
+	return rResponse.Send();
+}
+
+bool DynamicRequestHandler::HandleDynatraceMonitoringRequest(std::list<TParam>& params, HttpResponse& rResponse){
+
+    DynatraceAction* dtHandleRequest = mpUfo->dt.enterAction("Handle Dynatrace Monitoring Request");	
+	bool bEnabled = false;
+
+	String sBody;
+
+	std::list<TParam>::iterator it = params.begin();
+	while (it != params.end()){
+		if ((*it).paramName == "dtmonitoring")
+			bEnabled = (*it).paramValue;
+		it++;
+	}
+
+	mpUfo->GetConfig().mbDTMonitoring = bEnabled;
+
+	if (mpUfo->GetConfig().Write()) {
+		mpUfo->GetAWSIntegration().ProcessConfigChange();
+		mpUfo->dt.ProcessConfigChange();
+	}
+
+	ESP_LOGI(tag, "Dynatrace Monitoring Saved");
+
+	rResponse.AddHeader(HttpResponse::HeaderNoCache);
+	rResponse.AddHeader("Location: /#!pagedynatracemonitoringsettings");
 	rResponse.SetRetCode(302);
 	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send();
