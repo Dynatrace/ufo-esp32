@@ -214,7 +214,7 @@ void DynatraceIntegration::Process(String& jsonString) {
         free(sJsonPrint);
     }
 
-    bool changed = false;
+//    bool changed = false;
     int iTotalProblems = cJSON_GetObjectItem(json, "totalOpenProblemsCount")->valueint;
     int iInfrastructureProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "INFRASTRUCTURE")->valueint;
     int iApplicationProblems = cJSON_GetObjectItem(cJSON_GetObjectItem(json, "openProblemCounts"), "APPLICATION")->valueint;
@@ -228,21 +228,21 @@ void DynatraceIntegration::Process(String& jsonString) {
     cJSON_Delete(parentJson);
 
     if (iInfrastructureProblems != miInfrastructureProblems) {
-        changed = true;
+//        changed = true;
         miInfrastructureProblems = iInfrastructureProblems;
     }
     if (iApplicationProblems != miApplicationProblems) {
-        changed = true;
+//        changed = true;
         miApplicationProblems = iApplicationProblems;
     }
     if (iServiceProblems != miServiceProblems) {
-        changed = true;
+//        changed = true;
         miServiceProblems = iServiceProblems;
     }
     miTotalProblems = iTotalProblems;
 
-    if (changed) {
+//    if (changed) {
         DisplayDefault();
-    }
+//    }
 
 }
