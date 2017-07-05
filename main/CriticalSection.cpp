@@ -19,9 +19,9 @@ bool CriticalSection::Enter(__uint16_t ticks){
 			return true;
 		}
 		taskEXIT_CRITICAL(&myMutex);
-		vTaskDelay(1);
 		if (ticks && !--ticks)
 			return false;
+		vTaskDelay(1);
 	}
 }
 
