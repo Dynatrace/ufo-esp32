@@ -74,6 +74,8 @@ bool DynatraceMonitoring::Connect() {
         if (mpAws->mActive) {
             mConnected = true;
             mDevice.clientIp = mpUfo->GetWifi().GetLocalAddress();
+            mDevice.id = mpUfo->GetId();
+            mDevice.name = mpUfo->GetId();
         }
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
