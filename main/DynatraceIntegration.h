@@ -22,6 +22,7 @@ public:
     void Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, DisplayCharter* pDisplayUpperRing);
     void ProcessConfigChange();
     void Run(__uint8_t uTaskId);
+    bool IsActive() { return mEnabled; };
 
 private:
 
