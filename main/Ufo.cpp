@@ -49,10 +49,11 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
 
-	DynatraceAction* dtStartup = dt.enterAction("Startup");
-	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
-	
 	mConfig.Read();
+
+	DynatraceAction* dtStartup = dt.enterAction("Startup");
+
+	mbButtonPressed = !gpio_get_level(GPIO_NUM_0);
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 	mApiStore.Init();
 
@@ -128,11 +129,19 @@ void Ufo::TaskDisplay(){
 			if (!mbButtonPressed){
 				ESP_LOGI("Ufo", "button pressed");
 				mDisplayCharterLevel1.SetLeds(0, 15, 0xff0000);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0000);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
+				mDisplayCharterLevel1.Display(mStripeLevel1);
+				mDisplayCharterLevel2.Display(mStripeLevel2);								
+				vTaskDelay(50);
+				mDisplayCharterLevel1.SetLeds(0, 15, 0xffff00);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
+				mDisplayCharterLevel1.Display(mStripeLevel1);
+				mDisplayCharterLevel2.Display(mStripeLevel2);								
+				vTaskDelay(50);
+				mDisplayCharterLevel1.SetLeds(0, 15, 0x00ff00);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
 				mDisplayCharterLevel1.Display(mStripeLevel1);
 				mDisplayCharterLevel2.Display(mStripeLevel2);
-				vTaskDelay(100);
-								
 				mConfig.ToggleAPMode();
 				mConfig.Write();
 				if (mConfig.mbAPMode){
@@ -171,8 +180,16 @@ void Ufo::ShowLogoLeds(){
 void Ufo::SetId() {
 	char sHelp[20];
 	mWifi.GetMac((__uint8_t*)sHelp);
+	mId = "";
 	mId.printf("ufo-%x%x%x%x%x%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-} 
+	mConfig.msUfoId = mId;
+	mConfig.Write();	
+}
+
+String& Ufo::GetId() {
+	mId = mConfig.msUfoId;
+	return mId;
+}
 //-----------------------------------------------------------------------------------------
 
 Ufo ufo;

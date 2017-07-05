@@ -34,6 +34,7 @@ bool Config::Read(){
 		return false;
 	if (nvs_open("Ufo Config", NVS_READONLY, &h) != ESP_OK)
 		return false;
+	ReadBool(h, "APMode", mbAPMode);
 	ReadString(h, "APSsid", msAPSsid);
 	ReadString(h, "APPass", msAPPass);
 	nvs_get_u32(h, "STAIpAddress", &muLastSTAIpAddress);
@@ -42,12 +43,12 @@ bool Config::Read(){
 	ReadString(h, "STAENTUser", msSTAENTUser);
 	ReadString(h, "STAENTCA", msSTAENTCA);
 	ReadString(h, "hostname", msHostname);
+	ReadString(h, "UfoId", msUfoId);
 	ReadBool(h, "DTEnabled", mbDTEnabled);
 	ReadString(h, "DTEnvId", msDTEnvId);
 	ReadString(h, "DTApiToken", msDTApiToken);
 	ReadInt(h, "DTInterval", miDTInterval);
 	ReadBool(h, "DTMonitoring", mbDTMonitoring);
-	ReadBool(h, "APMode", mbAPMode);
 	ReadBool(h, "SrvSSLEnabled", mbWebServerUseSsl);
 	nvs_get_u16(h, "SrvListenPort", &muWebServerPort);
 	ReadString(h, "SrvCert", msWebServerCert);
@@ -67,6 +68,8 @@ bool Config::Write()
 		return false;
 	nvs_erase_all(h); //otherwise I need double the space
 
+	if (!WriteBool(h, "APMode", mbAPMode))
+		return nvs_close(h), false;
 	if (!WriteString(h, "APSsid", msAPSsid))
 		return nvs_close(h), false;
 	if (!WriteString(h, "APPass", msAPPass))
@@ -83,6 +86,8 @@ bool Config::Write()
 		return nvs_close(h), false;
 	if (nvs_set_u32(h, "STAIpAddress", muLastSTAIpAddress) != ESP_OK)
 		return nvs_close(h), false;
+	if (!WriteString(h, "UfoId", msUfoId))
+		return nvs_close(h), false;
 
 	if (!WriteBool(h, "DTEnabled", mbDTEnabled))
 		return nvs_close(h), false;
@@ -94,9 +99,6 @@ bool Config::Write()
 		return nvs_close(h), false;
 
 	if (!WriteBool(h, "DTMonitoring", mbDTMonitoring))
-		return nvs_close(h), false;
-
-	if (!WriteBool(h, "APMode", mbAPMode))
 		return nvs_close(h), false;
 
 	if (!WriteBool(h, "SrvSSLEnabled", mbWebServerUseSsl))	

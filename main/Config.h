@@ -33,6 +33,7 @@ public:
 	String msSTAENTUser;
 	String msSTAENTCA;
 	String msHostname;
+	String msUfoId;
 
     String msDTEnvId;
     String msDTApiToken;
