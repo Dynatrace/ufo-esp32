@@ -80,10 +80,6 @@ bool HttpResponse::Send(const char* sBody, __uint16_t uBodyLen){
 		if (!SendInternal(sBody, uBodyLen))
 			return false;
 	}
-	else{
-		if (!SendInternal("\r\n", 2))
-			return false;
-	}
 	return true;
 }
 
