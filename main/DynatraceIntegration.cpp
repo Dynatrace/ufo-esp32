@@ -53,6 +53,7 @@ void DynatraceIntegration::Init(Ufo* pUfo, DisplayCharter* pDisplayLowerRing, Di
     mpUfo = pUfo;  
     mpDisplayLowerRing = pDisplayLowerRing;
     mpDisplayUpperRing = pDisplayUpperRing;
+
     mpConfig = &(mpUfo->GetConfig());
     mEnabled = false;
     mInitialized = true;
@@ -164,32 +165,32 @@ void DynatraceIntegration::DisplayDefault() {
 
     switch (miTotalProblems){
         case 0:
-          mpDisplayUpperRing->SetLeds(0, 15, 0xff0000);
-          mpDisplayLowerRing->SetLeds(0, 15, 0xff0000);
+          mpDisplayUpperRing->SetLeds(0, 15, 0x00ff00);
+          mpDisplayLowerRing->SetLeds(0, 15, 0x00ff00);
           mpDisplayUpperRing->SetMorph(4000, 6);
           mpDisplayLowerRing->SetMorph(4000, 6);
           break;
         case 1:
-          mpDisplayUpperRing->SetLeds(0, 15, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(0, 15, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
+          mpDisplayUpperRing->SetLeds(0, 15, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(0, 15, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
           mpDisplayUpperRing->SetMorph(1000, 8);
           mpDisplayLowerRing->SetMorph(1000, 8);
           break;
         case 2:
-          mpDisplayUpperRing->SetLeds(0, 7, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(0, 7, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
-          mpDisplayUpperRing->SetLeds(8, 6, (miApplicationProblems > 1) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 1) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(8, 6, (miApplicationProblems > 1) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 1) ? 0x00ffaa : 0xaaff00));
+          mpDisplayUpperRing->SetLeds(0, 7, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(0, 7, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
+          mpDisplayUpperRing->SetLeds(8, 6, (miApplicationProblems > 1) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 1) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(8, 6, (miApplicationProblems > 1) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 1) ? 0xff00aa : 0xffaa00));
           mpDisplayUpperRing->SetWhirl(180, true);
           mpDisplayLowerRing->SetWhirl(180, true);
           break;
         default:
-          mpDisplayUpperRing->SetLeds(0, 4, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(0, 4, (miApplicationProblems > 0) ? 0x00ff00 : ((miServiceProblems > 0) ? 0x00ffaa : 0xaaff00));
-          mpDisplayUpperRing->SetLeds(5, 4, (miApplicationProblems > 1) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 1) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(5, 4, (miApplicationProblems > 1) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 1) ? 0x00ffaa : 0xaaff00));
-          mpDisplayUpperRing->SetLeds(10, 4, (miApplicationProblems > 2) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 2) ? 0x00ffaa : 0xaaff00));
-          mpDisplayLowerRing->SetLeds(10, 4, (miApplicationProblems > 2) ? 0x00ff00 : ((miApplicationProblems + miServiceProblems > 2) ? 0x00ffaa : 0xaaff00));
+          mpDisplayUpperRing->SetLeds(0, 4, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(0, 4, (miApplicationProblems > 0) ? 0xff0000 : ((miServiceProblems > 0) ? 0xff00aa : 0xffaa00));
+          mpDisplayUpperRing->SetLeds(5, 4, (miApplicationProblems > 1) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 1) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(5, 4, (miApplicationProblems > 1) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 1) ? 0xff00aa : 0xffaa00));
+          mpDisplayUpperRing->SetLeds(10, 4, (miApplicationProblems > 2) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 2) ? 0xff00aa : 0xffaa00));
+          mpDisplayLowerRing->SetLeds(10, 4, (miApplicationProblems > 2) ? 0xff0000 : ((miApplicationProblems + miServiceProblems > 2) ? 0xff00aa : 0xffaa00));
           mpDisplayUpperRing->SetWhirl(180, true);
           mpDisplayLowerRing->SetWhirl(180, true);
           break;
