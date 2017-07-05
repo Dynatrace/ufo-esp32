@@ -2,7 +2,7 @@
 #define MAIN_CRITICALSECTION_H_
 
 #include "freertos/FreeRTOS.h"
-
+#include "freertos/task.h"
 
 class CriticalSection {
 public:
