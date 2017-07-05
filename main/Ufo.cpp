@@ -115,7 +115,7 @@ void Ufo::TaskWebServer(){
 
 void Ufo::TaskDisplay(){
 	while (1){
-		if (mWifi.IsConnected() && (mbApiCallReceived || (/*dtI running*/false && mStateDisplay.IpShownLongEnough()))){
+		if (mWifi.IsConnected() && (mbApiCallReceived || (mDt.IsActive() && mStateDisplay.IpShownLongEnough()))){
 			mDisplayCharterLevel1.Display(mStripeLevel1);
 			mDisplayCharterLevel2.Display(mStripeLevel2);
 		}
@@ -127,6 +127,12 @@ void Ufo::TaskDisplay(){
 		if (!gpio_get_level(GPIO_NUM_0)){
 			if (!mbButtonPressed){
 				ESP_LOGI("Ufo", "button pressed");
+				mDisplayCharterLevel1.SetLeds(0, 15, 0xff0000);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0000);
+				mDisplayCharterLevel1.Display(mStripeLevel1);
+				mDisplayCharterLevel2.Display(mStripeLevel2);
+				vTaskDelay(100);
+								
 				mConfig.ToggleAPMode();
 				mConfig.Write();
 				if (mConfig.mbAPMode){
