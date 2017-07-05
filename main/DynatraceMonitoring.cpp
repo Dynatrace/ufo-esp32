@@ -195,13 +195,21 @@ DynatraceAction* DynatraceMonitoring::enterAction(String pName, int pType, Dynat
 
 void DynatraceMonitoring::leaveAction(DynatraceAction* action) {
     if (action != NULL) {
-        action->leave();
+        if (mActive) { 
+            action->leave();
+        } else {
+            delete action;
+        }
     }
 }
 
 void DynatraceMonitoring::leaveAction(DynatraceAction* action, String* pUrl, ushort pResponseCode, uint pResponseSize) {
     if (action != NULL) {
-        action->leave(pUrl, pResponseCode, pResponseSize);
+        if (mActive) { 
+            action->leave(pUrl, pResponseCode, pResponseSize);
+        } else {
+            delete action;
+        }
     }    
 }
 
