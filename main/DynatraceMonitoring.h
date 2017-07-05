@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "Config.h"
+#include "CriticalSection.h"
 #include "String.h"
 #include <cJSON.h>
 
@@ -92,6 +93,8 @@ private:
     Ufo* mpUfo;  
     AWSIntegration* mpAws;
     Config* mpConfig;
+
+    CriticalSection criticalSection;
 
     tdDevice mDevice;
     ushort mBatterylevel;

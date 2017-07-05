@@ -2,6 +2,7 @@
 #include "AWSIntegration.h"
 #include "DynatraceMonitoring.h"
 #include "DynatraceAction.h"
+#include "CriticalSection.h"
 #include "Config.h"
 #include "String.h"
 #include "esp_system.h"
@@ -98,6 +99,7 @@ bool DynatraceMonitoring::Process() {
     ESP_LOGI(LOGTAG, "Processing monitoring payload (%i actions)", mActionCount);
 
 //    taskENTER_CRITICAL(&myMutex);
+    if (!criticalSection.Enter(0)) return false;
     __uint8_t actionCount = mActionCount;
     DynatraceAction* actionBuffer[100];
     for (__uint8_t i=0; i<mActionCount; i++) {
@@ -105,6 +107,7 @@ bool DynatraceMonitoring::Process() {
     }
     mActionCount = 0;
 //    taskEXIT_CRITICAL(&myMutex);
+    criticalSection.Leave();
 
     String payload = getPayload(actionBuffer, actionCount);
     Send(&payload);
@@ -216,12 +219,14 @@ void DynatraceMonitoring::leaveAction(DynatraceAction* action, String* pUrl, ush
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
     ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
 //    taskENTER_CRITICAL(&myMutex);
+    if (!criticalSection.Enter(0)) return;
     if (mActionCount < 90) {
         mAction[mActionCount++] = action;
     } else {
         delete action;
     }
 //    taskEXIT_CRITICAL(&myMutex);
+    criticalSection.Leave();
 }
 
 __uint32_t DynatraceMonitoring::getSequence0() {
