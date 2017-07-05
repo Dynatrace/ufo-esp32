@@ -36,7 +36,7 @@ public:
 	ApiStore& 				GetApiStore() 		{ return mApiStore; };
 	DynatraceIntegration&	GetDtIntegration() 	{ return mDt; };
 	AWSIntegration&			GetAWSIntegration() { return mAws; };
-    String&					GetId()				{ return mId; };
+    String&					GetId();
 
 	DynatraceMonitoring dt;
 	
