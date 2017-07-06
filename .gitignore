@@ -51,3 +51,6 @@ go/bin
 go/src/go*
 go/src/git*
 go/src/source*
+
+.vscode
+.vscode/*
