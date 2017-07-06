@@ -33,7 +33,7 @@ void task_function_display(void *pvParameter)
 //----------------------------------------------------------------------------------------
 
 
-Ufo::Ufo() : mStripeLevel1(15, GPIO_NUM_16, GPIO_NUM_17), mStripeLevel2(15, GPIO_NUM_16, GPIO_NUM_18), mStripeLogo(4, GPIO_NUM_16, GPIO_NUM_19){
+Ufo::Ufo() : mStripeLevel1(15, GPIO_NUM_16, GPIO_NUM_18), mStripeLevel2(15, GPIO_NUM_16, GPIO_NUM_17), mStripeLogo(4, GPIO_NUM_16, GPIO_NUM_19){
 	mServer.SetUfo(this);
 	mServer.SetDisplayCharter(&mDisplayCharterLevel1, &mDisplayCharterLevel2);
 	mWifi.SetConfig(&mConfig);
