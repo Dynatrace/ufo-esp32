@@ -34,6 +34,10 @@ public:
 	String msSTAENTCA;
 	String msHostname;
 	String msUfoId;
+	String msUfoName;
+	String msOrganization;
+	String msDepartment;
+	String msLocation;
 
     String msDTEnvId;
     String msDTApiToken;

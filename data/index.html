@@ -108,6 +108,8 @@
 		</header>
 		<div class="content">
 			<ul class="list">
+				<li class="divider">Device</li>
+				<li class="padded-list">ID: <span id="ufoid">-</span></li>
 				<li class="divider">System</li>
 				<!-- TODO class=pull-right doesnt work for wider strings -->
 				<li class="padded-list">Heap: <span id="infoheap">-</span></li>
@@ -402,11 +404,17 @@
 						<ul class="list">
 							<li class="">
 								<label class="checkbox">
-                                <input type="checkbox" class="" name="dtmonitoring" id="dtmonitoring">
-                                Enabled
-                                <span></span>
-                            </label>
+                                	<input type="checkbox" class="" name="dtmonitoring" id="dtmonitoring">
+                                	Enabled
+                                	<span></span>
+                            	</label>
 							</li>
+							<li class="divider">Device Information</li>
+							<input type="text" name="ufoname" placeholder="UFO Name" id="ufoname" />
+							<input type="text" name="organization" placeholder="Organization" id="organization" />
+							<input type="text" name="department" placeholder="Department" id="department" />
+							<input type="text" name="location" placeholder="Location" id="location" />
+						
 						</ul>
 
 						<!--<ul class="list">
@@ -693,6 +701,7 @@
 					success: function (res, xhr) {
 						//console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
+						document.getElementById('ufoid').innerHTML = result.ufoid;
 						document.getElementById('infoheap').innerHTML = result.heap;
 						document.getElementById('infofirmwareversion').innerHTML = result.firmwareversion;
 						document.getElementById('infomacaddress').innerHTML = result.macaddress;
@@ -874,6 +883,10 @@
 						//console.log(xhr.response);
 						var result = JSON.parse(xhr.response);
 						document.getElementById('dtmonitoring').checked = (result.dtmonitoring == '1');
+						document.getElementById('ufoname').value = result.ufoname;
+						document.getElementById('organization').value = result.organization;
+						document.getElementById('department').value = result.department;
+						document.getElementById('location').value = result.location;
 					},
 					error: function (res, flagError, xhr) {
 						console.error(flagError);

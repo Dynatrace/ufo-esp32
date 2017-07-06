@@ -43,7 +43,6 @@ bool Config::Read(){
 	ReadString(h, "STAENTUser", msSTAENTUser);
 	ReadString(h, "STAENTCA", msSTAENTCA);
 	ReadString(h, "hostname", msHostname);
-	ReadString(h, "UfoId", msUfoId);
 	ReadBool(h, "DTEnabled", mbDTEnabled);
 	ReadString(h, "DTEnvId", msDTEnvId);
 	ReadString(h, "DTApiToken", msDTApiToken);
@@ -52,6 +51,11 @@ bool Config::Read(){
 	ReadBool(h, "SrvSSLEnabled", mbWebServerUseSsl);
 	nvs_get_u16(h, "SrvListenPort", &muWebServerPort);
 	ReadString(h, "SrvCert", msWebServerCert);
+	ReadString(h, "UfoId", msUfoId);
+	ReadString(h, "UfoName", msUfoName);
+	ReadString(h, "Organization", msOrganization);
+	ReadString(h, "Department", msDepartment);
+	ReadString(h, "Location", msLocation);
 
 	nvs_close(h);
 	return true;
@@ -86,8 +90,6 @@ bool Config::Write()
 		return nvs_close(h), false;
 	if (nvs_set_u32(h, "STAIpAddress", muLastSTAIpAddress) != ESP_OK)
 		return nvs_close(h), false;
-	if (!WriteString(h, "UfoId", msUfoId))
-		return nvs_close(h), false;
 
 	if (!WriteBool(h, "DTEnabled", mbDTEnabled))
 		return nvs_close(h), false;
@@ -108,6 +110,16 @@ bool Config::Write()
 	if (!WriteString(h, "SrvCert", msWebServerCert))
 		return nvs_close(h), false;
 
+	if (!WriteString(h, "UfoId", msUfoId))
+		return nvs_close(h), false;
+	if (!WriteString(h, "UfoName", msUfoName))
+		return nvs_close(h), false;
+	if (!WriteString(h, "Organization", msOrganization))
+		return nvs_close(h), false;
+	if (!WriteString(h, "Department", msDepartment))
+		return nvs_close(h), false;
+	if (!WriteString(h, "Location", msLocation))
+		return nvs_close(h), false;
 
 	nvs_commit(h);
 	nvs_close(h);

@@ -137,13 +137,9 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody.printf("\"sslenabled\":\"%s\",", mpUfo->GetConfig().mbWebServerUseSsl ? "1":"0");
 	sBody.printf("\"listenport\":\"%d\",", mpUfo->GetConfig().muWebServerPort);
 
-	if (mpUfo->GetConfig().mbAPMode){
+	if (mpUfo->GetConfig().mbAPMode) {
 		sBody.printf("\"lastiptoap\":\"%d.%d.%d.%d\",", IP2STR((ip4_addr*)&(mpUfo->GetConfig().muLastSTAIpAddress)));
-	}
-	else{
-		//mpUfo->GetWifi().GetLocalAddress(sHelp);
-		//sprintf(sBuf, "\"ipaddress\":\"%s\",", sHelp);
-		//sBody += sBuf;
+	} else {
 		sBody += "\"ipaddress\":\"";
 		sBody += mpUfo->GetWifi().GetLocalAddress();
 		mpUfo->GetWifi().GetGWAddress(sHelp);
@@ -161,6 +157,11 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 
 	sBody.printf("\"macaddress\":\"%x:%x:%x:%x:%x:%x\",", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
 	sBody.printf("\"firmwareversion\":\"%s\",", FIRMWARE_VERSION);
+	sBody.printf("\"ufoid\":\"%s\",", mpUfo->GetConfig().msUfoId.c_str());
+	sBody.printf("\"ufoname\":\"%s\",", mpUfo->GetConfig().msUfoName.c_str());
+	sBody.printf("\"organization\":\"%s\",", mpUfo->GetConfig().msOrganization.c_str());
+	sBody.printf("\"department\":\"%s\",", mpUfo->GetConfig().msDepartment.c_str());
+	sBody.printf("\"location\":\"%s\",", mpUfo->GetConfig().msLocation.c_str());
 	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
 	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvId.c_str());
 	sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
@@ -226,6 +227,15 @@ bool DynamicRequestHandler::HandleDynatraceMonitoringRequest(std::list<TParam>& 
 	while (it != params.end()){
 		if ((*it).paramName == "dtmonitoring")
 			bEnabled = (*it).paramValue;
+		else if ((*it).paramName == "ufoname")
+			mpUfo->GetConfig().msUfoName = (*it).paramValue;
+		else if ((*it).paramName == "organization")
+			mpUfo->GetConfig().msOrganization = (*it).paramValue;
+		else if ((*it).paramName == "department")
+			mpUfo->GetConfig().msDepartment = (*it).paramValue;
+		else if ((*it).paramName == "location")
+			mpUfo->GetConfig().msLocation = (*it).paramValue;
+			
 		it++;
 	}
 
