@@ -128,20 +128,11 @@ void Ufo::TaskDisplay(){
 		if (!gpio_get_level(GPIO_NUM_0)){
 			if (!mbButtonPressed){
 				ESP_LOGI("Ufo", "button pressed");
-				mDisplayCharterLevel1.SetLeds(0, 15, 0xff0000);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
-				mDisplayCharterLevel1.Display(mStripeLevel1);
-				mDisplayCharterLevel2.Display(mStripeLevel2);								
-				vTaskDelay(50);
-				mDisplayCharterLevel1.SetLeds(0, 15, 0xffff00);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
-				mDisplayCharterLevel1.Display(mStripeLevel1);
-				mDisplayCharterLevel2.Display(mStripeLevel2);								
-				vTaskDelay(50);
-				mDisplayCharterLevel1.SetLeds(0, 15, 0x00ff00);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
+				mDisplayCharterLevel1.SetLeds(0, 15, 0x440044);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0x440044);
 				mDisplayCharterLevel1.Display(mStripeLevel1);
 				mDisplayCharterLevel2.Display(mStripeLevel2);
+				vTaskDelay(200);
 				mConfig.ToggleAPMode();
 				mConfig.Write();
 				if (mConfig.mbAPMode){

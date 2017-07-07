@@ -39,8 +39,8 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					else{
 						muStateTimer = 200;
 						muState = 1;
-						rStripeLevel1.InitColor(0, 0, 25);
-						rStripeLevel2.InitColor(0, 0, 25);
+						rStripeLevel1.InitColor(0, 25, 25);
+						rStripeLevel2.InitColor(0, 25, 25);
 					}
 					break;
 				case 1:
