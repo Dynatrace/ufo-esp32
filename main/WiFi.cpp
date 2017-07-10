@@ -4,18 +4,19 @@
 #include "Wifi.h"
 #include "Config.h"
 #include "StateDisplay.h"
+#include "String.h"
 #include <esp_event.h>
 #include <esp_event_loop.h>
 #include <esp_log.h>
 #include <esp_wifi.h>
-#include "esp_wpa2.h"
+#include <esp_wpa2.h>
+#include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <nvs_flash.h>
 #include <lwip/dns.h>
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
 #include <tcpip_adapter.h>
-#include "String.h"
 
 static char tag[] = "Wifi";
 
@@ -261,8 +262,12 @@ esp_err_t Wifi::OnEvent(system_event_t *event)
 			mpStateDisplay->SetConnected(true, this);
 		tcpip_adapter_ip_info_t ip;
 		tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
-		if (mpConfig)
+		if (mpConfig && (mpConfig->muLastSTAIpAddress != ip.ip.addr)){
 			mpConfig->muLastSTAIpAddress = ip.ip.addr;
+			//mpConfig->Write();
+			//esp_restart(); //otherwise it needs ages before the chip reacts on that ip (arp request)
+			
+		}
 		break;
 	case SYSTEM_EVENT_STA_START:
 		ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_START");

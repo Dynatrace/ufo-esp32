@@ -523,7 +523,7 @@ bool DynamicRequestHandler::HandleCheckFirmwareRequest(std::list<TParam>& params
 	version = version.substring(0, i);
 
 	if (!version.equalsIgnoreCase(FIRMWARE_VERSION)){
-		sBody = "{\"newversion\":\"New version available: ";
+		sBody = "{\"newversion\":\"Firmware available: ";
 		sBody += version;
 		sBody += "\"}";
 	}

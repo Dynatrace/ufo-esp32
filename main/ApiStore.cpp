@@ -18,7 +18,7 @@ void ApiStore::Init(){
 		mApis.push_back("/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5");
 		mApis.push_back("/api?top_init&top=0|15|ff0000&top_morph=80|8&bottom_init&bottom=0|15|ff0000&bottom_morph=80|8");
 		mApis.push_back("/api?top_init&bottom_init");
-		mApis.push_back("/api?top_init&top=0|15|00ff00&top_morph=1000|5&bottom_init&bottom=0|15|00ff00&bottom_morph=1000|5&logo_reset");
+		mApis.push_back("/api?top_init&top=0|1|ff0000&top_bg=00ff00&top_whirl=240|ccw&bottom_init&bottom=0|1|00ff00&bottom_bg=ff0000&bottom_whirl=190");
 		mApis.push_back("/api?top_init&top=0|15|ff0000&top_morph=80|8&bottom_init&bottom=0|15|ff0000&bottom_morph=80|8&logo=ff0000|ff0000|ff0000|ff0000");
 		mApis.push_back("/api?top_init&top=0|15|ff0000&bottom_init&bottom=0|15|00ff00");
 	}
