@@ -20,6 +20,7 @@ Config::Config() {
 	muWebServerPort = 0;
 
 	mbDTEnabled = false;
+	mbDTMonitoring = false;
 
 	muLastSTAIpAddress = 0;
 }

@@ -116,6 +116,8 @@ bool DynatraceMonitoring::Process() {
         delete actionBuffer[i];
     }
 
+    ESP_LOGD(LOGTAG, "free heap after monitoring: %i", esp_get_free_heap_size());  
+
     return true;
 }
 
