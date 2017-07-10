@@ -136,16 +136,15 @@ bool Ota::OnReceiveEnd() {
         return false;
     }
 
-    ESP_LOGW(LOGTAG, "DEBUGGING CODE ACTIVE ---- NO BOOT PARTITION SET!!!!!");
+    //ESP_LOGW(LOGTAG, "DEBUGGING CODE ACTIVE ---- NO BOOT PARTITION SET!!!!!");
 
-/*
-    err = esp_ota_set_boot_partition(mpUpdatePartition);
+    esp_err_t err = esp_ota_set_boot_partition(mpUpdatePartition);
     if (err != ESP_OK) {
         ESP_LOGE(LOGTAG, "esp_ota_set_boot_partition failed! err=0x%x", err);
         miProgress = OTA_PROGRESS_FLASHERROR;
         //task_fatal_error();
         return false;
-    } */
+    } 
     
     ESP_LOGI(LOGTAG, "Prepare to restart system!");
     miProgress = OTA_PROGRESS_FINISHEDSUCCESS;

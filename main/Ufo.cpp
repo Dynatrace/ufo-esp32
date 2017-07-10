@@ -33,7 +33,7 @@ void task_function_display(void *pvParameter)
 //----------------------------------------------------------------------------------------
 
 
-Ufo::Ufo() : mStripeLevel1(15, GPIO_NUM_16, GPIO_NUM_17), mStripeLevel2(15, GPIO_NUM_16, GPIO_NUM_18), mStripeLogo(4, GPIO_NUM_16, GPIO_NUM_19){
+Ufo::Ufo() : mStripeLevel1(15, GPIO_NUM_16, GPIO_NUM_18), mStripeLevel2(15, GPIO_NUM_16, GPIO_NUM_17), mStripeLogo(4, GPIO_NUM_16, GPIO_NUM_19){
 	mServer.SetUfo(this);
 	mServer.SetDisplayCharter(&mDisplayCharterLevel1, &mDisplayCharterLevel2);
 	mWifi.SetConfig(&mConfig);
@@ -128,20 +128,11 @@ void Ufo::TaskDisplay(){
 		if (!gpio_get_level(GPIO_NUM_0)){
 			if (!mbButtonPressed){
 				ESP_LOGI("Ufo", "button pressed");
-				mDisplayCharterLevel1.SetLeds(0, 15, 0xff0000);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
-				mDisplayCharterLevel1.Display(mStripeLevel1);
-				mDisplayCharterLevel2.Display(mStripeLevel2);								
-				vTaskDelay(50);
-				mDisplayCharterLevel1.SetLeds(0, 15, 0xffff00);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
-				mDisplayCharterLevel1.Display(mStripeLevel1);
-				mDisplayCharterLevel2.Display(mStripeLevel2);								
-				vTaskDelay(50);
-				mDisplayCharterLevel1.SetLeds(0, 15, 0x00ff00);
-				mDisplayCharterLevel2.SetLeds(0, 15, 0xff0044);
+				mDisplayCharterLevel1.SetLeds(0, 15, 0x440044);
+				mDisplayCharterLevel2.SetLeds(0, 15, 0x440044);
 				mDisplayCharterLevel1.Display(mStripeLevel1);
 				mDisplayCharterLevel2.Display(mStripeLevel2);
+				vTaskDelay(200);
 				mConfig.ToggleAPMode();
 				mConfig.Write();
 				if (mConfig.mbAPMode){

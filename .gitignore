@@ -29,7 +29,6 @@
 *.app
 build/*
 *.d
-sdkconfig
 sdkconfig.old
 .project
 
@@ -54,3 +53,4 @@ go/src/source*
 
 .vscode
 .vscode/*
+.vscode/settings.json
