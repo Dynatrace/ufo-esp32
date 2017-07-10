@@ -40,7 +40,7 @@ bool DynatraceMonitoring::Init(Ufo* pUfo, AWSIntegration* pAws) {
 
     mStartTimestamp = getTimestamp();
     mDevice.id = mpUfo->GetId();
-    mDevice.name = mpUfo->GetId();
+    mDevice.name = mpConfig->msUfoName.c_str();
     mDevice.cpu = "ESP32"; 
     mDevice.os = "ESP32";
     mDevice.totalmem = 532480;
@@ -139,8 +139,11 @@ String DynatraceMonitoring::getPayload(DynatraceAction* pActions[], __uint8_t pC
     sPayload.printf("\"manufacturer\":\"%s\",", mDevice.manufacturer.c_str());
     sPayload.printf("\"modelId\":\"%s\",", mDevice.modelId.c_str());
     sPayload.printf("\"appVersion\":\"%s\",", mDevice.appVersion.c_str());
-    sPayload.printf("\"appBuild\":\"%s\"", mDevice.appBuild.c_str());
-    sPayload.printf("},");
+    sPayload.printf("\"appBuild\":\"%s\",", mDevice.appBuild.c_str());
+    sPayload.printf("\"organization\":\"%s\",", mpConfig->msOrganization.c_str());
+    sPayload.printf("\"department\":\"%s\",", mpConfig->msDepartment.c_str());
+    sPayload.printf("\"location\":\"%s\"},", mpConfig->msLocation.c_str());
+
     sPayload.printf("\"session\":{");
     sPayload.printf("\"id\":\"%i\"",1);
     sPayload.printf("},");
