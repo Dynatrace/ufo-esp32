@@ -218,13 +218,13 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 		SSL_set_fd(ssl, socket);
 
 		if (!WaitForData(socket, 1)){
-			ESP_LOGE(tag, "<%d> No Data", conNumber);
+			ESP_LOGW(tag, "<%d> No Data", conNumber);
 			goto EXIT;
 		}
 
 		ESP_LOGD(tag, "<%d> Enter SSL_accept", conNumber);
 		if (!SSL_accept(ssl)){
-			ESP_LOGE(tag, "<%d> SSL_accept %s", conNumber, strerror(errno));
+			ESP_LOGW(tag, "<%d> SSL_accept %s", conNumber, strerror(errno));
 			goto EXIT;
 		}
 	}
@@ -245,7 +245,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 
 			if (sizeRead <= 0) {
 				if (receivedSomething){
-					ESP_LOGE(tag, "<%d> Connection closed during parsing", conNumber);
+					ESP_LOGW(tag, "<%d> Connection closed during parsing", conNumber);
 				}
 				else{
 					ESP_LOGD(tag, "<%d> Connection closed during parsing", conNumber);
@@ -256,7 +256,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 			receivedSomething = true;
 				
 			if (!httpParser.ParseRequest(data, sizeRead)){
-				ESP_LOGE(tag, "<%d> HTTP Parsing error: %d", conNumber, httpParser.GetError());
+				ESP_LOGW(tag, "<%d> HTTP Parsing error: %d", conNumber, httpParser.GetError());
 				goto EXIT;
 			}
 			if (httpParser.RequestFinished()){
