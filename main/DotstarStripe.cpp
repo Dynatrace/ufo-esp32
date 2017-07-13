@@ -77,13 +77,20 @@ void DotstarStripe::SendByte(__uint8_t out){
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	
     gpio_set_level(clock, 1);
     out <<= 1;
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+      __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
+      __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
     gpio_set_level(clock, 0);
+	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	  __asm__ __volatile__("nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;");
 	
   }
