@@ -96,7 +96,7 @@ bool DynatraceMonitoring::Run() {
 
 bool DynatraceMonitoring::Process() {
 
-    ESP_LOGI(LOGTAG, "Processing monitoring payload (%i actions)", mActionCount);
+    ESP_LOGD(LOGTAG, "Processing monitoring payload (%i actions)", mActionCount);
 
 //    taskENTER_CRITICAL(&myMutex);
     if (!criticalSection.Enter(0)) return false;
@@ -160,7 +160,7 @@ String DynatraceMonitoring::getPayload(DynatraceAction* pActions[], __uint8_t pC
 }
 
 void DynatraceMonitoring::Send(String* json) {
-    ESP_LOGI(LOGTAG, "%s", json->c_str());
+    ESP_LOGD(LOGTAG, "%s", json->c_str());
     String topic;
     topic.printf("/dynatraceufo/monitoring/%s", mpUfo->GetId().c_str());
     mpAws->Publish(topic.c_str(), topic.length(), json);
@@ -222,7 +222,7 @@ void DynatraceMonitoring::leaveAction(DynatraceAction* action, String* pUrl, ush
 }
 
 void DynatraceMonitoring::addAction(DynatraceAction* action) {
-    ESP_LOGI(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
+    ESP_LOGD(LOGTAG, "Action %i added to stack: %s", mActionCount, action->getName().c_str());
 //    taskENTER_CRITICAL(&myMutex);
     if (!criticalSection.Enter(0)) return;
     if (mActionCount < 90) {
@@ -244,7 +244,7 @@ __uint32_t DynatraceMonitoring::getSequence1() {
 
 __uint32_t DynatraceMonitoring::getTimestamp() {
     __uint32_t ms = esp_log_timestamp();
-    ESP_LOGI(LOGTAG, "current timestamp: %i", ms);
+    ESP_LOGD(LOGTAG, "current timestamp: %i", ms);
     return ms;
 };
 

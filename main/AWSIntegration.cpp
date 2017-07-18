@@ -1,5 +1,6 @@
 #include "Ufo.h"
 #include "aws_iot_config.h"
+#include "aws_certs.h"
 #include <aws_iot_log.h>
 #include <aws_iot_version.h>
 #include <aws_iot_mqtt_client_interface.h>
@@ -8,7 +9,10 @@
 #include <esp_log.h>
 #include <cJSON.h>
 #include "AWSIntegration.h"
-#include "certs.h"
+
+#define AWS_IOT_MQTT_HOST              "a3l8rpjg868svp.iot.us-east-1.amazonaws.com"
+#define AWS_IOT_MQTT_TX_BUF_LEN 4096
+
 
 static const char* LOGTAG = "AWS";
 
@@ -24,7 +28,7 @@ void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, ui
 	IOT_UNUSED(pData);
 	IOT_UNUSED(pClient);
 	ESP_LOGI(LOGTAG, "Message received");
-	ESP_LOGI(LOGTAG, "%s: %s", topicName, (char*)params->payload);
+	ESP_LOGD(LOGTAG, "%s: %s", topicName, (char*)params->payload);
 }
 
 void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data) {
