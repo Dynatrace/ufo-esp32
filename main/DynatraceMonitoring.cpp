@@ -251,7 +251,6 @@ __uint32_t DynatraceMonitoring::getTimestamp() {
 
 String DynatraceMonitoring::getPublicIp() {
     String response;
-    ESP_LOGI(LOGTAG, "getPublicIp");
     mUrl.Parse("https://api.ipify.org");
     if (mClient.Prepare(&mUrl)) {
         unsigned short responseCode = mClient.HttpGet();
