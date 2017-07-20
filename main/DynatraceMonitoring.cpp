@@ -74,7 +74,8 @@ bool DynatraceMonitoring::Connect() {
     while (!mConnected) {
         if (mpAws->mActive) {
             mConnected = true;
-            mDevice.clientIp = mpUfo->GetWifi().GetLocalAddress();
+//            mDevice.clientIp = mpUfo->GetWifi().GetLocalAddress();
+            mDevice.clientIp = getPublicIp();
             mDevice.id = mpUfo->GetId();
             mDevice.name = mpUfo->GetId();
         }
@@ -141,10 +142,10 @@ String DynatraceMonitoring::getPayload(DynatraceAction* pActions[], __uint8_t pC
     sPayload.printf("\"manufacturer\":\"%s\",", mDevice.manufacturer.c_str());
     sPayload.printf("\"modelId\":\"%s\",", mDevice.modelId.c_str());
     sPayload.printf("\"appVersion\":\"%s\",", mDevice.appVersion.c_str());
-    sPayload.printf("\"appBuild\":\"%s\",", mDevice.appBuild.c_str());
-    sPayload.printf("\"organization\":\"%s\",", mpConfig->msOrganization.c_str());
-    sPayload.printf("\"department\":\"%s\",", mpConfig->msDepartment.c_str());
-    sPayload.printf("\"location\":\"%s\"},", mpConfig->msLocation.c_str());
+    sPayload.printf("\"appBuild\":\"%s\"},", mDevice.appBuild.c_str());
+//    sPayload.printf("\"organization\":\"%s\",", mpConfig->msOrganization.c_str());
+//    sPayload.printf("\"department\":\"%s\",", mpConfig->msDepartment.c_str());
+//    sPayload.printf("\"location\":\"%s\"},", mpConfig->msLocation.c_str());
 
     sPayload.printf("\"session\":{");
     sPayload.printf("\"id\":\"%i\"",1);
@@ -247,5 +248,19 @@ __uint32_t DynatraceMonitoring::getTimestamp() {
     ESP_LOGD(LOGTAG, "current timestamp: %i", ms);
     return ms;
 };
+
+String DynatraceMonitoring::getPublicIp() {
+    String response;
+    ESP_LOGI(LOGTAG, "getPublicIp");
+    mUrl.Parse("https://api.ipify.org");
+    if (mClient.Prepare(&mUrl)) {
+        unsigned short responseCode = mClient.HttpGet();
+        response = mClient.GetResponseData();
+    }
+    mClient.Clear();
+    ESP_LOGI(LOGTAG, "public IP: %s", response.c_str());
+    return response;
+    
+}
 
 

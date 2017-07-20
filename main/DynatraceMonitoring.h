@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "Config.h"
+#include "WebClient.h"
 #include "CriticalSection.h"
 #include "String.h"
 #include <cJSON.h>
@@ -72,6 +73,7 @@ public:
 
     void addAction(DynatraceAction* action);
     String getPayload(DynatraceAction* pActions[], __uint8_t pCount);
+    String getPublicIp();
 
     __uint32_t getSequence0();
     __uint32_t getSequence1();
@@ -95,6 +97,8 @@ private:
     Config* mpConfig;
 
     CriticalSection criticalSection;
+    Url mUrl;
+    WebClient  mClient;
 
     tdDevice mDevice;
     ushort mBatterylevel;
