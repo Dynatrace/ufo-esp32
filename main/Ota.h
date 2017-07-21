@@ -13,8 +13,10 @@
 #include "WebClient.h"
 
 //#define LATEST_FIRMWARE_URL "https://surpro4:9999/getfirmware"  // testing with local go server
-#define OTA_LATEST_FIRMWARE_JSON_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/version.json"
-#define OTA_LATEST_FIRMWARE_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"
+//#define OTA_LATEST_FIRMWARE_JSON_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/version.json"
+//#define OTA_LATEST_FIRMWARE_URL "https://github.com/Dynatrace/ufo-esp32/raw/master/firmware/ufo-esp32.bin"
+#define OTA_LATEST_FIRMWARE_JSON_URL "https://raw.githubusercontent.com/Dynatrace/ufo-esp32/master/firmware/version.json"
+#define OTA_LATEST_FIRMWARE_URL "https://raw.githubusercontent.com/Dynatrace/ufo-esp32/master/firmware/ufo-esp32.bin"
 
 
 #define OTA_PROGRESS_NOTYETSTARTED      -1
