@@ -18,7 +18,11 @@ Since the UFO has an open REST interface you can use it freely for any other vis
 ## Hanging - Cafeteria, Hallway use.....
 ![ufo hanging](ufohanging.jpg)
 Note: Assembly of the UFO (in particular mounting the device on the ceiling) may only be carried out by qualified personnel. 
+
 ## Desktop - Office desk, ...
+![ufo on desktop](ufodesktop.jpg)
+* mount the 3 rubber feet that came in the box with the UFO
+* slide the stabilizing tube along the cable towards the USB plug, so you can bend the cable properly
 
 # Configuring the UFO
 
@@ -41,7 +45,7 @@ Dear Customer,
 
 Please read the operating instructions carefully before putting into operation for the first time.
 
-* The UFO device may only be operated with a USB power adapter with a voltage of 5V and at least a 2A (max. 3A) DC. Only use power adapters that are legally approved for the respective country.
+* The UFO device may only be operated with a USB power adapter with a voltage of 5V and at least a 2A DC. Only use power adapters that are legally approved for the respective country.
 
 * Connecting the UFO device to your PC or laptop requires a special development environment, which is permitted only to trained developers. The user is liable for any possible damage to the PC or UFO.
 
