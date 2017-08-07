@@ -212,7 +212,7 @@ void task_function_firmwareupdate(void* user_data) {
 	ESP_LOGW(LOGTAG, "Starting Firmware Update Task ....");
 
     Ota ota;
-    if(ota.UpdateFirmware(OTA_LATEST_FIRMWARE_URL)) {
+    if(ota.UpdateFirmware((const char*)user_data)) { //url
       	ESP_LOGI(LOGTAG, "Firmware updated. Rebooting now......");
     } else {
 	  	ESP_LOGE(LOGTAG, "OTA update failed!");
@@ -225,10 +225,10 @@ void task_function_firmwareupdate(void* user_data) {
 
 
 
-void Ota::StartUpdateFirmwareTask() {
+void Ota::StartUpdateFirmwareTask(const char* url) {
     miProgress = 0;
 	//xTaskCreate(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 5, NULL);
     // Pin firmware update task to core 0 --- otherwise we get weird crashes
-   	xTaskCreatePinnedToCore(&task_function_firmwareupdate, "firmwareupdate", 8192, NULL, 6, NULL, 0);
+   	xTaskCreatePinnedToCore(&task_function_firmwareupdate, "firmwareupdate", 8192, (void*)url, 6, NULL, 0);
 }
 

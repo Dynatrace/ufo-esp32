@@ -11,11 +11,13 @@
             "browse": {
                 "path": [
                     "/usr/include",
-                    "/usr/local/include"
+                    "/usr/local/include",
+                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "intelliSenseMode": "clang-x64"
         },
         {
             "name": "Linux",
@@ -28,14 +30,16 @@
             "browse": {
                 "path": [
                     "/usr/include",
-                    "/usr/local/include"
+                    "/usr/local/include",
+                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "intelliSenseMode": "clang-x64"
         },
         {
-          "name": "Win32",
+            "name": "Win32",
             "includePath": [
                 "C:/Users/Bernd/Documents/GitHub/esp-idf",
                 "C:/msys32/opt/xtensa-esp32-elf/xtensa-esp32-elf/include"
@@ -45,9 +49,12 @@
                 "databaseFilename": "",
                 "path": [
                     "C:/Users/Bernd/Documents/GitHub/esp-idf",
-                    "C:/msys32/opt/xtensa-esp32-elf/xtensa-esp32-elf/include"
+                    "C:/msys32/opt/xtensa-esp32-elf/xtensa-esp32-elf/include",
+                    "${workspaceRoot}"
                 ]
-            }
+            },
+            "intelliSenseMode": "msvc-x64"
         }
-    ]
+    ],
+    "version": 2
 }
