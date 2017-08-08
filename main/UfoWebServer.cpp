@@ -1,13 +1,12 @@
 #include "UfoWebServer.h"
-#include "ufo.h"
-#include "config.h"
+#include "Ufo.h"
+#include "Config.h"
 #include "DynamicRequestHandler.h"
 #include "HttpRequestParser.h"
 #include "HttpResponse.h"
 #include <lwip/sockets.h>
 #include <esp_log.h>
 #include <esp_system.h>
-#include <String.h>
 
 #include "sdkconfig.h"
 #include "fontwoff.h"
