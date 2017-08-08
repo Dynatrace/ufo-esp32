@@ -29,7 +29,7 @@ UfoWebServer::UfoWebServer() {
 UfoWebServer::~UfoWebServer() {
 }
 
-bool UfoWebServer::StartUfoSevrver(){
+bool UfoWebServer::StartUfoServer(){
 
 	if (mpUfo->GetConfig().mbAPMode)
 		return Start(80, false, NULL);	

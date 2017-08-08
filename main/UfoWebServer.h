@@ -14,7 +14,7 @@ public:
 	UfoWebServer();
 	virtual ~UfoWebServer();
 
-	bool StartUfoSevrver();
+	bool StartUfoServer();
 
 	void SetUfo(Ufo* pUfo) { mpUfo = pUfo; };
 	void SetDisplayCharter(DisplayCharter* pDCLevel1, DisplayCharter* pDCLevel2){ mpDisplayCharterLevel1 = pDCLevel1; mpDisplayCharterLevel2 = pDCLevel2; };

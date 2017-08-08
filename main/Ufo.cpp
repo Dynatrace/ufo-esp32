@@ -108,7 +108,7 @@ void Ufo::TaskWebServer(){
 	while (1){
 		if (mWifi.IsConnected()){
 			ESP_LOGI("Ufo", "starting Webserver");
-			mServer.StartUfoSevrver();
+			mServer.StartUfoServer();
 		}
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
