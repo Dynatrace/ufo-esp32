@@ -1,5 +1,4 @@
 #include <freertos/FreeRTOS.h>
-#include "dotstarstripe.h"
 #include "Ufo.h"
 #include "DotstarStripe.h"
 #include "esp_system.h"
