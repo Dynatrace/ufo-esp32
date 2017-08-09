@@ -23,6 +23,8 @@ void DisplayCharterLogo::Init(){
 	mLedRed[3] 	 = 255;
 	mLedGreen[3] = 0;
 	mLedBlue[3]  = 150;
+	mbChanged = true;
+	muSendAnywayCount = 0;
 }
 
 void DisplayCharterLogo::SetLed(__uint8_t uLed, __uint8_t r, __uint8_t g, __uint8_t b){
@@ -30,6 +32,7 @@ void DisplayCharterLogo::SetLed(__uint8_t uLed, __uint8_t r, __uint8_t g, __uint
 		mLedRed[uLed] 	= r;
 		mLedGreen[uLed] = g;
 		mLedBlue[uLed]  = b;
+		mbChanged = true;
 	}
 }
 
@@ -50,9 +53,14 @@ void DisplayCharterLogo::ParseLogoLedArg(String& argument){
 }
 
 void DisplayCharterLogo::Display(DotstarStripe &dotstar){
-	for (__uint8_t u=0 ; u<4 ; u++)
-		dotstar.SetLeds(u, 1, mLedRed[u], mLedGreen[u], mLedBlue[u]);
-	dotstar.Show();
+	if (mbChanged || !muSendAnywayCount){
+		for (__uint8_t u=0 ; u<4 ; u++)
+			dotstar.SetLeds(u, 1, mLedRed[u], mLedGreen[u], mLedBlue[u]);
+		dotstar.Show();
+
+		mbChanged = false;
+	}
+	muSendAnywayCount++;
 }
 
 

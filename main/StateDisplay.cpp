@@ -2,8 +2,8 @@
 #include "Wifi.h"
 
 
-#define IPSPEED    400
-#define IPBREAK    40
+#define IPSPEED    150
+#define IPBREAK    20
 
 
 StateDisplay::StateDisplay() {
@@ -37,7 +37,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 200;
+						muStateTimer = 70;
 						muState = 1;
 						rStripeLevel1.InitColor(0, 25, 25);
 						rStripeLevel2.InitColor(0, 25, 25);
@@ -47,7 +47,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 200;
+						muStateTimer = 70;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 0);
@@ -64,7 +64,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 200;
+						muStateTimer = 70;
 						muState = 1;
 						rStripeLevel1.InitColor(0, 0, 25);
 						rStripeLevel2.InitColor(0, 0, 0);
@@ -74,7 +74,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 200;
+						muStateTimer = 70;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 25);
@@ -97,7 +97,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 40;
+						muStateTimer = 20;
 						muState = 1;
 						rStripeLevel1.InitColor(25, 20, 0);
 						rStripeLevel2.InitColor(25, 20, 0);
@@ -107,7 +107,7 @@ void StateDisplay::Display(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeL
 					if (muStateTimer)
 						muStateTimer--;
 					else{
-						muStateTimer = 200;
+						muStateTimer = 70;
 						muState = 0;
 						rStripeLevel1.InitColor(0, 0, 0);
 						rStripeLevel2.InitColor(0, 0, 0);

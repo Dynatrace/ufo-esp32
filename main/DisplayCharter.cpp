@@ -185,19 +185,21 @@ void DisplayCharter::GetPixelColor(__uint8_t i, __uint8_t& ruR, __uint8_t& ruG, 
 }
 
 
-void DisplayCharter::Display(DotstarStripe &dotstar){
+void DisplayCharter::Display(DotstarStripe &dotstar, bool send){
 
 	//taskENTER_CRITICAL(&mMutex);
 
-	__uint8_t r;
-	__uint8_t g;
-	__uint8_t b;
-	for (__uint8_t i=0 ; i<RING_LEDCOUNT ; i++){
-		GetPixelColor(i, r, g, b);
-		dotstar.SetLeds(i, 1, r, g, b);
+	if (send){
+		__uint8_t r;
+		__uint8_t g;
+		__uint8_t b;
+		for (__uint8_t i=0 ; i<RING_LEDCOUNT ; i++){
+			GetPixelColor(i, r, g, b);
+			dotstar.SetLeds(i, 1, r, g, b);
+		}
+		dotstar.SetStartPos(offset);
+		dotstar.Show();
 	}
-	dotstar.SetStartPos(offset);
-	dotstar.Show();
 
    
 	if (whirlSpeed){

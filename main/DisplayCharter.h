@@ -21,7 +21,7 @@ class DisplayCharter
     void ParseBgArg(String& argument);
     void ParseWhirlArg(String& argument);
     void ParseMorphArg(String& argument);
-    void Display(DotstarStripe &dotstar);
+    void Display(DotstarStripe &dotstar, bool send);
 
   private:
     //__uint32_t GetPixelColor(__uint8_t i);

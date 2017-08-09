@@ -4,6 +4,7 @@
         "algorithm": "cpp",
         "list": "cpp",
         "vector": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "xmemory0": "cpp"
     }
 }

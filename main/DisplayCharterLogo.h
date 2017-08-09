@@ -21,6 +21,9 @@ private:
 	__uint8_t mLedRed[4];
 	__uint8_t mLedGreen[4];
 	__uint8_t mLedBlue[4];
+
+	bool mbChanged;
+	__uint8_t muSendAnywayCount;
 };
 
 #endif /* MAIN_DISPLAYCHARTERLOGO_H_ */
