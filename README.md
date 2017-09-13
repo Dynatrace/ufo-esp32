@@ -33,9 +33,9 @@ If the connections succeeds there are several options to connect to the UFO:
 * Option 1: Open your browser, make sure its connected to the same Wifi as the UFO. Goto <a href="http://ufo">http://ufo</a>
 If that doesnt work you will need to use http://<ipaddress>.
 There are multiple ways to discover the IP address of the Dynatrace UFO in case you need it:
-** The rings visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4)	then 2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization run uses a different color.
-** After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the info section for the latest IP adress retrieved by DHCP.
-** Lookup the MAC address in your Wifi Access Point and get the IP address assigned by DHCP
+* The rings visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4)	then 2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization run uses a different color.
+* After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the info section for the latest IP adress retrieved by DHCP.
+* Lookup the MAC address in your Wifi Access Point and get the IP address assigned by DHCP
 
 ## API
 
