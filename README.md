@@ -65,9 +65,11 @@ Examples:
 - Turn all LEDs red on the top row: `/api?top=0|15|ff0000`
 - First seven LEDs red, the rest green: `/api?top=0|7|ff0000&top=7|8|00ff00`
 
-To reset the row back to its original state, execute the following API call:
+To reset the row back to its black state, execute the following API call:
 
 `/api?top_init`
+
+The backgroud color (default is black) can be set by `top_bg=<hex color>`
 
 #### Controlling the bottom row
 Controlling the LEDs on the bottom row works similar as the top row. Instead of using the `top` query parameter, it should
@@ -75,7 +77,7 @@ be renamed to `bottom`.
 
 #### Animations
 Besides having static colors, it is also possible to add some animations, like:
-- morph - from dark to light to dark
+- morph - from foreground to background and back
 - whirl - rotate either clockwise, or counter clockwise
 
 ##### Morph
