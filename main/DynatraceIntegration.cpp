@@ -97,8 +97,18 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
             //Configuration is not atomic - so in case of a change there is the possibility that we use inconsistent credentials - but who cares (the next time it would be fine again)
             if (uConfigRevision != mActConfigRevision){
                 uConfigRevision = mActConfigRevision; //memory barrier would be needed here
-                mDtUrl.Build(true, mpConfig->msDTEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mpConfig->msDTApiToken);
-                mDtUrlString = "https://"+mpConfig->msDTEnvId+".live.dynatrace.com/api/v1/problem/status";
+                String delimiter = "/";
+                int location = mpConfig->msDTEnvId.indexOf(delimiter);
+                String host;
+                String pathExtension = "";
+                if (location == -1 ){
+                    host = mpConfig->msDTEnvId + ".live.dynatrace.com" ;
+                } else {
+                    host = mpConfig->msDTEnvId.substring(0, location);
+                    pathExtension = mpConfig->msDTEnvId.substring(location);
+                }
+                mDtUrl.Build(true, host, 443, pathExtension+"/api/v1/problem/status?Api-Token="+mpConfig->msDTApiToken);
+                mDtUrlString = "https://"+host+pathExtension+"/api/v1/problem/status";
                 ESP_LOGI(LOGTAG, "URL: %s", mDtUrlString.c_str());
             }
 
