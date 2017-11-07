@@ -1,5 +1,4 @@
 #include "sdkconfig.h"
-#if defined(CONFIG_WIFI_ENABLED)
 
 #include "Wifi.h"
 #include "Config.h"
@@ -142,16 +141,17 @@ void Wifi::Connect()
 	memcpy(config.sta.ssid, msSsid.c_str(), msSsid.length());
 	if (!msUser.length())
 		memcpy(config.sta.password, msPass.c_str(), msPass.length());
-	esp_wifi_set_config(WIFI_IF_STA, &config);
+	esp_wifi_set_config(ESP_IF_WIFI_STA, &config);
 
 	if (msUser.length())
 	{ //Enterprise WPA2
+		esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT();
 		if (msCA.length())
 			esp_wifi_sta_wpa2_ent_set_ca_cert((__uint8_t *)msCA.c_str(), msCA.length());
 		esp_wifi_sta_wpa2_ent_set_identity((__uint8_t *)msUser.c_str(), msUser.length());
 		esp_wifi_sta_wpa2_ent_set_username((__uint8_t *)msUser.c_str(), msUser.length());
 		esp_wifi_sta_wpa2_ent_set_password((__uint8_t *)msPass.c_str(), msPass.length());
-		esp_wifi_sta_wpa2_ent_enable();
+		esp_wifi_sta_wpa2_ent_enable(&config);
 	}
 
 	esp_wifi_start();
@@ -277,4 +277,3 @@ esp_err_t Wifi::OnEvent(system_event_t *event)
 	return rc;
 }
 
-#endif

@@ -39,7 +39,7 @@ public:
 	String msDepartment;
 	String msLocation;
 
-    String msDTEnvId;
+    String msDTEnvIdOrUrl;
     String msDTApiToken;
 	bool mbDTEnabled;
     int miDTInterval;

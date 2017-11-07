@@ -150,10 +150,9 @@ void StateDisplay::DisplayIp(DotstarStripe& rStripeLevel1, DotstarStripe& rStrip
 
 		if (!msIp[uPos]){
 			uPos = 0;
-			if (++uColor >= 3){
+			mbFullCycleDone = true;
+			if (++uColor >= 3)
 				uColor = 0;
-				mbFullCycleDone = true;
-			}
 			switch (uColor){
 				case 0:
 					uColorValue[0] = 0xFF;

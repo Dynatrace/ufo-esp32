@@ -45,7 +45,7 @@ bool Config::Read(){
 	ReadString(h, "STAENTCA", msSTAENTCA);
 	ReadString(h, "hostname", msHostname);
 	ReadBool(h, "DTEnabled", mbDTEnabled);
-	ReadString(h, "DTEnvId", msDTEnvId);
+	ReadString(h, "DTEnvId", msDTEnvIdOrUrl);
 	ReadString(h, "DTApiToken", msDTApiToken);
 	ReadInt(h, "DTInterval", miDTInterval);
 	ReadBool(h, "DTMonitoring", mbDTMonitoring);
@@ -94,7 +94,7 @@ bool Config::Write()
 
 	if (!WriteBool(h, "DTEnabled", mbDTEnabled))
 		return nvs_close(h), false;
-	if (!WriteString(h, "DTEnvId", msDTEnvId))
+	if (!WriteString(h, "DTEnvId", msDTEnvIdOrUrl))
 		return nvs_close(h), false;
 	if (!WriteString(h, "DTApiToken", msDTApiToken))
 		return nvs_close(h), false;

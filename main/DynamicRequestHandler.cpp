@@ -170,7 +170,7 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody.printf("\"department\":\"%s\",", mpUfo->GetConfig().msDepartment.c_str());
 	sBody.printf("\"location\":\"%s\",", mpUfo->GetConfig().msLocation.c_str());
 	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
-	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvId.c_str());
+	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvIdOrUrl.c_str());
 	sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
 	sBody.printf("\"dtinterval\":\"%u\",", mpUfo->GetConfig().miDTInterval);
 	sBody.printf("\"dtmonitoring\":\"%u\"", mpUfo->GetConfig().mbDTMonitoring);
@@ -207,7 +207,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	}
 
 	mpUfo->GetConfig().mbDTEnabled = bEnabled;
-	mpUfo->GetConfig().msDTEnvId = sEnvId;
+	mpUfo->GetConfig().msDTEnvIdOrUrl = sEnvId;
 	mpUfo->GetConfig().msDTApiToken = sApiToken;
 	mpUfo->GetConfig().miDTInterval = iInterval;
 
@@ -222,6 +222,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	mpUfo->dt.leaveAction(dtHandleRequest);
 	return rResponse.Send();
 }
+
 
 bool DynamicRequestHandler::HandleDynatraceMonitoringRequest(std::list<TParam>& params, HttpResponse& rResponse){
 
