@@ -86,7 +86,7 @@
 				</li>
 				<li>
 					<!--<a href="wifisettings.html" class="padded-list">Wifi settings</a>-->
-					<a href="#!pagewifisettings" class="padded-list">WIFI Settings</a>
+					<a href="#!pagewifisettings" class="padded-list">WiFi Settings</a>
 				</li>
 				<li>
 					<a href="#!pageserversettings" class="padded-list">Web Server Settings</a>
@@ -120,7 +120,7 @@
 				<li class="padded-list" id="liinfoipaddress">IP: <span id="infoipaddress">-</span></li>
 				<li class="padded-list" id="liinfoipsubnetmask">Subnetmask: <span id="infoipsubnetmask">-</span></li>
 				<li class="padded-list" id="liinfoipgateway">Gateway: <span id="infoipgateway">-</span></li>
-				<li class="padded-list" id="liinfomacaddress">Macaddress: <span id="infomacaddress">-</span></li>
+				<li class="padded-list" id="liinfomacaddress">MAC address: <span id="infomacaddress">-</span></li>
 				<li class="padded-list" id="lirssi">Signal strength: <span id="rssi">-</span></li>
 				<li class="padded-list" id="liapchannel">Channel: <span id="apchannel">-</span></li>
 				<li class="padded-list" id="liinfohostname">Hostname: <span id="infohostname">-</span></li>
@@ -159,14 +159,14 @@
 					<li class="divider">from update server</li>
 					<li class="padded-list">
 						<div id="versiondisplay">Checking for newer version...</div>
-						<div><font color="red" id="versionerror" style="Display:None">Failed to connect github.com to check for new version!</font></div>
+						<div><font color="red" id="versionerror" style="Display:None">Failed to connect to github.com to check for new version!</font></div>
 						<button class="btn btn-flat primary" id="firmware_update" style="Display:None">download and update</button>
 					</li>
 					<li class="padded-list">
 						<button class="btn btn-flat primary" id="firmware_restart">restart</button>
 					</li>
 					<li class="padded-list">
-						<button class="btn btn-flat primary" id="firmware_switchbootpartition">switch to previus firmware (if available)</button>
+						<button class="btn btn-flat primary" id="firmware_switchbootpartition">switch to previous firmware (if available)</button>
 					</li>
 					<li class="divider">manual update</li>
 				</ul>
@@ -190,7 +190,7 @@
 		<header class="header-bar">
 			<button class="btn icon icon-arrow-back pull-left" data-navigation="$previous-page"></button>
 			<div class="center">
-				<h1 class="title">Dynatrace UFO - Configure WIFI</h1>
+				<h1 class="title">Dynatrace UFO - Configure WiFi</h1>
 			</div>
 		</header>
 		<div class="content">
@@ -198,22 +198,22 @@
 				<ul style="color:dimgrey">
 					<b>Welcome to the Dynatrace UFO</b><br/>Firmware version: <span id="firmwareversion">---</span>
 					<p/><br/>
-					<span style="color:dimgrey">Please configure the Wifi settings of your UFO first. In order to access the UFO AFTER submitting the Wifi settings, you may do the following:</span>
-					<li>Option 1: Open your browser, make sure its connected to the same Wifi as the UFO. Goto <a href="http://ufo">http://ufo</a>
+					<span style="color:dimgrey">Please configure the WiFi settings of your UFO first. In order to access the UFO AFTER submitting the WiFi settings, you may do the following:</span>
+					<li>Option 1: Open your browser, make sure it is connected to the same WiFi as the UFO. Goto <a href="http://ufo">http://ufo</a>
 					</li>
-					<li>Option 2: The lower ring visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4)
-						then 2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The
-						IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization
+					<li>Option 2: The lower ring visualizes the current IP address digit by digit. 192.168... will light 1 LED then 9 (5+4)
+						then 2 and so on. A dot is visualized as 3 white LEDs. The individual digits are separated by a short white flash. The
+						IP is visualized over and over again until the first API rest call is issued. To stay in sync every IP address visualization
 						run uses a different color.</li>
-					<li>Option 3: After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the
-						info section for the latest IP adress retrieved by DHCP.
+					<li>Option 3: After a successful connection to the WiFi switch back to Access Point mode (push the button) and look at the
+						info section for the latest IP address retrieved by DHCP.
 					</li>
 					<!-- no SSDP available right now  
 				<li>Option 3: Open Windows file explorer and click on "Network" to display all devices that are discovered through SSDP.
 				</li>
 				-->
 					<li>Option 4: Remember your MAC address <b><span id="macaddress">---</span></b> as you may want to lookup the IP address
-						in your Wifi Accesspoint.
+						in your WiFi Accesspoint.
 					</li>
 				</ul>
 
@@ -259,7 +259,7 @@
 					</div>
 					<div class="padded-full">
 						<span class="padded-list"><font color="red" id="configwifierror"></font></span>
-						<button class="btn btn-submit fit-parent primary" type='button' id='configureWifi'>Apply WIFI settings and reboot.</button>
+						<button class="btn btn-submit fit-parent primary" type='button' id='configureWifi'>Apply WiFi settings and reboot.</button>
 					</div>
 				</form>
 			</div>
@@ -389,7 +389,7 @@
 				<form method='GET' action='/dynatracemonitoring'>
 					<div class="padded-full">
 						<p>
-							Please help us to improve the Dynatrace UFO by providing anonymus usage and performance statistics by enabling the checkbox below. <br />
+							Please help us to improve the Dynatrace UFO by providing anonymous usage and performance statistics by enabling the checkbox below. <br />
 							These data may include:
 							<ul>
 								<li>Timings for network requests</li>

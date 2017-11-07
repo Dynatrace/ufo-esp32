@@ -27,7 +27,7 @@ Note: Assembly of the UFO (in particular mounting the device on the ceiling) may
 # Configuring the UFO
 
 ## Wifi
-When you have not configured a wifi endpoint in the web-interface yet or every time you press the button on the top, the UFO starts up in Ad-Hoc mode which is symbolized by blue flashing led rings. The SSID is "Ufo" and the IP address 192.168.4.1. Use a notebook, tablet or phone to connect to the "Ufo" net and open "http://192.168.4.1/" in a browser. This will open up the web-interface of the UFO where you now can configure your Wifi setting. After applying the settings the UFO will restart and try to connect to the configured Wifi, which is symbolized by yellow flashing led rings. Once a connection has been made the led display starts to display the retrieved (DHCP) IP address. If this does not succeed switch back to Ad-Hoc mode and check the settings.
+When you have not configured a wifi endpoint in the web-interface yet or every time you press the button on the top, the UFO starts up in Ad-Hoc mode which is symbolized by blue flashing LED rings. The SSID is "Ufo" and the IP address 192.168.4.1. Use a notebook, tablet or phone to connect to the "Ufo" net and open "http://192.168.4.1/" in a browser. This will open up the web-interface of the UFO where you now can configure your Wifi setting. After applying the settings the UFO will restart and try to connect to the configured Wifi, which is symbolized by yellow flashing LED rings. Once a connection has been made the LED display starts to display the retrieved (DHCP) IP address. If this does not succeed switch back to Ad-Hoc mode and check the settings.
 
 If the connections succeeds there are several options to connect to the UFO:
 * Option 1: Open your browser, make sure its connected to the same Wifi as the UFO. Goto <a href="http://ufo">http://ufo</a>
@@ -35,11 +35,71 @@ If the connections succeeds there are several options to connect to the UFO:
 If that doesnt work you will need to use `http://<ipaddress>`.
 
 There are multiple ways to discover the IP address of the Dynatrace UFO in case you need it:
-* The rings visualizes the current IP address digit by digit. 192.168... will light 1 led then 9 (5+4)	then 2 and so on. A dot is visualized as 3 white leds. The individuL digits are separated by a short white flash. The IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization run uses a different color.
+* The rings visualizes the current IP address digit by digit. 192.168... will light 1 LED then 9 (5+4)	then 2 and so on. A dot is visualized as 3 white LEDs. The individuL digits are separated by a short white flash. The IP is visualized over and over again until the first api rest call is issued. To stay in sync every IP address visualization run uses a different color.
 * After a successful connection to the Wifi switch back to Access Point mode (push the button) and look at the info section for the latest IP adress retrieved by DHCP.
 * Lookup the MAC address in your Wifi Access Point and get the IP address assigned by DHCP
 
 ## API
+All LEDs can be controlled through an API. By calling the API, you can separately control the bottom row, the top row
+and the 4 LEDs that show the Dynatrace logo.
+
+#### Controlling the logo
+The four LEDs that form the Dynatrace logo can be given different colors using the following API query parameter:
+
+`logo=<color>|<color>|<color>|<color>`
+
+Example where the colors will be set to red, green, blue and white:
+
+`/api?logo=ff0000|00ff00|0000ff|ffffff`
+
+To reset the colors back to its initial state, execute the following API call:
+
+`/api?logo_reset`
+
+#### Controlling the top row
+All 15 LEDs of the top row can be controlled using the `top` query parameter in the API call. The format is as follows:
+
+`top=<starting LED>|<number of LEDs>|<hex color>`
+
+Examples:
+- Turn all LEDs red on the top row: `/api?top=0|15|ff0000`
+- First seven LEDs red, the rest green: `/api?top=0|7|ff0000&top=7|8|00ff00`
+
+To reset the row back to its black state, execute the following API call:
+
+`/api?top_init`
+
+The backgroud color (default is black) can be set by `top_bg=<hex color>`
+
+#### Controlling the bottom row
+Controlling the LEDs on the bottom row works similar as the top row. Instead of using the `top` query parameter, it should
+be renamed to `bottom`.
+
+#### Animations
+Besides having static colors, it is also possible to add some animations, like:
+- morph - from foreground to background and back
+- whirl - rotate either clockwise, or counter clockwise
+
+##### Morph
+`<row>_morph=<period>|<speed>`
+
+First parameter indicates the period between the morphs. The seconds parameter is the speed of the morph, where the
+maximum speed is 10.
+
+Example:
+
+`/api?top=0|15|00ff00&top_morph=80|8`
+
+##### Whirl
+`<row>_whirl=<speed>|<direction>`
+
+First parameter indicates the speed of the whirl, with a maximum of 255. The second parameter indicated if it should go 
+clockwise, or counter clockwise. The default here is clockwise. If the opposite is needed, the direction parameter has 
+to be set to `ccw`.
+
+Examples:
+- Have two blue LEDs go around over a green circle in a clockwise direction: 
+`/api?top_bg=00ff00&top=0|2|0000ff&top_whirl=240`
 
 # Firmware
 
