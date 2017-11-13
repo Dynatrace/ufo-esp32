@@ -865,7 +865,6 @@
 						var result = JSON.parse(xhr.response);
 						document.getElementById('dtenabled').checked = (result.dtenabled == '1');
 						document.getElementById('dtenvid').value = result.dtenvid;
-						document.getElementById('dtapitoken').value = result.dtapitoken;
 						document.getElementById('dtinterval').value = result.dtinterval;
 					},
 					error: function (res, flagError, xhr) {

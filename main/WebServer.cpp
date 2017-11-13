@@ -99,9 +99,12 @@ bool WebServer::Start(__uint16_t port, bool useSsl, String* pCertificate){
 				return false;
 			}
 			if (pCertificate && pCertificate->length()){
-				//ESP_LOGD(tag, "Using custom certificate <%s>", certificate.c_str());
 				sWsCert = (unsigned char*)pCertificate->c_str();
 				uWsCertLength = pCertificate->length();
+				ESP_LOGD(tag, "Using custom certificate (%d)<%s>", uWsCertLength, sWsCert);
+			}
+			else{
+				ESP_LOGD(tag, "Using builtin certificate (%d)<%s>", uWsCertLength, sWsCert);
 			}
 			if (!SSL_CTX_use_certificate_ASN1(mpSslCtx,  uWsCertLength, sWsCert)){
 				ESP_LOGE(tag, "SSL_CTX_use_certificate_ASN1: %s", strerror(errno));
@@ -217,7 +220,7 @@ void WebServer::WebRequestHandler(int socket, int conNumber){
 
 		SSL_set_fd(ssl, socket);
 
-		if (!WaitForData(socket, 1)){
+		if (!WaitForData(socket, 10)){
 			ESP_LOGW(tag, "<%d> No Data", conNumber);
 			goto EXIT;
 		}
