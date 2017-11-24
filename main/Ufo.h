@@ -27,6 +27,8 @@ public:
 	
 	void InitLogoLeds();
 	void ShowLogoLeds();
+	void SetInit();
+	void SetColor(String& color);
 
 	void IndicateApiCall() 	{ mbApiCallReceived = true; };
 

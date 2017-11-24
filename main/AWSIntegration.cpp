@@ -15,6 +15,7 @@
 
 
 static const char* LOGTAG = "AWS";
+Ufo* xpUfo;  
 
 void task_function_aws(void *pvParameter)
 {
@@ -27,8 +28,27 @@ void iot_subscribe_callback_handler(AWS_IoT_Client *pClient, char *topicName, ui
 									IoT_Publish_Message_Params *params, void *pData) {
 	IOT_UNUSED(pData);
 	IOT_UNUSED(pClient);
-	ESP_LOGI(LOGTAG, "Message received");
-	ESP_LOGD(LOGTAG, "%s: %s", topicName, (char*)params->payload);
+	ESP_LOGI(LOGTAG, "Message received (%i)", params->payloadLen);
+	((char*)params->payload)[params->payloadLen] = 0;
+	ESP_LOGI(LOGTAG, "%s", (char*)params->payload);
+    cJSON* json = cJSON_Parse((char*)params->payload);
+
+	int init = 0;
+	String color = "";
+
+	if (cJSON_GetObjectItem(json, "init")) init = cJSON_GetObjectItem(json, "init")->valueint;
+	if (cJSON_GetObjectItem(json, "bgcolor")) color.printf("%s", cJSON_GetObjectItem(json, "bgcolor")->valuestring);
+
+    if (init > 0) {
+		color = "init";
+	}
+	xpUfo->IndicateApiCall();
+	if (color == "init") {
+		xpUfo->SetInit();		
+	} else {
+		xpUfo->SetColor(color);				
+	}
+
 }
 
 void disconnectCallbackHandler(AWS_IoT_Client *pClient, void *data) {
@@ -64,6 +84,7 @@ AWSIntegration::~AWSIntegration() {
 
 bool AWSIntegration::Init(Ufo* pUfo) {
     mpUfo = pUfo;  
+    xpUfo = pUfo;  
     mpConfig = &(mpUfo->GetConfig());
 	mInitialized = true;
     ProcessConfigChange();
@@ -87,7 +108,7 @@ void AWSIntegration::ProcessConfigChange(){
 
 bool AWSIntegration::Connect() {
 
-	vTaskDelay(12000 / portTICK_PERIOD_MS);
+	vTaskDelay(2000 / portTICK_PERIOD_MS);
 	ESP_LOGI(LOGTAG, "Connecting");
 
     while (!mConnected) {
@@ -146,23 +167,30 @@ bool AWSIntegration::Run() {
 		ESP_LOGE(LOGTAG, "Unable to set Auto Reconnect to true - %d", rc);
 		return false;
 	}
-/*
-	String topic("/dynatraceufo/");
-	topic.printf("%s", AWS_IOT_MQTT_CLIENT_ID);
+
+	String topic("dynatraceufo/control/");
+	String topic2("dynatraceufo/control/all");
+	topic.printf("%s", mpUfo->GetId().c_str());
 	ESP_LOGI(LOGTAG, "Subscribing to %s", topic.c_str());
 	rc = aws_iot_mqtt_subscribe(&client, topic.c_str(), topic.length(), QOS1, iot_subscribe_callback_handler, NULL);
 	if(SUCCESS != rc) {
 		ESP_LOGE(LOGTAG, "Error subscribing : %d ", rc);
 		return false;
 	}
+	rc = aws_iot_mqtt_subscribe(&client, topic2.c_str(), topic2.length(), QOS1, iot_subscribe_callback_handler, NULL);
+	if(SUCCESS != rc) {
+		ESP_LOGE(LOGTAG, "Error subscribing : %d ", rc);
+		return false;
+	}
 	ESP_LOGI(LOGTAG, "subscription successful");
-*/
+
 	mActive = true;
+	String payload("heartbeat ");
+	payload.printf("%s", mpUfo->GetId().c_str());
+	
 	while (mActive) {
-//		String payload("message from ");
-//		payload.printf("%s", mpUfo->GetId().c_str());
-//		Publish("/dynatraceufo/ufohub", 20, &payload);
-		vTaskDelay(10000 / portTICK_PERIOD_MS);
+		Publish("dynatraceufo/ufohub", 20, &payload);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 	
 	return mActive;
@@ -196,7 +224,7 @@ bool AWSIntegration::Publish(const char* pTopic, short pTopicLength, String* pPa
 	if(SUCCESS != rc) {
 		ESP_LOGE(LOGTAG, "An error occurred in Publish: %i", rc);
 	} else {
-		ESP_LOGI(LOGTAG, "successfully published to %s", pTopic);
+		ESP_LOGD(LOGTAG, "successfully published to %s", pTopic);
 	}
 
 	return rc;	

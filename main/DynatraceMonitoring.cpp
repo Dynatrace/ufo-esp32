@@ -163,7 +163,7 @@ String DynatraceMonitoring::getPayload(DynatraceAction* pActions[], __uint8_t pC
 void DynatraceMonitoring::Send(String* json) {
     ESP_LOGD(LOGTAG, "%s", json->c_str());
     String topic;
-    topic.printf("/dynatraceufo/monitoring/%s", mpUfo->GetId().c_str());
+    topic.printf("dynatraceufo/monitoring/%s", mpUfo->GetId().c_str());
     mpAws->Publish(topic.c_str(), topic.length(), json);
 }
 
@@ -253,7 +253,7 @@ String DynatraceMonitoring::getPublicIp() {
     String response;
     mUrl.Parse("https://api.ipify.org");
     if (mClient.Prepare(&mUrl)) {
-        unsigned short responseCode = mClient.HttpGet();
+        mClient.HttpGet();
         response = mClient.GetResponseData();
     }
     mClient.Clear();

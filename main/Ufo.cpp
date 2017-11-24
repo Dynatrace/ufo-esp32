@@ -189,6 +189,18 @@ void Ufo::SetId() {
 	mConfig.Write();	
 }
 
+void Ufo::SetInit() {
+	ESP_LOGI("Ufo", "LED: SetInit");
+	mDisplayCharterLevel1.Init();
+	mDisplayCharterLevel2.Init();	
+}
+
+void Ufo::SetColor(String& color) {
+	ESP_LOGI("Ufo", "LED: SetColor(%s)", color.c_str());
+	mDisplayCharterLevel1.ParseBgArg(color);
+	mDisplayCharterLevel2.ParseBgArg(color);
+}
+
 String& Ufo::GetId() {
 	mId = mConfig.msUfoId;
 	return mId;
