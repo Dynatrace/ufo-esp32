@@ -340,10 +340,11 @@
 							Connect your UFO to a Dynatrace Server to query the problem API.<br />
 							Following metrics will then be visualized by the UFO:
 							<ul>
-								<li>open Application problems</li>
-								<li>open Infrastructure problems</li>
-								<li>open Service problems</li>
+								Open application problems (red)<br>
+								Open service problems (purple)<br>
+								Open infrastructure problems (yellow)
 							</ul>
+							Only the three most severe problems will be shows.
 						</p>
 						<ul class="list">
 							<li class="">
@@ -355,7 +356,7 @@
 							</li>
 						</ul>
 
-						<input type="text" name="dtenvid" placeholder="Environment ID (tenant)" id="dtenvid" />
+						<input type="text" name="dtenvid" placeholder="Environment ID (tenant) or complete URL (like 'https://mine.dynatrace.com/e/<environment id>')" id="dtenvid" />
 						<input type="text" name="dtapitoken" placeholder="API Token" id="dtapitoken" />
 						<input type="number" min="10" max="300" placeholder="polling interval in sec" name="dtinterval" id="dtinterval" />
 						<!--<ul class="list">
@@ -803,7 +804,7 @@
 						if (result.enterpriseuser.length > 0){
 							document.getElementById('enterpriseuser').value =  result.enterpriseuser;
 							document.getElementById('wifimode2').checked = true;
-							wifiModeChange0();
+							wifiModeChange2();
 						}
 						else
 							wifiModeChange1();
@@ -864,7 +865,6 @@
 						var result = JSON.parse(xhr.response);
 						document.getElementById('dtenabled').checked = (result.dtenabled == '1');
 						document.getElementById('dtenvid').value = result.dtenvid;
-						document.getElementById('dtapitoken').value = result.dtapitoken;
 						document.getElementById('dtinterval').value = result.dtinterval;
 					},
 					error: function (res, flagError, xhr) {

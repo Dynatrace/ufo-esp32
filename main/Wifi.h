@@ -7,8 +7,8 @@
 
 #ifndef MAIN_WIFI_H_
 #define MAIN_WIFI_H_
+
 #include "sdkconfig.h"
-#if defined(CONFIG_WIFI_ENABLED)
 #include "esp_wifi.h"
 #include "esp_err.h"
 #include "String.h"
@@ -70,5 +70,4 @@ private:
 	char *dnsServer = nullptr;
 };
 
-#endif // CONFIG_WIFI_ENABLED
 #endif /* MAIN_WIFI_H_ */

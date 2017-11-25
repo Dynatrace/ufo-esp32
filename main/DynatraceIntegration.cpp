@@ -88,22 +88,51 @@ void DynatraceIntegration::ProcessConfigChange(){
     mActConfigRevision++;
 }
 
+void ParseIntegrationUrl(Url& rUrl, String& sEnvIdOrUrl, String& sApiToken){
+    String sHelp;
+ 
+    ESP_LOGI(LOGTAG, "%s", sEnvIdOrUrl.c_str());
+    ESP_LOGD(LOGTAG, "%s", sApiToken.c_str());
+
+    if (sEnvIdOrUrl.length()){
+        if (sEnvIdOrUrl.indexOf(".") < 0){ //an environment id
+            sHelp.printf("https://%s.live.dynatrace.com/api/v1/problem/status?Api-Token=%s", sEnvIdOrUrl.c_str(), sApiToken.c_str());
+        }
+        else{
+            if (sEnvIdOrUrl.startsWith("http")){
+                if (sEnvIdOrUrl.charAt(sEnvIdOrUrl.length()-1) == '/')
+                    sHelp.printf("%sapi/v1/problem/status?Api-Token=%s", sEnvIdOrUrl.c_str(), sApiToken.c_str());
+                else
+                    sHelp.printf("%s/api/v1/problem/status?Api-Token=%s", sEnvIdOrUrl.c_str(), sApiToken.c_str());
+            }
+            else{
+                if (sEnvIdOrUrl.charAt(sEnvIdOrUrl.length()-1) == '/')
+                    sHelp.printf("https://%sapi/v1/problem/status?Api-Token=%s", sEnvIdOrUrl.c_str(), sApiToken.c_str());
+                else
+                    sHelp.printf("https://%s/api/v1/problem/status?Api-Token=%s", sEnvIdOrUrl.c_str(), sApiToken.c_str());
+            }
+                
+        }   
+    }
+    
+    ESP_LOGD(LOGTAG, "URL: %s", sHelp.c_str());
+    rUrl.Clear();
+    rUrl.Parse(sHelp);
+ }
+
 void DynatraceIntegration::Run(__uint8_t uTaskId) {
     __uint8_t uConfigRevision = mActConfigRevision - 1;
     vTaskDelay(5000 / portTICK_PERIOD_MS);
-	ESP_LOGI(LOGTAG, "Run");
+	ESP_LOGD(LOGTAG, "Run");
     while (1) {
         if (mpUfo->GetWifi().IsConnected()) {
             //Configuration is not atomic - so in case of a change there is the possibility that we use inconsistent credentials - but who cares (the next time it would be fine again)
             if (uConfigRevision != mActConfigRevision){
                 uConfigRevision = mActConfigRevision; //memory barrier would be needed here
-                mDtUrl.Build(true, mpConfig->msDTEnvId+".live.dynatrace.com", 443, "/api/v1/problem/status?Api-Token="+mpConfig->msDTApiToken);
-                mDtUrlString = "https://"+mpConfig->msDTEnvId+".live.dynatrace.com/api/v1/problem/status";
-                ESP_LOGI(LOGTAG, "URL: %s", mDtUrlString.c_str());
+                ParseIntegrationUrl(mDtUrl, mpConfig->msDTEnvIdOrUrl, mpConfig->msDTApiToken);
             }
-
             GetData();
-            ESP_LOGI(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());            
+            ESP_LOGD(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());            
 
             for (int i=0 ; i < mpConfig->miDTInterval ; i++){
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -121,7 +150,7 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
 }
 
 void DynatraceIntegration::GetData() {
-	ESP_LOGI(LOGTAG, "polling");
+	ESP_LOGD(LOGTAG, "polling");
     DynatraceAction* dtPollApi = mpUfo->dt.enterAction("Poll Dynatrace API");	
     if (dtClient.Prepare(&mDtUrl)) {
 
