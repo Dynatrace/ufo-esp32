@@ -114,13 +114,10 @@ void Wifi::Connect()
 	ESP_LOGD(tag, "-----------------------");
 	ESP_LOGD(tag, "%s", msCA.c_str());
 	ESP_LOGD(tag, "-----------------------");
-	char sHelp[20];
-	GetMac((__uint8_t*)sHelp);
-	ESP_LOGD(tag, " macaddress: %x:%x:%x:%x:%x:%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-	ESP_LOGD(tag, "-----------------------");
-
+	
 	nvs_flash_init();
 	tcpip_adapter_init();
+	
 	if (ip.length() > 0 && gw.length() > 0 && netmask.length() > 0)
 	{
 		tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
@@ -145,19 +142,21 @@ void Wifi::Connect()
 
 	if (msUser.length())
 	{ //Enterprise WPA2
-		esp_wpa2_config_t config = WPA2_CONFIG_INIT_DEFAULT();
+		esp_wpa2_config_t ent_config = WPA2_CONFIG_INIT_DEFAULT();
+		esp_wifi_sta_wpa2_ent_clear_ca_cert();
 		if (msCA.length())
 			esp_wifi_sta_wpa2_ent_set_ca_cert((__uint8_t *)msCA.c_str(), msCA.length());
 		esp_wifi_sta_wpa2_ent_set_identity((__uint8_t *)msUser.c_str(), msUser.length());
 		esp_wifi_sta_wpa2_ent_set_username((__uint8_t *)msUser.c_str(), msUser.length());
 		esp_wifi_sta_wpa2_ent_set_password((__uint8_t *)msPass.c_str(), msPass.length());
-		esp_wifi_sta_wpa2_ent_enable(&config);
+		esp_wifi_sta_wpa2_ent_enable(&ent_config);
 	}
 
 	esp_wifi_start();
 	ESP_LOGD(tag, "SETTING HOSTNAME: %s", msHostname.c_str() == NULL ? "NULL" : msHostname.c_str());
 	ESP_ERROR_CHECK(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, msHostname.c_str()));
 	esp_wifi_connect();
+	ESP_LOGD(tag, "CONNECT DONE");
 }
 
 void Wifi::StartAP()
@@ -267,6 +266,11 @@ esp_err_t Wifi::OnEvent(system_event_t *event)
 		break;
 	case SYSTEM_EVENT_STA_START:
 		ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_START");
+		char sHelp[200];
+		GetMac((__uint8_t*)sHelp);
+		ESP_LOGD(tag, " macaddress: %x:%x:%x:%x:%x:%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
+		ESP_LOGD(tag, "-----------------------");
+
 		break;
 	case SYSTEM_EVENT_STA_STOP:
 		ESP_LOGD(tag, "--- SYSTEM_EVENT_STA_STOP");

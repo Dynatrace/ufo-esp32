@@ -167,7 +167,7 @@ bool Ota::UpdateFirmware(String sUrl)
         if (miProgress == OTA_PROGRESS_NOTYETSTARTED || miProgress >= 0) {
             miProgress = OTA_PROGRESS_CONNECTIONERROR;
         }
-      	ESP_LOGE(LOGTAG, "Ota update failed - error %u", statuscode)
+      	ESP_LOGE(LOGTAG, "Ota update failed - error %u", statuscode);
         // esp_reboot();
       	return false;
     }

@@ -16,12 +16,13 @@ public:
 
 private:
 	bool ReadString(nvs_handle h, const char* sKey, String& rsValue);
+	bool ReadBigString(nvs_handle h, const char* sKey, String& rsValue);
 	bool ReadBool(nvs_handle h, const char* sKey, bool& rbValue);
 	bool ReadInt(nvs_handle h, const char* sKey, int& rbValue);
 	bool WriteString(nvs_handle h, const char* sKey, String& rsValue);
+	bool WriteBigString(nvs_handle h, const char* sKey, String& rsValue);
 	bool WriteBool(nvs_handle h, const char* sKey, bool bValue);
 	bool WriteInt(nvs_handle h, const char* sKey, int bValue);
-
 
 public:
 	bool mbAPMode;

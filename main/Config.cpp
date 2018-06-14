@@ -42,7 +42,7 @@ bool Config::Read(){
 	ReadString(h, "STASsid", msSTASsid);
 	ReadString(h, "STAPass", msSTAPass);
 	ReadString(h, "STAENTUser", msSTAENTUser);
-	ReadString(h, "STAENTCA", msSTAENTCA);
+	ReadBigString(h, "STAENTCA", msSTAENTCA);
 	ReadString(h, "hostname", msHostname);
 	ReadBool(h, "DTEnabled", mbDTEnabled);
 	ReadString(h, "DTEnvId", msDTEnvIdOrUrl);
@@ -87,7 +87,7 @@ bool Config::Write()
 		return nvs_close(h), false;
 	if (!WriteString(h, "STAENTUser", msSTAENTUser))
 		return nvs_close(h), false;
-	if (!WriteString(h, "STAENTCA", msSTAENTCA))
+	if (!WriteBigString(h, "STAENTCA", msSTAENTCA))
 		return nvs_close(h), false;
 	if (nvs_set_u32(h, "STAIpAddress", muLastSTAIpAddress) != ESP_OK)
 		return nvs_close(h), false;
@@ -145,6 +145,23 @@ bool Config::ReadString(nvs_handle h, const char* sKey, String& rsValue){
 	return true;
 }
 
+bool Config::ReadBigString(nvs_handle h, const char* sKey, String& rsValue){
+	String sHelp;
+	if (!ReadString(h, sKey, sHelp))
+		return false;
+	rsValue = sHelp;
+	int i = 1;
+	while ((i <= 5) && sHelp.length() == 1900){
+		String sKeyHelp = sKey;
+		sKeyHelp += i;
+		i++;
+		if (!ReadString(h, sKeyHelp.c_str(), sHelp))
+			break;
+		rsValue += sHelp;
+	}
+	return true;
+}
+
 bool Config::ReadBool(nvs_handle h, const char* sKey, bool& rbValue){
 	__uint8_t u;
 	if (nvs_get_u8(h, sKey, &u) != ESP_OK)
@@ -161,11 +178,30 @@ bool Config::ReadInt(nvs_handle h, const char* sKey, int& riValue){
 	return true;
 }
 
-bool Config:: WriteString(nvs_handle h, const char* sKey, String& rsValue){
+bool Config::WriteString(nvs_handle h, const char* sKey, String& rsValue){
 	esp_err_t err = nvs_set_str(h, sKey, rsValue.c_str());
 	if (err != ESP_OK){
-		ESP_LOGE("Config", "  <%s> -> %d", sKey, err);
+		ESP_LOGE("Config", "  <%s>%d -> %d", sKey, rsValue.length(), err);
 		return false;
+	}
+	return true;
+}
+
+bool Config::WriteBigString(nvs_handle h, const char* sKey, String& rsValue){
+	if (rsValue.length() <= 1900){
+		return WriteString(h, sKey, rsValue);
+	}
+	int i = 0;
+	int iWritten = 0;
+	while (iWritten < rsValue.length()){
+		String sKeyHelp = sKey;
+		if (i)
+			sKeyHelp += i;
+		String sSub = rsValue.substring(iWritten, iWritten+1900);
+		if (!WriteString(h, sKeyHelp.c_str(), sSub))
+			return false;
+		i++;
+		iWritten += 1900;
 	}
 	return true;
 }

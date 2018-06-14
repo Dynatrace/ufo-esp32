@@ -1,0 +1,11 @@
+In order to be able to suppress the certificate chain validation in case no CA is specified following TLS file needs to be patched:
+
+/esp-idf/components/wpa_supplicant/src/wpa2/tls/tlsv1_client_read.c
+
+change
+if (conn->cred &&
+	    x509_certificate_chain_validate(conn->cred->trusted_certs, chain, &reason, conn->disable_time_checks)
+to
+if (conn->cred && conn->cred->trusted_certs &&
+	    x509_certificate_chain_validate(conn->cred->trusted_certs, chain, &reason, conn->disable_time_checks)
+

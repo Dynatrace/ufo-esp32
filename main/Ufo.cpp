@@ -183,16 +183,9 @@ void Ufo::ShowLogoLeds(){
 void Ufo::SetId() {
 	char sHelp[20];
 	mWifi.GetMac((__uint8_t*)sHelp);
-	mId = "";
 	mId.printf("ufo-%x%x%x%x%x%x", sHelp[0], sHelp[1], sHelp[2], sHelp[3], sHelp[4], sHelp[5]);
-	mConfig.msUfoId = mId;
-	mConfig.Write();	
 }
 
-String& Ufo::GetId() {
-	mId = mConfig.msUfoId;
-	return mId;
-}
 //-----------------------------------------------------------------------------------------
 
 Ufo ufo;
