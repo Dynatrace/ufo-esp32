@@ -233,7 +233,14 @@
 							<li class="padded-for-list">
 								<label class="radio">
 									<input type="radio" name="wifimode" value="2" id="wifimode2" onchangex="wifiModeChange(2);">
-									WPA2-Enterprise
+									WPA2-Enterprise EAP-PEAP
+									<span></span>
+								</label>
+							</li>
+							<li class="padded-for-list">
+								<label class="radio">
+									<input type="radio" name="wifimode" value="3" id="wifimode3" onchangex="wifiModeChange(3);">
+									WPA2-Enterprise EAP-TLS
 									<span></span>
 								</label>
 							</li>
@@ -246,11 +253,19 @@
 							Password:<br>
 							<input type="password" name="wifipwd" id="wifipwd" />
 						</div>
-						<div id="enterprisefields" style='Display:None'>
+						<div id="enterprisepeapfields" style='Display:None'>
 							Enterprise WPA2 User:<br>
 							<input type="text" name="wifientuser" id="enterpriseuser" /> 
 							Enterprise WPA2 Password:<br>
 							<input type="password" name="wifientpwd" id="enterprisepass" /> 
+							Enterprise WPA2 Certificate Authority (optional):<br>
+							<textarea name="wifientca" id="enterpriseca" style='Height:100px'></textarea>
+						</div>
+						<div id="enterprisetlsfields" style='Display:None'>
+							Enterprise WPA2 Client Certificate (Chain):<br>
+							<textarea name="wifientcert" id="enterprisecert" style='Height:100px'></textarea>
+							Enterprise WPA2 Client Certificate Key (without password):<br>
+							<textarea name="wifientkey" id="enterprisekey" style='Height:100px'></textarea>
 							Enterprise WPA2 Certificate Authority (optional):<br>
 							<textarea name="wifientca" id="enterpriseca" style='Height:100px'></textarea>
 						</div>
@@ -776,23 +791,49 @@
 						document.getElementById('configwifierror').innerText = text;
 					}
 					else{
-						document.getElementById('configwifierror').innerText = "";
-						document.getElementById('configwifiform').submit();
+						input = document.getElementById('enterprisecert');
+						if (input.value.length  > 10240){
+							var text = "Client Certificate Chain is too big (";
+							text += input.value.length;
+							text += "B)! Max size is 10kB";
+							document.getElementById('configwifierror').innerText = text;
+						}
+						else{
+							input = document.getElementById('enterprisekey');
+							if (input.value.length  > 10240){
+								var text = "Client Certificate Key is too big (";
+								text += input.value.length;
+								text += "B)! Max size is 10kB";
+								document.getElementById('configwifierror').innerText = text;
+							}
+							else{
+								document.getElementById('configwifierror').innerText = "";
+								document.getElementById('configwifiform').submit();
+							}
+						}
 					}
 				}
 				document.querySelector('#configureWifi').on('tap', configureWifi);
 				document.querySelector('#configureWifi').on('click', configureWifi);
 			
 				var wifiModeChange1 = function() {
-					document.getElementById('enterprisefields').style.display = 'none';
 					document.getElementById('wpafields').style.display = '';
+					document.getElementById('enterprisepeapfields').style.display = 'none';
+					document.getElementById('enterprisetlsfields').style.display = 'none';
 				}
 				var wifiModeChange2 = function() {
-					document.getElementById('enterprisefields').style.display = '';
 					document.getElementById('wpafields').style.display = 'none';
+					document.getElementById('enterprisepeapfields').style.display = '';
+					document.getElementById('enterprisetlsfields').style.display = 'none';
+				}
+				var wifiModeChange3 = function() {
+					document.getElementById('wpafields').style.display = 'none';
+					document.getElementById('enterprisepeapfields').style.display = 'none';
+					document.getElementById('enterprisetlsfields').style.display = '';
 				}
 				document.querySelector('#wifimode1').on('change', wifiModeChange1);
 				document.querySelector('#wifimode2').on('change', wifiModeChange2);
+				document.querySelector('#wifimode3').on('change', wifiModeChange3);
 
 				var req = phonon.ajax({
 					method: 'GET',

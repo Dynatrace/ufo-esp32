@@ -84,6 +84,7 @@ void Wifi::GetApInfo(int8_t& riRssi, uint8_t& ruChannel)
 
 void Wifi::StartAPMode(String& rsSsid, String& rsPass, String& rsHostname)
 {
+	muMode = 0;
 	msSsid = rsSsid;
 	msPass = rsPass;
 	msHostname = rsHostname;
@@ -92,14 +93,16 @@ void Wifi::StartAPMode(String& rsSsid, String& rsPass, String& rsHostname)
 
 void Wifi::StartSTAMode(String& rsSsid, String& rsPass, String& rsHostname)
 {
+	muMode = 1;
 	msSsid = rsSsid;
 	msPass = rsPass;
 	msHostname = rsHostname;
 	Connect();
 }
 
-void Wifi::StartSTAModeEnterprise(String& rsSsid, String& rsUser, String& rsPass, String& rsCA, String& rsHostname)
+void Wifi::StartSTAModeEnterprisePEAP(String& rsSsid, String& rsUser, String& rsPass, String& rsCA, String& rsHostname)
 {
+	muMode = 2;
 	msSsid = rsSsid;
 	msUser = rsUser;
 	msPass = rsPass;
@@ -108,9 +111,26 @@ void Wifi::StartSTAModeEnterprise(String& rsSsid, String& rsUser, String& rsPass
 	Connect();
 }
 
+void Wifi::StartSTAModeEnterpriseTLS(String& rsSsid, String& rsCert, String& rsKey, String& rsCA, String& rsHostname)
+{
+	muMode = 2;
+	msSsid = rsSsid;
+	msCert = rsCert;
+	msKey = rsKey;
+	msCA = rsCA;
+	msHostname = rsHostname;
+	Connect();
+}
+
 void Wifi::Connect()
 {
 	ESP_LOGD(tag, "  Connect(<%s><%s><%s><%d>)", msSsid.c_str(), msUser.c_str(), msPass.c_str(), msCA.length());
+	ESP_LOGD(tag, "-----------------------");
+	ESP_LOGD(tag, "%s", msCA.c_str());
+	ESP_LOGD(tag, "-----------------------");
+	ESP_LOGD(tag, "-----------------------");
+	ESP_LOGD(tag, "%s", msCA.c_str());
+	ESP_LOGD(tag, "-----------------------");
 	ESP_LOGD(tag, "-----------------------");
 	ESP_LOGD(tag, "%s", msCA.c_str());
 	ESP_LOGD(tag, "-----------------------");
@@ -136,13 +156,17 @@ void Wifi::Connect()
 	wifi_config_t config;
 	memset(&config, 0, sizeof(config));
 	memcpy(config.sta.ssid, msSsid.c_str(), msSsid.length());
-	if (!msUser.length())
-		memcpy(config.sta.password, msPass.c_str(), msPass.length());
-	esp_wifi_set_config(ESP_IF_WIFI_STA, &config);
+	esp_wpa2_config_t ent_config;
 
-	if (msUser.length())
-	{ //Enterprise WPA2
-		esp_wpa2_config_t ent_config = WPA2_CONFIG_INIT_DEFAULT();
+	switch (muMode){
+	case 1:
+		if (!msUser.length())
+			memcpy(config.sta.password, msPass.c_str(), msPass.length());
+		esp_wifi_set_config(ESP_IF_WIFI_STA, &config);
+		break;
+	case 2: //EAP-PEAP
+		esp_wifi_set_config(ESP_IF_WIFI_STA, &config);
+		ent_config = WPA2_CONFIG_INIT_DEFAULT();
 		esp_wifi_sta_wpa2_ent_clear_ca_cert();
 		if (msCA.length())
 			esp_wifi_sta_wpa2_ent_set_ca_cert((__uint8_t *)msCA.c_str(), msCA.length());
@@ -150,6 +174,16 @@ void Wifi::Connect()
 		esp_wifi_sta_wpa2_ent_set_username((__uint8_t *)msUser.c_str(), msUser.length());
 		esp_wifi_sta_wpa2_ent_set_password((__uint8_t *)msPass.c_str(), msPass.length());
 		esp_wifi_sta_wpa2_ent_enable(&ent_config);
+		break;
+	case 3: //EAP-TLS
+		esp_wifi_set_config(ESP_IF_WIFI_STA, &config);
+		ent_config = WPA2_CONFIG_INIT_DEFAULT();
+		esp_wifi_sta_wpa2_ent_clear_ca_cert();
+		if (msCA.length())
+			esp_wifi_sta_wpa2_ent_set_ca_cert((__uint8_t *)msCA.c_str(), msCA.length());
+		esp_wifi_sta_wpa2_ent_set_cert_key((__uint8_t *)msCert.c_str(), msCert.length(), (__uint8_t *)msKey.c_str(), msKey.length(), NULL, 0);
+		esp_wifi_sta_wpa2_ent_enable(&ent_config);
+		break;
 	}
 
 	esp_wifi_start();

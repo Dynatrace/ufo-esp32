@@ -253,7 +253,7 @@ String DynatraceMonitoring::getPublicIp() {
     String response;
     mUrl.Parse("https://api.ipify.org");
     if (mClient.Prepare(&mUrl)) {
-        unsigned short responseCode = mClient.HttpGet();
+        mClient.HttpGet();
         response = mClient.GetResponseData();
     }
     mClient.Clear();

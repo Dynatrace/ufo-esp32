@@ -172,8 +172,9 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody.printf("\"dtenabled\":\"%u\",", mpUfo->GetConfig().mbDTEnabled);
 	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvIdOrUrl.c_str());
 	//sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
-	sBody.printf("\"dtinterval\":\"%u\",", mpUfo->GetConfig().miDTInterval);
+	sBody.printf("\"dtinterval\":\"%u\",", mpUfo->GetConfig().muDTInterval);
 	sBody.printf("\"dtmonitoring\":\"%u\"", mpUfo->GetConfig().mbDTMonitoring);
+	sBody.printf("\"wifimode\":\"%u\"", mpUfo->GetConfig().muWifiMode);
 	sBody += '}';
 
 	rResponse.AddHeader(HttpResponse::HeaderContentTypeJson);
@@ -189,7 +190,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	String sEnvId;
 	String sApiToken;
 	bool bEnabled = false;
-	int iInterval = 0;
+	__uint32_t uInterval = 0;
 
 	String sBody;
 
@@ -202,7 +203,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 		else if ((*it).paramName == "dtapitoken")
 			sApiToken = (*it).paramValue;
 		else if ((*it).paramName == "dtinterval")
-			iInterval = (*it).paramValue.toInt();
+			uInterval = (*it).paramValue.toInt();
 		it++;
 	}
 
@@ -210,7 +211,7 @@ bool DynamicRequestHandler::HandleDynatraceIntegrationRequest(std::list<TParam>&
 	mpUfo->GetConfig().msDTEnvIdOrUrl = sEnvId;
 	if (sApiToken.length())
 		mpUfo->GetConfig().msDTApiToken = sApiToken;
-	mpUfo->GetConfig().miDTInterval = iInterval;
+	mpUfo->GetConfig().muDTInterval = uInterval;
 
 	if (mpUfo->GetConfig().Write())
 		mpUfo->GetDtIntegration().ProcessConfigChange();
@@ -272,6 +273,8 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	const char* sWifiPass = NULL;
 	const char* sWifiEntPass = NULL;
 	const char* sWifiEntUser = NULL;
+	const char* sWifiEntCert = NULL;
+	const char* sWifiEntKey = NULL;
 	const char* sWifiEntCA = NULL;
 	const char* sWifiHostName = NULL;
 
@@ -290,6 +293,10 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			sWifiEntPass = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifientuser")
 			sWifiEntUser = (*it).paramValue.c_str();
+		else if ((*it).paramName == "wifientcert")
+			sWifiEntCert = (*it).paramValue.c_str();
+		else if ((*it).paramName == "wifientkey")
+			sWifiEntKey = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifientca")
 			sWifiEntCA = (*it).paramValue.c_str();
 		else if ((*it).paramName == "wifihostname")
@@ -301,8 +308,9 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	if (sWifiSsid){
 		mpUfo->GetConfig().msSTASsid = sWifiSsid;
 
-		if (sWifiMode && (sWifiMode[0] == '2')){ //enterprise wap2
+		if (sWifiMode && (sWifiMode[0] == '2')){ //enterprise wap2 peap
 			if (sWifiEntUser && (sWifiEntUser[0] != 0x00)){
+				mpUfo->GetConfig().muWifiMode = 2;
 					mpUfo->GetConfig().msSTAENTUser = sWifiEntUser;
 				if (sWifiEntCA)
 					mpUfo->GetConfig().msSTAENTCA = sWifiEntCA;
@@ -312,14 +320,33 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 					mpUfo->GetConfig().msSTAPass = sWifiEntPass;
 				else
 					mpUfo->GetConfig().msSTAPass.clear();
+				mpUfo->GetConfig().msSTAENTCert.clear();
+				mpUfo->GetConfig().msSTAENTKey.clear();
+				bOk = true;
+			}
+		}
+		else if (sWifiMode && (sWifiMode[0] == '3')){ //enterprise wap2 tls
+			if (sWifiEntCert && (sWifiEntCert[0] != 0x00) && sWifiEntKey && (sWifiEntKey[0] != 0x00)){
+				mpUfo->GetConfig().muWifiMode = 3;
+				mpUfo->GetConfig().msSTAENTCert = sWifiEntCert;
+				mpUfo->GetConfig().msSTAENTKey = sWifiEntKey;
+				if (sWifiEntCA)
+					mpUfo->GetConfig().msSTAENTCA = sWifiEntCA;
+				else
+					mpUfo->GetConfig().msSTAENTCA.clear();
+				mpUfo->GetConfig().msSTAENTUser.clear();
+				mpUfo->GetConfig().msSTAPass.clear();
 				bOk = true;
 			}
 		}
 		else{
+			mpUfo->GetConfig().muWifiMode = 1;
 			if (sWifiPass)
 				mpUfo->GetConfig().msSTAPass = sWifiPass;
 			else
 				mpUfo->GetConfig().msSTAPass.clear();
+			mpUfo->GetConfig().msSTAENTCert.clear();
+			mpUfo->GetConfig().msSTAENTKey.clear();
 			mpUfo->GetConfig().msSTAENTUser.clear();
 			mpUfo->GetConfig().msSTAENTCA.clear();
 			bOk = true;
