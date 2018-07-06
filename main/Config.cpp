@@ -57,7 +57,7 @@ bool Config::Read(){
 	ReadString(h, "Organization", msOrganization);
 	ReadString(h, "Department", msDepartment);
 	ReadString(h, "Location", msLocation);
-	if (nvs_get_u8(h, "WifiMode", &muWifiMode) != ESP_OK){
+	if (nvs_get_u8(h, "WifiMode", &muWifiMode) == ESP_OK){
 		ReadBigString(h, "STAENTCert", msSTAENTCert);
 		ReadBigString(h, "STAENTKey", msSTAENTKey);
 	}

@@ -173,7 +173,7 @@ bool DynamicRequestHandler::HandleInfoRequest(std::list<TParam>& params, HttpRes
 	sBody.printf("\"dtenvid\":\"%s\",", mpUfo->GetConfig().msDTEnvIdOrUrl.c_str());
 	//sBody.printf("\"dtapitoken\":\"%s\",", mpUfo->GetConfig().msDTApiToken.c_str());
 	sBody.printf("\"dtinterval\":\"%u\",", mpUfo->GetConfig().muDTInterval);
-	sBody.printf("\"dtmonitoring\":\"%u\"", mpUfo->GetConfig().mbDTMonitoring);
+	sBody.printf("\"dtmonitoring\":\"%u\",", mpUfo->GetConfig().mbDTMonitoring);
 	sBody.printf("\"wifimode\":\"%u\"", mpUfo->GetConfig().muWifiMode);
 	sBody += '}';
 
@@ -312,8 +312,10 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			if (sWifiEntUser && (sWifiEntUser[0] != 0x00)){
 				mpUfo->GetConfig().muWifiMode = 2;
 					mpUfo->GetConfig().msSTAENTUser = sWifiEntUser;
-				if (sWifiEntCA)
+				if (sWifiEntCA && *sWifiEntCA){
 					mpUfo->GetConfig().msSTAENTCA = sWifiEntCA;
+					mpUfo->GetConfig().msSTAENTCA.concat("\n");
+				}
 				else
 					mpUfo->GetConfig().msSTAENTCA.clear();
 				if (sWifiEntPass)
@@ -329,10 +331,13 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 			if (sWifiEntCert && (sWifiEntCert[0] != 0x00) && sWifiEntKey && (sWifiEntKey[0] != 0x00)){
 				mpUfo->GetConfig().muWifiMode = 3;
 				mpUfo->GetConfig().msSTAENTCert = sWifiEntCert;
+				mpUfo->GetConfig().msSTAENTCert.concat("\n");
 				mpUfo->GetConfig().msSTAENTKey = sWifiEntKey;
-				if (sWifiEntCA)
+				mpUfo->GetConfig().msSTAENTKey.concat("\n");
+				if (sWifiEntCA && *sWifiEntCA){
 					mpUfo->GetConfig().msSTAENTCA = sWifiEntCA;
-				else
+					mpUfo->GetConfig().msSTAENTCA.concat("\n");
+				}	else
 					mpUfo->GetConfig().msSTAENTCA.clear();
 				mpUfo->GetConfig().msSTAENTUser.clear();
 				mpUfo->GetConfig().msSTAPass.clear();
