@@ -50,7 +50,7 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
 
-	esp_task_wdt_init(30, false);
+	esp_task_wdt_init(30, true);
 
 	mConfig.Read();
 
@@ -60,7 +60,7 @@ void Ufo::Start(){
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 	mApiStore.Init();
 
-	gpio_pad_select_gpio(10);
+	gpio_pad_select_gpio(GPIO_NUM_0);
 	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
 	gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
 
@@ -127,6 +127,12 @@ void Ufo::TaskWebServer(){
 void Ufo::TaskDisplay(){
 	__uint8_t uSendState = 0;
 
+	mDisplayCharterLevel1.SetLeds(0, 15, 0x004400);
+	mDisplayCharterLevel2.SetLeds(0, 15, 0x004400);
+	mDisplayCharterLevel1.Display(mStripeLevel1, true);
+	mDisplayCharterLevel2.Display(mStripeLevel2, true);
+	vTaskDelay(100);
+
 	esp_task_wdt_add(NULL);
 
 	while (1){
@@ -145,8 +151,11 @@ void Ufo::TaskDisplay(){
 					uSendState++;
 			}
 		}
-		else
+		else{
 			mStateDisplay.Display(mStripeLevel1, mStripeLevel2);
+			if (mStateDisplay.ShouldRestart())
+				esp_restart();
+		}
 
 		mDisplayCharterLogo.Display(mStripeLogo);
 

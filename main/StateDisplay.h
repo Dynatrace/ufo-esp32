@@ -25,6 +25,7 @@ public:
 	void StartShowingIp();
 	void DisplayIp(DotstarStripe& rStripeLevel1, DotstarStripe& rStripeLevel2);
 	bool IpShownLongEnough() { return mbFullCycleDone; }; 
+	bool ShouldRestart()	 { return muRestartTimer && !--muRestartTimer; };
 
 private:
 	bool mbAPMode;
@@ -33,6 +34,7 @@ private:
 
 	__uint8_t muState;
 	__uint16_t muStateTimer;
+	__uint16_t muRestartTimer;
 
 	char msIp[16];
 	__uint8_t uPos;
