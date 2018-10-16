@@ -2,9 +2,9 @@
 Please be warned that we cannot provide any support or warranty as soon as you upload non-officially released firmware.
 
 ## get the build environment
-* [http://esp-idf.readthedocs.io](http://esp-idf.readthedocs.io)
+* [https://esp-idf.readthedocs.io](https://esp-idf.readthedocs.io)
 
-* [http://esp-idf.readthedocs.io/en/latest/windows-setup.html](http://esp-idf.readthedocs.io/en/latest/windows-setup.html)
+* [https://docs.espressif.com/projects/esp-idf/en/latest/get-started/windows-setup.html](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/windows-setup.html)
 
 ## getting the latest version
 Tested with ESP-IDF version 2.1:
