@@ -14,14 +14,21 @@ git submodule update
 ```
 
 ## build settings
-### make menuconfig
+### run make menuconfig
+```
+make menuconfig
+``` 
+
 * Serial flasher config --> (COMx) Default serial port e.g. `COM4` on Windows (you find on Windows COM port in device manager), or `/dev/ttyUSB0` on Linux (look at /dev/tty*); you can use speeds up to 921600bps
+* Serial flasher config --> Flash size --> 4 MB
 * Component config --> ESP32-specific --> (10) Task watchdog timeout (seconds)
 * Component config --> ESP32-specific --> Core dump destination --> Flash
+* Component config --> Amazon Web Services IoT Platform --> turn ON [*]
 * Partition table --> Custom parition table --> partitions.csv
 
 
 ## useful build commands
 * ``make erase_flash`` to erase all partitions of the flash
 * ``make clean`` to force a fresh build from scratch
+* ``make -j all`` just build all with max parallel threads (omit -j in case of compile errors caused by race conditions)
 * ``make -j flash monitor`` build all, flash to UFO, and start monitoring over serial interface
