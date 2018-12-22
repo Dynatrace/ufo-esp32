@@ -39,4 +39,6 @@ executed in the ufo-esp32 folder
 * ``make erase_flash`` to erase all partitions of the flash
 * ``make clean`` to force a fresh build from scratch
 * ``make -j all`` just build all with max parallel threads (omit -j in case of compile errors caused by race conditions)
-* ``make -j flash monitor`` build all, flash to UFO, and start monitoring over serial interface
+* ``make -j all flash monitor`` build all, flash to UFO, and start monitoring over serial interface
+* ``make monitor`` reboots the UFO and monitors output over serial interface
+
