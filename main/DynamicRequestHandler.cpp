@@ -359,6 +359,7 @@ bool DynamicRequestHandler::HandleConfigRequest(std::list<TParam>& params, HttpR
 	}
 	if (sWifiHostName && !mpUfo->GetConfig().msHostname.equals(sWifiHostName)) {
 		mpUfo->GetConfig().msHostname = sWifiHostName;
+		ESP_LOGI(tag, "HandleConfigRequest Hostname %s", mpUfo->GetConfig().msHostname.c_str());
 		bOk = true;
 	}
 	if (bOk){
