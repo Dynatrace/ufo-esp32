@@ -8,6 +8,7 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <esp_log.h>
+#include "esp_task_wdt.h"
 
 static const char* LOGTAG = "Ufo";
 
@@ -49,6 +50,8 @@ void Ufo::Start(){
 	ESP_LOGI(LOGTAG, "Firmware Version: %s", FIRMWARE_VERSION);
 	ESP_LOGI(LOGTAG, "Start");
 
+	esp_task_wdt_init(30, true);
+
 	mConfig.Read();
 
 	DynatraceAction* dtStartup = dt.enterAction("Startup");
@@ -57,7 +60,7 @@ void Ufo::Start(){
 	mStateDisplay.SetAPMode(mConfig.mbAPMode);
 	mApiStore.Init();
 
-	gpio_pad_select_gpio(10);
+	gpio_pad_select_gpio(GPIO_NUM_0);
 	gpio_set_direction(GPIO_NUM_0, GPIO_MODE_INPUT);
 	gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
 
@@ -87,11 +90,18 @@ void Ufo::Start(){
 	}
 	else{
 		DynatraceAction* dtWifi = dt.enterAction("Start Wifi", dtStartup);	
-		if (mConfig.msSTAENTUser.length())
-			mWifi.StartSTAModeEnterprise(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA, mConfig.msHostname);
-		else
+		switch (mConfig.muWifiMode){
+		case 1:
 			mWifi.StartSTAMode(mConfig.msSTASsid, mConfig.msSTAPass, mConfig.msHostname);
-	
+			break;
+		case 2:
+			mWifi.StartSTAModeEnterprisePEAP(mConfig.msSTASsid, mConfig.msSTAENTUser, mConfig.msSTAPass, mConfig.msSTAENTCA, mConfig.msHostname);
+			break;
+		case 3:
+			mWifi.StartSTAModeEnterpriseTLS(mConfig.msSTASsid, mConfig.msSTAENTCert, mConfig.msSTAENTKey, mConfig.msSTAENTCA, mConfig.msHostname);
+			break;
+		}
+
 		dt.leaveAction(dtWifi);
 		SetId();
 		// Dynatrace API Integration
@@ -116,6 +126,15 @@ void Ufo::TaskWebServer(){
 
 void Ufo::TaskDisplay(){
 	__uint8_t uSendState = 0;
+
+	mDisplayCharterLevel1.SetLeds(0, 15, 0x004400);
+	mDisplayCharterLevel2.SetLeds(0, 15, 0x004400);
+	mDisplayCharterLevel1.Display(mStripeLevel1, true);
+	mDisplayCharterLevel2.Display(mStripeLevel2, true);
+	vTaskDelay(100);
+
+	esp_task_wdt_add(NULL);
+
 	while (1){
 		if (mWifi.IsConnected() && (mbApiCallReceived || (mDt.IsActive() && mStateDisplay.IpShownLongEnough()))){
 			if (!uSendState){
@@ -132,8 +151,11 @@ void Ufo::TaskDisplay(){
 					uSendState++;
 			}
 		}
-		else
+		else{
 			mStateDisplay.Display(mStripeLevel1, mStripeLevel2);
+			if (mStateDisplay.ShouldRestart())
+				esp_restart();
+		}
 
 		mDisplayCharterLogo.Display(mStripeLogo);
 
@@ -158,6 +180,7 @@ void Ufo::TaskDisplay(){
 		else
 			mbButtonPressed = false;
 
+		esp_task_wdt_reset();
 		vTaskDelay(1);
 	}
 }

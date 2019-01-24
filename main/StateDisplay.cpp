@@ -11,6 +11,7 @@ StateDisplay::StateDisplay() {
 	mbConnected = false;
 	muState = 0;
 	muStateTimer = 0;
+	muRestartTimer = 10000;
 	msIp[0] = 0x00;
 	mbFullCycleDone = false;
 }
@@ -21,8 +22,14 @@ StateDisplay::~StateDisplay() {
 
 void StateDisplay::SetConnected(bool b, Wifi* pWifi){
 	if (b){
+		muRestartTimer = 0;
 		pWifi->GetLocalAddress(msIp);
 		StartShowingIp();
+	}
+	else{
+		if (mbConnected){ //lost connection
+			muRestartTimer = 2000; 
+		}
 	}
 	mbConnected = b;
 };

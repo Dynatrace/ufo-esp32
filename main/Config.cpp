@@ -47,7 +47,7 @@ bool Config::Read(){
 	ReadBool(h, "DTEnabled", mbDTEnabled);
 	ReadString(h, "DTEnvId", msDTEnvIdOrUrl);
 	ReadString(h, "DTApiToken", msDTApiToken);
-	ReadInt(h, "DTInterval", miDTInterval);
+	ReadUInt(h, "DTInterval", muDTInterval);
 	ReadBool(h, "DTMonitoring", mbDTMonitoring);
 	ReadBool(h, "SrvSSLEnabled", mbWebServerUseSsl);
 	nvs_get_u16(h, "SrvListenPort", &muWebServerPort);
@@ -57,6 +57,13 @@ bool Config::Read(){
 	ReadString(h, "Organization", msOrganization);
 	ReadString(h, "Department", msDepartment);
 	ReadString(h, "Location", msLocation);
+	if (nvs_get_u8(h, "WifiMode", &muWifiMode) == ESP_OK){
+		ReadBigString(h, "STAENTCert", msSTAENTCert);
+		ReadBigString(h, "STAENTKey", msSTAENTKey);
+	}
+	else{
+		muWifiMode = msSTAENTUser.length() ? 2 : 1;
+	}
 
 	nvs_close(h);
 	return true;
@@ -98,7 +105,7 @@ bool Config::Write()
 		return nvs_close(h), false;
 	if (!WriteString(h, "DTApiToken", msDTApiToken))
 		return nvs_close(h), false;
-	if (!WriteInt(h, "DTInterval", miDTInterval))
+	if (!WriteUInt(h, "DTInterval", muDTInterval))
 		return nvs_close(h), false;
 
 	if (!WriteBool(h, "DTMonitoring", mbDTMonitoring))
@@ -121,6 +128,13 @@ bool Config::Write()
 		return nvs_close(h), false;
 	if (!WriteString(h, "Location", msLocation))
 		return nvs_close(h), false;
+	if (nvs_set_u8(h, "WifiMode", muWifiMode) != ESP_OK)
+		return nvs_close(h), false;
+	if (!WriteBigString(h, "STAENTCert", msSTAENTCert))
+		return nvs_close(h), false;
+	if (!WriteBigString(h, "STAENTKey", msSTAENTKey))
+		return nvs_close(h), false;
+	
 
 	nvs_commit(h);
 	nvs_close(h);
@@ -170,11 +184,11 @@ bool Config::ReadBool(nvs_handle h, const char* sKey, bool& rbValue){
 	return true;
 }
 
-bool Config::ReadInt(nvs_handle h, const char* sKey, int& riValue){
+bool Config::ReadUInt(nvs_handle h, const char* sKey, __uint32_t& ruValue){
 	__uint32_t u;
 	if (nvs_get_u32(h, sKey, &u) != ESP_OK)
 		return false;
-	riValue = u;
+	ruValue = u;
 	return true;
 }
 
@@ -207,10 +221,10 @@ bool Config::WriteBigString(nvs_handle h, const char* sKey, String& rsValue){
 }
 
 
-bool Config:: WriteBool(nvs_handle h, const char* sKey, bool bValue){
+bool Config::WriteBool(nvs_handle h, const char* sKey, bool bValue){
 	return (nvs_set_u8(h, sKey, bValue ? 1 : 0) == ESP_OK);
 }
 
-bool Config:: WriteInt(nvs_handle h, const char* sKey, int iValue){
-	return (nvs_set_u32(h, sKey, iValue) == ESP_OK);
+bool Config::WriteUInt(nvs_handle h, const char* sKey, __uint32_t uValue){
+	return (nvs_set_u32(h, sKey, uValue) == ESP_OK);
 }

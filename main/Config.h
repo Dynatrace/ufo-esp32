@@ -18,11 +18,11 @@ private:
 	bool ReadString(nvs_handle h, const char* sKey, String& rsValue);
 	bool ReadBigString(nvs_handle h, const char* sKey, String& rsValue);
 	bool ReadBool(nvs_handle h, const char* sKey, bool& rbValue);
-	bool ReadInt(nvs_handle h, const char* sKey, int& rbValue);
+	bool ReadUInt(nvs_handle h, const char* sKey, __uint32_t& ruValue);
 	bool WriteString(nvs_handle h, const char* sKey, String& rsValue);
 	bool WriteBigString(nvs_handle h, const char* sKey, String& rsValue);
 	bool WriteBool(nvs_handle h, const char* sKey, bool bValue);
-	bool WriteInt(nvs_handle h, const char* sKey, int bValue);
+	bool WriteUInt(nvs_handle h, const char* sKey, __uint32_t uValue);
 
 public:
 	bool mbAPMode;
@@ -39,11 +39,14 @@ public:
 	String msOrganization;
 	String msDepartment;
 	String msLocation;
+	__uint8_t muWifiMode;
+	String msSTAENTCert;
+	String msSTAENTKey;
 
     String msDTEnvIdOrUrl;
     String msDTApiToken;
 	bool mbDTEnabled;
-    int miDTInterval;
+    __uint32_t muDTInterval;
 
 	bool mbDTMonitoring;
 

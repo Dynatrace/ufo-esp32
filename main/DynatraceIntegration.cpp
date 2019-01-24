@@ -134,7 +134,7 @@ void DynatraceIntegration::Run(__uint8_t uTaskId) {
             GetData();
             ESP_LOGD(LOGTAG, "free heap after processing DT: %i", esp_get_free_heap_size());            
 
-            for (int i=0 ; i < mpConfig->miDTInterval ; i++){
+            for (int i=0 ; i < mpConfig->muDTInterval ; i++){
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
 
                 if (uTaskId != mActTaskId)

@@ -34,8 +34,8 @@ public:
 
 	void StartAPMode(String& rsSsid, String& rsPass, String& rsHostname);
 	void StartSTAMode(String& rsSsid, String& rsPass, String& rsHostname);
-	void StartSTAModeEnterprise(String& rsSsid, String& rsUser, String& rsPass, String& rsCA, String& rsHostname);
-
+	void StartSTAModeEnterprisePEAP(String& rsSsid, String& rsUser, String& rsPass, String& rsCA, String& rsHostname);
+	void StartSTAModeEnterpriseTLS(String& rsSsid, String& rsCert, String& rsKey, String& rsCA, String& rsHostname);
 
 	bool IsConnected() { return mbConnected; };
 	void addDNSServer(String& ip);
@@ -56,11 +56,13 @@ private:
 	String      gw;
 	String      netmask;
 
-	__uint8_t        muMode;
+	__uint8_t   muMode;
 	String      msSsid;
 	String      msPass;
 	String      msUser;
 	String      msCA;
+	String      msCert;
+	String      msKey;
 	String 	 msHostname;
 
 	__uint8_t 		muConnectedClients;
