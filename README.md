@@ -129,11 +129,11 @@ Please read the operating instructions carefully before putting into operation f
 
 ### LIMITED SUPPORT & WARRANTY
 
-For replacement of faulty hardware within 90 days of purchase, <a href= “eva-maria.penninger@dynatrace.com”>contact Dynatrace</a>.
+For replacement of faulty hardware within 90 days of purchase, <a href="mailto:austria@dynatrace.com">contact Dynatrace</a>.
 
-Firmware updates are available for <a href= “https://github.com/Dynatrace/ufo-esp32”>download from Github</a>.
+Firmware updates are available for <a href="https://github.com/Dynatrace/ufo-esp32">download from Github</a>.
 
-For all software issues and support, <a href= “https://github.com/Dynatrace/ufo-esp32/issues”>raise an issue on our GitHub site</a>.
+For all software issues and support, <a href="https://github.com/Dynatrace/ufo-esp32/issues">raise an issue on our GitHub site</a>.
 
 1.1. Limited Warranty. Dynatrace warrants to Buyer that, for a period of 90 days from the date of shipment of the Goods, such Goods will materially conform to Dynatrace’s published specifications in effect as of the date of manufacture.
 
