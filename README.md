@@ -126,12 +126,17 @@ Please read the operating instructions carefully before putting into operation f
 
 * The UFO is to be used exclusively in interior spaces.
 
-### WARRANTY:
+
+### LIMITED SUPPORT & WARRANTY
+
+For replacement of faulty hardware within 90 days of purchase, <a href="mailto:austria@dynatrace.com">contact Dynatrace</a>.
+
+Firmware updates are available for <a href="https://github.com/Dynatrace/ufo-esp32">download from Github</a>.
+
+For all software issues and support, <a href="https://github.com/Dynatrace/ufo-esp32/issues">raise an issue on our GitHub site</a>.
 
 1.1. Limited Warranty. Dynatrace warrants to Buyer that, for a period of 90 days from the date of shipment of the Goods, such Goods will materially conform to Dynatrace’s published specifications in effect as of the date of manufacture.
 
 1.2. Disclaimer. EXCEPT FOR THE WARRANTY SET FORTH IN SECTION 1.1 ABOVE, DYNATRACE MAKES NO WARRANTY WHATSOEVER WITH RESPECT TO THE GOODS, INCLUDING ANY (A) WARRANTY OF MERCHANTABILITY; (B) WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE; (C) WARRANTY OF TITLE; OR (D) WARRANTY AGAINST INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS OF A THIRD PARTY, WHETHER EXPRESS OR IMPLIED BY LAW, COURSE OF DEALING, COURSE OF PERFORMANCE, USAGE OF TRADE OR OTHERWISE.
-
-
 
 
